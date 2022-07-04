@@ -3,8 +3,10 @@ package ti4.message;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.AttachmentOption;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,11 @@ public class MessageHelper {
     }
 
     public static void sendFileToChannel(MessageChannel channel, File file) {
-        channel.sendFile(file).queue();
+        channel.sendFile(file, (AttachmentOption[]) null);
+    }
+    
+    public static void sendFileToChannel(MessageChannel channel, InputStream file) {
+        channel.sendFile(file, "help.txt", (AttachmentOption[])null).queue();
     }
 
 

@@ -5,10 +5,14 @@ import ti4.helpers.LoggerHandler;
 import ti4.map.Map;
 
 import javax.annotation.CheckForNull;
+
+import static java.nio.file.Files.newInputStream;
+
 import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -62,9 +66,10 @@ public class PositionMapper {
     }
 
     private static void readData(String fileName, Properties positionMap, String errorMessage) {
-        String positionFile = ResourceHelper.getInstance().getPositionFile(fileName);
+        Path positionFile = ResourceHelper.getInstance().getPositionFile(fileName);
         if (positionFile != null) {
-            try (InputStream input = new FileInputStream(positionFile)) {
+            
+            try (InputStream input = newInputStream(positionFile)) {
                 positionMap.load(input);
             } catch (IOException e) {
                 LoggerHandler.log(errorMessage, e);

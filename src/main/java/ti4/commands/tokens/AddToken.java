@@ -15,6 +15,7 @@ import ti4.map.Map;
 import ti4.map.Tile;
 import ti4.message.MessageHelper;
 
+import java.nio.file.Path;
 import java.util.*;
 
 public class AddToken extends AddRemoveToken {
@@ -35,7 +36,7 @@ public class AddToken extends AddRemoveToken {
 
     public static void addToken(SlashCommandInteractionEvent event, Tile tile, String tokenName) {
         String tokenFileName = Mapper.getAttachmentID(tokenName);
-        String tokenPath = tile.getAttachmentPath(tokenFileName);
+        Path tokenPath = tile.getAttachmentPath(tokenFileName);
         if (tokenPath != null) {
             addToken(event, tile, tokenFileName, true);
         } else {

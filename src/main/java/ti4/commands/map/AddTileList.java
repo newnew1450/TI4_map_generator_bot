@@ -17,6 +17,7 @@ import ti4.map.*;
 import ti4.message.MessageHelper;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 
 public class AddTileList implements Command {
@@ -61,7 +62,7 @@ public class AddTileList implements Command {
                 }
                 String tileName = Mapper.getTileID(tileID);
                 String position = entry.getKey();
-                String tilePath = ResourceHelper.getInstance().getTileFile(tileName);
+                Path tilePath = ResourceHelper.getInstance().getTileFile(tileName);
                 if (tilePath == null) {
                     MessageHelper.replyToMessage(event, "Could not find tile: " + tileID);
                     return;

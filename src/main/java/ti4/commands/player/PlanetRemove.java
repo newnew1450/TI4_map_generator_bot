@@ -1,5 +1,7 @@
 package ti4.commands.player;
 
+import java.nio.file.Path;
+
 import ti4.generator.Mapper;
 import ti4.helpers.Constants;
 import ti4.map.Map;
@@ -18,7 +20,7 @@ public class PlanetRemove extends PlanetAddRemove {
         String color = player.getColor();
         if (unitHolder != null && color != null && !"white".equals(color)) {
             String ccID = Mapper.getControlID(color);
-            String ccPath = Mapper.getCCPath(ccID);
+            Path ccPath = Mapper.getCCPath(ccID);
             if (ccPath != null) {
                 unitHolder.removeControl(ccID);
             }

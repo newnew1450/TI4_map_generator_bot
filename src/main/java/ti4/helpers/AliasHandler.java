@@ -2,9 +2,12 @@ package ti4.helpers;
 
 import ti4.ResourceHelper;
 
+import static java.nio.file.Files.newInputStream;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.*;
 
 public class AliasHandler {
@@ -37,9 +40,9 @@ public class AliasHandler {
     }
     private static void readAliasFile(String fileName, ArrayList<String> list, boolean keys) {
         Properties aliasProperties = new Properties();
-        String aliasFile = ResourceHelper.getInstance().getAliasFile(fileName);
+        Path aliasFile = ResourceHelper.getInstance().getAliasFile(fileName);
         if (aliasFile != null) {
-            try (InputStream input = new FileInputStream(aliasFile)) {
+            try (InputStream input = newInputStream(aliasFile)) {
                 aliasProperties.load(input);
                 if (keys){
                     for (Object key : aliasProperties.keySet()) {
@@ -64,9 +67,9 @@ public class AliasHandler {
 
     private static void readAliasFile(String fileName, HashMap<String, String> aliasList, String errorMessage) {
         Properties aliasProperties = new Properties();
-        String aliasFile = ResourceHelper.getInstance().getAliasFile(fileName);
+        Path aliasFile = ResourceHelper.getInstance().getAliasFile(fileName);
         if (aliasFile != null) {
-            try (InputStream input = new FileInputStream(aliasFile)) {
+            try (InputStream input = newInputStream(aliasFile)) {
                 aliasProperties.load(input);
                 for (String id: aliasProperties.stringPropertyNames()) {
                     StringTokenizer tokenizer = new StringTokenizer(aliasProperties.getProperty(id), ",");

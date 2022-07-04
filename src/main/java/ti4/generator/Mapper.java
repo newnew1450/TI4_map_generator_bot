@@ -6,9 +6,13 @@ import ti4.helpers.AliasHandler;
 import ti4.helpers.LoggerHandler;
 
 import javax.annotation.CheckForNull;
+
+import static java.nio.file.Files.newInputStream;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,9 +65,9 @@ public class Mapper {
     }
 
     private static void readData(String propertyFileName, Properties colors, String s) {
-        String colorFile = ResourceHelper.getInstance().getInfoFile(propertyFileName);
+        Path colorFile = ResourceHelper.getInstance().getInfoFile(propertyFileName);
         if (colorFile != null) {
-            try (InputStream input = new FileInputStream(colorFile)) {
+            try (InputStream input = newInputStream(colorFile)) {
                 colors.load(input);
             } catch (IOException e) {
                 LoggerHandler.log(s, e);
@@ -279,8 +283,8 @@ public class Mapper {
     }
 
     @CheckForNull
-    public static String getCCPath(String ccID) {
-        String ccPath = ResourceHelper.getInstance().getCCFile(ccID);
+    public static Path getCCPath(String ccID) {
+        Path ccPath = ResourceHelper.getInstance().getCCFile(ccID);
         if (ccPath == null) {
 //            LoggerHandler.log("Could not find command counter: " + ccID);
             return null;
@@ -289,8 +293,8 @@ public class Mapper {
     }
 
     @CheckForNull
-    public static String getTokenPath(String tokenID) {
-        String tokenPath = ResourceHelper.getInstance().getAttachmentFile(tokenID);
+    public static Path getTokenPath(String tokenID) {
+        Path tokenPath = ResourceHelper.getInstance().getAttachmentFile(tokenID);
         if (tokenPath == null) {
             tokenPath = ResourceHelper.getInstance().getTokenFile(tokenID);
             if (tokenPath == null) {

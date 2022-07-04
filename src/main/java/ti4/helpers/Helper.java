@@ -13,6 +13,7 @@ import ti4.map.*;
 
 import javax.annotation.CheckForNull;
 import java.awt.*;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -95,8 +96,8 @@ public class Helper {
     }
 
     @CheckForNull
-    public static String getDamagePath() {
-        String tokenPath = ResourceHelper.getInstance().getResourceFromFolder("extra/", "marker_damage.png", "Could not find damage token file");
+    public static Path getDamagePath() {
+        Path tokenPath = ResourceHelper.getInstance().getResourceFromFolder("extra/", "marker_damage.png", "Could not find damage token file");
         if (tokenPath == null) {
             LoggerHandler.log("Could not find token: marker_damage");
             return null;

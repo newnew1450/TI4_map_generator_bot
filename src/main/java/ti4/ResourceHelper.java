@@ -4,21 +4,32 @@ import ti4.helpers.LoggerHandler;
 
 import javax.annotation.CheckForNull;
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.spi.FileSystemProvider;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class ResourceHelper {
     private static ResourceHelper resourceHelper = null;
-    private HashMap<String, String> unitCache = new HashMap<>();
-    private HashMap<String, String> tileCache = new HashMap<>();
-    private HashMap<String, String> ccCache = new HashMap<>();
-    private HashMap<String, String> attachmentCache = new HashMap<>();
-    private HashMap<String, String> tokenCache = new HashMap<>();
-    private HashMap<String, String> factionCache = new HashMap<>();
-    private HashMap<String, String> generalCache = new HashMap<>();
-    private HashMap<String, String> planetCache = new HashMap<>();
-    private HashMap<String, String> paCache = new HashMap<>();
+    private HashMap<String, Path> unitCache = new HashMap<>();
+    private HashMap<String, Path> tileCache = new HashMap<>();
+    private HashMap<String, Path> ccCache = new HashMap<>();
+    private HashMap<String, Path> attachmentCache = new HashMap<>();
+    private HashMap<String, Path> tokenCache = new HashMap<>();
+    private HashMap<String, Path> factionCache = new HashMap<>();
+    private HashMap<String, Path> generalCache = new HashMap<>();
+    private HashMap<String, Path> planetCache = new HashMap<>();
+    private HashMap<String, Path> paCache = new HashMap<>();
+    
+    private FileSystem fs = null;
 
     private ResourceHelper() {
     }
@@ -30,170 +41,196 @@ public class ResourceHelper {
         return resourceHelper;
     }
 
-    public File getResource(String name) {
-        File resourceFile = null;
-        URL resource = getClass().getClassLoader().getResource(name);
-
+    public Path getResource(String name) {
+        Path resourcePath = null;
+        URI resource;
         try {
-            if (resource != null) {
-                resourceFile = Paths.get(resource.toURI()).toFile();
+            resource = getClass().getClassLoader().getResource("resources/" + name).toURI();
+            String[] array = resource.toString().split("!");
+            if(fs==null) {
+                fs = FileSystems.newFileSystem(URI.create(array[0]),Collections.emptyMap());
             }
+            if (resource != null) {
+                System.out.println("URI for " + name + " is "+resource);
+                Path path = fs.getPath(array[1]);
+                System.out.println("Obtained path for " +  name + " and it is " + path);
+                resourcePath = fs.getPath(array[1]);
+            }else {
+                System.out.println("Resource is null for " + name);
+            }
+        } catch (URISyntaxException e1) {
+            
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } 
+        
 
-        } catch (Exception e) {
-            LoggerHandler.log("Could not find asset", e);
-        }
-        return resourceFile;
+        return resourcePath != null ? resourcePath : null;
     }
 
     @CheckForNull
-    public String getPositionFile(String name)
+    public Path getPositionFile(String name)
     {
         return getResourceFromFolder("positions/", name, "Could not find position files");
     }
 
     @CheckForNull
-    public String getTileFile(String name)
+    public Path getTileFile(String name)
     {
-        String unitPath = tileCache.get(name);
+        Path unitPath = tileCache.get(name);
         if (unitPath != null)
         {
             return unitPath;
         }
-        String tile = getResourceFromFolder("tiles/", name, "Could not find tile file");
+        Path tile = getResourceFromFolder("tiles/", name, "Could not find tile file");
         tileCache.put(name, tile);
         return tile;
     }
 
     @CheckForNull
-    public String getFactionFile(String name)
+    public Path getFactionFile(String name)
     {
-        String unitPath = factionCache.get(name);
+        Path unitPath = factionCache.get(name);
         if (unitPath != null)
         {
             return unitPath;
         }
-        String tile = getResourceFromFolder("factions/", name, "Could not find faction file");
+        Path tile = getResourceFromFolder("factions/", name, "Could not find faction file");
         factionCache.put(name, tile);
         return tile;
     }
 
     @CheckForNull
-    public String getGeneralFile(String name)
+    public Path getGeneralFile(String name)
     {
-        String unitPath = generalCache.get(name);
+        Path unitPath = generalCache.get(name);
         if (unitPath != null)
         {
             return unitPath;
         }
-        String tile = getResourceFromFolder("general/", name, "Could not find faction file");
+        Path tile = getResourceFromFolder("general/", name, "Could not find faction file");
         generalCache.put(name, tile);
         return tile;
     }
 
     @CheckForNull
-    public String getUnitFile(String name) {
-        String unitPath = unitCache.get(name);
+    public Path getUnitFile(String name) {
+        Path unitPath = unitCache.get(name);
         if (unitPath != null) {
             return unitPath;
         }
-        String unit = getResourceFromFolder("units/new_units/", name, "Could not find unit file");
+        Path unit = getResourceFromFolder("units/new_units/", name, "Could not find unit file");
         unitCache.put(name, unit);
         return unit;
     }
     @CheckForNull
-    public String getCCFile(String name)
+    public Path getCCFile(String name)
     {
-        String ccPath = ccCache.get(name);
+        Path ccPath = ccCache.get(name);
         if (ccPath != null)
         {
             return ccPath;
         }
-        String cc = getResourceFromFolder("command_token/", name, "Could not find command token file");
+        Path cc = getResourceFromFolder("command_token/", name, "Could not find command token file");
         ccCache.put(name, cc);
         return cc;
     }
 
     @CheckForNull
-    public String getAttachmentFile(String name)
+    public Path getAttachmentFile(String name)
     {
-        String tokenPath = attachmentCache.get(name);
+        Path tokenPath = attachmentCache.get(name);
         if (tokenPath != null)
         {
             return tokenPath;
         }
-        String token = getResourceFromFolder("attachment_token/", name, "Could not find attachment token file");
+        Path token = getResourceFromFolder("attachment_token/", name, "Could not find attachment token file");
         attachmentCache.put(name, token);
         return token;
     }
 
     @CheckForNull
-    public String getPlanetResource(String name)
+    public Path getPlanetResource(String name)
     {
-        String planetInfoPath = planetCache.get(name);
+        Path planetInfoPath = planetCache.get(name);
         if (planetInfoPath != null)
         {
             return planetInfoPath;
         }
-        String token = getResourceFromFolder("planet_cards/", name, "Could not find planet token file");
+        Path token = getResourceFromFolder("planet_cards/", name, "Could not find planet token file");
         planetCache.put(name, token);
         return token;
     }
 
     @CheckForNull
-    public String getPAResource(String name)
+    public Path getPAResource(String name)
     {
-        String paInfoPath = paCache.get(name);
+        Path paInfoPath = paCache.get(name);
         if (paInfoPath != null)
         {
             return paInfoPath;
         }
-        String token = getResourceFromFolder("player_area/", name, "Could not find player area token file");
+        Path token = getResourceFromFolder("player_area/", name, "Could not find player area token file");
         paCache.put(name, token);
         return token;
     }
 
     @CheckForNull
-    public String getTokenFile(String name)
+    public Path getTokenFile(String name)
     {
-        String tokenPath = tokenCache.get(name);
+        Path tokenPath = tokenCache.get(name);
         if (tokenPath != null)
         {
             return tokenPath;
         }
-        String token = getResourceFromFolder("tokens/", name, "Could not find token file");
+        Path token = getResourceFromFolder("tokens/", name, "Could not find token file");
         tokenCache.put(name, token);
         return token;
     }
 
-    public String getResourceFromFolder(String folder, String name, String errorDescription) {
-        File resourceFile = null;
-        URL resource = getClass().getClassLoader().getResource(folder + name);
-
+    public Path getResourceFromFolder(String folder, String name, String errorDescription) {
+        Path resourcePath = null;
+        URI resource;
         try {
-            if (resource != null) {
-                resourceFile = Paths.get(resource.toURI()).toFile();
+            resource = getClass().getClassLoader().getResource("resources/" + folder + name).toURI();
+            String[] array = resource.toString().split("!");
+            if(fs==null) {
+                fs = FileSystems.newFileSystem(URI.create(array[0]),Collections.emptyMap());
             }
+            if (resource != null) {
+                System.out.println("URI for " + folder + name + " is "+resource);
+                Path path = fs.getPath(array[1]);
+                System.out.println("Obtained path for " + folder + name + " and it is " + path);
+                resourcePath = fs.getPath(array[1]);
+            }else {
+                System.out.println("Resource is null for " + folder + name);
+            }
+        } catch (URISyntaxException e1) {
+            
+            e1.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } 
+        
 
-        } catch (Exception e) {
-            LoggerHandler.log(errorDescription, e);
-        }
-        return resourceFile != null ? resourceFile.getAbsolutePath() : null;
+        return resourcePath != null ? resourcePath : null;
     }
 
     @CheckForNull
-    public String getInfoFile(String name)
+    public Path getInfoFile(String name)
     {
         return getResourceFromFolder("info/", name, "Could not find info file");
     }
 
     @CheckForNull
-    public String getAliasFile(String name)
+    public Path getAliasFile(String name)
     {
         return getResourceFromFolder("alias/", name, "Could not find alias file");
     }
 
     @CheckForNull
-    public String getHelpFile(String name)
+    public Path getHelpFile(String name)
     {
         return getResourceFromFolder("help/", name, "Could not find alias file");
     }

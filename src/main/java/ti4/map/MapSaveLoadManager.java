@@ -429,6 +429,7 @@ public class MapSaveLoadManager {
 
     private static File[] readAllMapFiles() {
         File folder = Storage.getMapImageDirectory();
+        System.out.println("shavtemp ::: " + folder.getAbsolutePath());
         if (folder == null) {
             try {
                 //noinspection ConstantConditions
@@ -460,15 +461,19 @@ public class MapSaveLoadManager {
     public static void loadMaps() {
         HashMap<String, Map> mapList = new HashMap<>();
         File[] files = readAllMapFiles();
+        System.out.println(files.length + " Map files loaded");
         if (files != null) {
             for (File file : files) {
+                System.out.println("Attempting to load " + file.getAbsolutePath());
                 if (isTxtExtention(file)) {
+                    System.out.println("found txt extension");
                     try {
                         Map map = loadMap(file);
                         if (map != null) {
                             mapList.put(map.getName(), map);
                         }
                     } catch (Exception e) {
+                        e.printStackTrace();
                         LoggerHandler.log("Could not load game:" + file, e);
                     }
                 }

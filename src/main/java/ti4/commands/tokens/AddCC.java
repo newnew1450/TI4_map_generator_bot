@@ -7,6 +7,7 @@ import ti4.map.Map;
 import ti4.map.Tile;
 import ti4.message.MessageHelper;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class AddCC extends AddRemoveToken {
@@ -19,7 +20,7 @@ public class AddCC extends AddRemoveToken {
 
     public static void addCC(SlashCommandInteractionEvent event, String color, Tile tile) {
         String ccID = Mapper.getCCID(color);
-        String ccPath = tile.getCCPath(ccID);
+        Path ccPath = tile.getCCPath(ccID);
         if (ccPath == null) {
             MessageHelper.sendMessageToChannel(event.getChannel(), "Command Counter: " + color + " is not valid and not supported.");
         }

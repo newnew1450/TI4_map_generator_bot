@@ -10,6 +10,7 @@ import ti4.map.Map;
 import ti4.map.Tile;
 import ti4.message.MessageHelper;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,7 +48,7 @@ public class RemoveControl extends AddRemoveToken {
 
             for (String color : colors) {
                 String ccID = Mapper.getControlID(color);
-                String ccPath = tile.getCCPath(ccID);
+                Path ccPath = tile.getCCPath(ccID);
                 if (ccPath == null) {
                     MessageHelper.sendMessageToChannel(event.getChannel(), "Control token: " + color + " is not valid and not supported.");
                 }

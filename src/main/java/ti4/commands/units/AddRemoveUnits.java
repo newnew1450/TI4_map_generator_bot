@@ -18,6 +18,7 @@ import ti4.map.Tile;
 import ti4.message.MessageHelper;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -97,7 +98,7 @@ abstract public class AddRemoveUnits implements Command {
                 unit = AliasHandler.resolveUnit(unitInfoTokenizer.nextToken());
             }
             String unitID = Mapper.getUnitID(unit, color);
-            String unitPath = tile.getUnitPath(unitID);
+            Path unitPath = tile.getUnitPath(unitID);
             if (unitPath == null) {
                 MessageHelper.sendMessageToChannel(event.getChannel(), "Unit: " + unit + " is not valid and not supported.");
                 continue;

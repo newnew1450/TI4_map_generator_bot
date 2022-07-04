@@ -6,6 +6,7 @@ import ti4.map.Map;
 import ti4.map.Player;
 import ti4.map.UnitHolder;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class PlanetAdd extends PlanetAddRemove {
@@ -21,7 +22,7 @@ public class PlanetAdd extends PlanetAddRemove {
         String color = player.getColor();
         if (unitHolder != null && color != null && !"white".equals(color)) {
             String ccID = Mapper.getControlID(color);
-            String ccPath = Mapper.getCCPath(ccID);
+            Path ccPath = Mapper.getCCPath(ccID);
             if (ccPath != null) {
                 unitHolder.addControl(ccID);
             }

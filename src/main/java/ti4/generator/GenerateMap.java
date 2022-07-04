@@ -11,12 +11,16 @@ import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
+
+import static java.nio.file.Files.newInputStream;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,7 +53,7 @@ public class GenerateMap {
     private GenerateMap() {
         try {
             String controlID = Mapper.getControlID("red");
-            BufferedImage bufferedImage = resizeImage(ImageIO.read(new File(Mapper.getCCPath(controlID))), 0.45f);
+            BufferedImage bufferedImage = resizeImage(ImageIO.read(newInputStream(Mapper.getCCPath(controlID))), 0.45f);
             scoreTokenWidth = bufferedImage.getWidth();
         } catch (IOException e) {
             LoggerHandler.logError("Could read file data for setup file", e);
@@ -187,21 +191,21 @@ public class GenerateMap {
     }
 
     @CheckForNull
-    private String getFactionPath(String factionID) {
+    private Path getFactionPath(String factionID) {
         if (factionID.equals("null")) {
             return null;
         }
         String factionFileName = Mapper.getFactionFileName(factionID);
-        String factionFile = ResourceHelper.getInstance().getFactionFile(factionFileName);
+        Path factionFile = ResourceHelper.getInstance().getFactionFile(factionFileName);
         if (factionFile == null) {
             LoggerHandler.log("Could not find faction: " + factionID);
         }
         return factionFile;
     }
 
-    private String getGeneralPath(String tokenID) {
+    private Path getGeneralPath(String tokenID) {
         String fileName = Mapper.getGeneralFileName(tokenID);
-        String filePath = ResourceHelper.getInstance().getGeneralFile(fileName);
+        Path filePath = ResourceHelper.getInstance().getGeneralFile(fileName);
         if (filePath == null) {
             LoggerHandler.log("Could not find general token: " + tokenID);
         }
@@ -250,13 +254,13 @@ public class GenerateMap {
                 y += 2;
                 String faction = player.getFaction();
                 if (faction != null) {
-                    String factionPath = getFactionPath(faction);
+                    Path factionPath = getFactionPath(faction);
                     if (factionPath != null) {
                         BufferedImage bufferedImage;
                         if ("keleres".equals(faction)) {
-                            bufferedImage = resizeImage(ImageIO.read(new File(factionPath)), 0.7f);
+                            bufferedImage = resizeImage(ImageIO.read(newInputStream(factionPath)), 0.7f);
                         } else {
-                            bufferedImage = resizeImage(ImageIO.read(new File(factionPath)), percent);
+                            bufferedImage = resizeImage(ImageIO.read(newInputStream(factionPath)), percent);
                         }
                         graphics.drawImage(bufferedImage, x, y, null);
                     }
@@ -624,9 +628,9 @@ public class GenerateMap {
 
     private void drawPlanetImage(int x, int y, String resourceName) {
         try {
-            String resourcePath = ResourceHelper.getInstance().getPlanetResource(resourceName);
+            Path resourcePath = ResourceHelper.getInstance().getPlanetResource(resourceName);
             @SuppressWarnings("ConstantConditions")
-            BufferedImage resourceBufferedImage = ImageIO.read(new File(resourcePath));
+            BufferedImage resourceBufferedImage = ImageIO.read(newInputStream(resourcePath));
             graphics.drawImage(resourceBufferedImage, x, y, null);
         } catch (Exception e) {
             LoggerHandler.log("Could not display planet: " + resourceName, e);
@@ -635,9 +639,9 @@ public class GenerateMap {
 
     private void drawPAImage(int x, int y, String resourceName) {
         try {
-            String resourcePath = ResourceHelper.getInstance().getPAResource(resourceName);
+            Path resourcePath = ResourceHelper.getInstance().getPAResource(resourceName);
             @SuppressWarnings("ConstantConditions")
-            BufferedImage resourceBufferedImage = ImageIO.read(new File(resourcePath));
+            BufferedImage resourceBufferedImage = ImageIO.read(newInputStream(resourcePath));
             graphics.drawImage(resourceBufferedImage, x, y, null);
         } catch (Exception e) {
             LoggerHandler.log("Could not display play area: " + resourceName, e);
@@ -665,7 +669,7 @@ public class GenerateMap {
         for (Player player : players) {
             try {
                 String controlID = Mapper.getControlID(player.getColor());
-                BufferedImage bufferedImage = resizeImage(ImageIO.read(new File(Mapper.getCCPath(controlID))), 0.7f);
+                BufferedImage bufferedImage = resizeImage(ImageIO.read(newInputStream(Mapper.getCCPath(controlID))), 0.7f);
                 tempWidth = bufferedImage.getWidth();
                 Integer vpCount = userVPs.get(player);
                 if (vpCount == null) {
@@ -766,11 +770,11 @@ public class GenerateMap {
 
             if (player == speaker) {
                 String speakerID = Mapper.getTokenID(Constants.SPEAKER);
-                String speakerFile = ResourceHelper.getInstance().getTokenFile(speakerID);
+                Path speakerFile = ResourceHelper.getInstance().getTokenFile(speakerID);
                 if (speakerFile != null) {
                     BufferedImage bufferedImage = null;
                     try {
-                        bufferedImage = ImageIO.read(new File(speakerFile));
+                        bufferedImage = ImageIO.read(newInputStream(speakerFile));
                     } catch (IOException e) {
                         LoggerHandler.log("Could not read speaker file");
                     }
@@ -791,9 +795,9 @@ public class GenerateMap {
     }
 
     private void drawCCOfPlayer(String ccID, int x, int y, int ccCount, boolean isLetnev, Player player) {
-        String ccPath = Mapper.getCCPath(ccID);
+        Path ccPath = Mapper.getCCPath(ccID);
         try {
-            BufferedImage ccImage = resizeImage(ImageIO.read(new File(ccPath)), 0.75f);
+            BufferedImage ccImage = resizeImage(ImageIO.read(newInputStream(ccPath)), 0.75f);
             int delta = 20;
             if (isLetnev) {
                 for (int i = 0; i < 2; i++) {
@@ -813,8 +817,8 @@ public class GenerateMap {
                 if (!mahactCC.isEmpty()) {
                     for (String ccColor : mahactCC) {
                         lastCCPosition++;
-                        String fleetCCID = Mapper.getCCPath(Mapper.getFleeCCID(ccColor));
-                        BufferedImage ccImageExtra = resizeImage(ImageIO.read(new File(fleetCCID)), 0.75f);
+                        Path fleetCCID = Mapper.getCCPath(Mapper.getFleeCCID(ccColor));
+                        BufferedImage ccImageExtra = resizeImage(ImageIO.read(newInputStream(fleetCCID)), 0.75f);
                         graphics.drawImage(ccImageExtra, x + (delta * lastCCPosition), y, null);
                     }
                 }
@@ -1017,7 +1021,7 @@ public class GenerateMap {
                     if (controlID.contains("null")) {
                         continue;
                     }
-                    BufferedImage bufferedImage = resizeImage(ImageIO.read(new File(Mapper.getCCPath(controlID))), 0.55f);
+                    BufferedImage bufferedImage = resizeImage(ImageIO.read(newInputStream(Mapper.getCCPath(controlID))), 0.55f);
                     Integer vpCount = userVPs.get(player);
                     if (vpCount == null) {
                         vpCount = 0;
@@ -1116,7 +1120,7 @@ public class GenerateMap {
 
     private void addTile(Tile tile, Map map, boolean justTile) {
         try {
-            BufferedImage image = ImageIO.read(new File(tile.getTilePath()));
+            BufferedImage image = ImageIO.read(newInputStream(tile.getTilePath()));
             Point positionPoint = PositionMapper.getTilePosition(tile.getPosition(), map);
             if (positionPoint == null) {
                 System.out.println();
@@ -1177,13 +1181,13 @@ public class GenerateMap {
         int deltaX = 0;//ccList.size() * 20;
         int deltaY = 0;//ccList.size() * 20;
         for (String ccID : ccList) {
-            String ccPath = tile.getCCPath(ccID);
+            Path ccPath = tile.getCCPath(ccID);
             if (ccPath == null) {
 //                LoggerHandler.log("Could not parse cc file for: " + ccID);
                 continue;
             }
             try {
-                image = resizeImage(ImageIO.read(new File(ccPath)), 0.85f);
+                image = resizeImage(ImageIO.read(newInputStream(ccPath)), 0.85f);
             } catch (Exception e) {
 //                LoggerHandler.log("Could not parse cc file for: " + ccID, e);
             }
@@ -1205,14 +1209,14 @@ public class GenerateMap {
                 if (controlID.contains(Constants.SLEEPER)) {
                     continue;
                 }
-                String controlPath = tile.getCCPath(controlID);
+                Path controlPath = tile.getCCPath(controlID);
                 if (controlPath == null) {
                     LoggerHandler.log("Could not parse control token file for: " + controlID);
                     continue;
                 }
                 float scale = 1.00f;
                 try {
-                    image = resizeImage(ImageIO.read(new File(controlPath)), scale);
+                    image = resizeImage(ImageIO.read(newInputStream(controlPath)), scale);
                 } catch (Exception e) {
                     LoggerHandler.log("Could not parse control token file for: " + controlID, e);
                 }
@@ -1250,19 +1254,19 @@ public class GenerateMap {
         });
         for (String tokenID : tokenList) {
             if (tokenID.contains(Constants.SLEEPER) || tokenID.contains(Constants.DMZ_LARGE) || tokenID.contains(Constants.WORLD_DESTROYED)) {
-                String tokenPath = tile.getTokenPath(tokenID);
+                Path tokenPath = tile.getTokenPath(tokenID);
                 if (tokenPath == null) {
                     LoggerHandler.log("Could not sleeper token file for: " + tokenID);
                     continue;
                 }
                 float scale = 0.85f;
-                if (tokenPath.contains(Constants.DMZ_LARGE)) {
+                if (tokenPath.toString().contains(Constants.DMZ_LARGE)) {
                     scale = 0.6f;
-                } else if (tokenPath.contains(Constants.WORLD_DESTROYED)) {
+                } else if (tokenPath.toString().contains(Constants.WORLD_DESTROYED)) {
                     scale = 0.8f;
                 }
                 try {
-                    image = resizeImage(ImageIO.read(new File(tokenPath)), scale);
+                    image = resizeImage(ImageIO.read(newInputStream(tokenPath)), scale);
                 } catch (Exception e) {
                     LoggerHandler.log("Could not parse sleeper token file for: " + tokenID, e);
                 }
@@ -1293,18 +1297,18 @@ public class GenerateMap {
                 if (tokenID.contains(Constants.SLEEPER) || tokenID.contains(Constants.DMZ_LARGE) || tokenID.contains(Constants.WORLD_DESTROYED)) {
                     continue;
                 }
-                String tokenPath = tile.getTokenPath(tokenID);
+                Path tokenPath = tile.getTokenPath(tokenID);
                 if (tokenPath == null) {
                     LoggerHandler.log("Could not parse token file for: " + tokenID);
                     continue;
                 }
                 float scale = 1.00f;
                 try {
-                    image = resizeImage(ImageIO.read(new File(tokenPath)), scale);
+                    image = resizeImage(ImageIO.read(newInputStream(tokenPath)), scale);
                 } catch (Exception e) {
                     LoggerHandler.log("Could not parse control token file for: " + tokenID, e);
                 }
-                if (tokenPath.contains(Constants.DMZ_LARGE) || tokenPath.contains(Constants.WORLD_DESTROYED)) {
+                if (tokenPath.toString().contains(Constants.DMZ_LARGE) || tokenPath.toString().contains(Constants.WORLD_DESTROYED)) {
                     graphics.drawImage(image, tileX + centerPosition.x - (image.getWidth() / 2), tileY + centerPosition.y - (image.getHeight() / 2), null);
                 } else {
                     Point position = planetTokenPosition.getPosition(tokenID);
@@ -1331,13 +1335,13 @@ public class GenerateMap {
         int x = tileX + centerPosition.x;
         int y = tileY + centerPosition.y - (tokenList.size() > 1 ? 35 : 0);
         for (String tokenID : tokenList) {
-            String tokenPath = tile.getTokenPath(tokenID);
+            Path tokenPath = tile.getTokenPath(tokenID);
             if (tokenPath == null) {
                 LoggerHandler.log("Could not parse token file for: " + tokenID);
                 continue;
             }
             try {
-                image = resizeImage(ImageIO.read(new File(tokenPath)), 0.85f);
+                image = resizeImage(ImageIO.read(newInputStream(tokenPath)), 0.85f);
             } catch (Exception e) {
                 LoggerHandler.log("Could not parse control token file for: " + tokenID, e);
             }
@@ -1361,21 +1365,21 @@ public class GenerateMap {
         }
         int index = 0;
         for (String tokenID : tokenList) {
-            String tokenPath = tile.getTokenPath(tokenID);
+            Path tokenPath = tile.getTokenPath(tokenID);
             if (tokenPath == null) {
                 LoggerHandler.log("Could not parse token file for: " + tokenID);
                 continue;
             }
             try {
-                float scale = tokenPath.contains(Constants.MIRAGE) ? 1.0f : 0.80f;
-                image = resizeImage(ImageIO.read(new File(tokenPath)), scale);
+                float scale = tokenPath.toString().contains(Constants.MIRAGE) ? 1.0f : 0.80f;
+                image = resizeImage(ImageIO.read(newInputStream(tokenPath)), scale);
             } catch (Exception e) {
                 LoggerHandler.log("Could not parse control token file for: " + tokenID, e);
             }
 
-            if (tokenPath.contains(Constants.MIRAGE)) {
+            if (tokenPath.toString().contains(Constants.MIRAGE)) {
                 graphics.drawImage(image, tileX + Constants.MIRAGE_POSITION.x, tileY + Constants.MIRAGE_POSITION.y, null);
-            } else if (tokenPath.contains(Constants.SLEEPER)) {
+            } else if (tokenPath.toString().contains(Constants.SLEEPER)) {
                 graphics.drawImage(image, tileX + centerPosition.x - (image.getWidth() / 2), tileY + centerPosition.y - (image.getHeight() / 2), null);
             } else {
                 if (spaceTokenPositions.size() > index) {
@@ -1412,7 +1416,7 @@ public class GenerateMap {
         PlanetTokenPosition planetTokenPosition = PositionMapper.getPlanetTokenPosition(unitHolder.getName());
         BufferedImage dmgImage = null;
         try {
-            BufferedImage read = ImageIO.read(new File(Helper.getDamagePath()));
+            BufferedImage read = ImageIO.read(newInputStream(Helper.getDamagePath()));
             dmgImage = resizeImage(read, 0.8f);
         } catch (IOException e) {
             LoggerHandler.log("Could not parse damage token file.", e);
@@ -1441,7 +1445,7 @@ public class GenerateMap {
 
 
             try {
-                image = resizeImage(ImageIO.read(new File(tile.getUnitPath(unitID))), scaleOfUnit);
+                image = resizeImage(ImageIO.read(newInputStream(tile.getUnitPath(unitID))), scaleOfUnit);
             } catch (Exception e) {
                 LoggerHandler.log("Could not parse unit file for: " + unitID, e);
             }

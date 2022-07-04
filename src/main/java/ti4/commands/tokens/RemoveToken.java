@@ -15,6 +15,7 @@ import ti4.map.Tile;
 import ti4.map.UnitHolder;
 import ti4.message.MessageHelper;
 
+import java.nio.file.Path;
 import java.util.*;
 
 public class RemoveToken extends AddRemoveToken {
@@ -27,7 +28,7 @@ public class RemoveToken extends AddRemoveToken {
             tokenName = AliasHandler.resolveAttachment(tokenName);
 
             String tokenID = Mapper.getAttachmentID(tokenName);
-            String tokenPath = tile.getAttachmentPath(tokenID);
+            Path tokenPath = tile.getAttachmentPath(tokenID);
             if (tokenPath != null) {
                 removeToken(event, tile, tokenID, true);
                 activeMap.clearPlanetsCache();
@@ -88,7 +89,7 @@ public class RemoveToken extends AddRemoveToken {
             }
         }
     }
-
+ 
     @Override
     protected String getActionDescription() {
         return "Remove token from tile/planet";

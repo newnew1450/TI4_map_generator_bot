@@ -9,6 +9,10 @@ import ti4.helpers.Storage;
 import ti4.message.MessageHelper;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class HelpAction implements Command {
 
@@ -25,14 +29,21 @@ public class HelpAction implements Command {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         MessageHelper.sendMessageToChannel(event.getChannel(), "Help information is in help file");
-        String helpFile = ResourceHelper.getInstance().getHelpFile("help.txt");
+        Path helpFile = ResourceHelper.getInstance().getHelpFile("help.txt");
         if (helpFile != null){
-            File file = new File(helpFile);
-            if (!file.exists()){
-                MessageHelper.sendMessageToChannel(event.getChannel(), "Could not find help file");
-                return;
+            InputStream file;
+            try {
+                file = Files.newInputStream(helpFile);
+                if (file.available()==0){
+                    MessageHelper.sendMessageToChannel(event.getChannel(), "Could not find help file");
+                    return;
+                }
+                MessageHelper.sendFileToChannel(event.getChannel(), file);
+            } catch (IOException e) {
+                // shavnote = fixthis
+                e.printStackTrace();
             }
-            MessageHelper.sendFileToChannel(event.getChannel(), file);
+
         } else {
             MessageHelper.sendMessageToChannel(event.getChannel(), "Could not find help file");
         }

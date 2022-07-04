@@ -20,6 +20,7 @@ import ti4.map.Tile;
 import ti4.message.MessageHelper;
 
 import java.io.File;
+import java.nio.file.Path;
 
 abstract public class AddRemoveTile implements Command {
     @Override
@@ -56,7 +57,7 @@ abstract public class AddRemoveTile implements Command {
         }
 
         String tileName = Mapper.getTileID(planetTileName);
-        String tilePath = ResourceHelper.getInstance().getTileFile(tileName);
+        Path tilePath = ResourceHelper.getInstance().getTileFile(tileName);
         if (tilePath == null) {
             MessageHelper.replyToMessage(event, "Could not find tile: " + planetTileName);
             return null;

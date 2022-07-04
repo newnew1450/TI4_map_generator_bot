@@ -8,6 +8,7 @@ import ti4.helpers.LoggerHandler;
 
 import javax.annotation.CheckForNull;
 import java.awt.*;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
@@ -43,8 +44,8 @@ public class Tile {
     }
 
     @CheckForNull
-    public String getUnitPath(String unitID) {
-        String unitPath = ResourceHelper.getInstance().getUnitFile(unitID);
+    public Path getUnitPath(String unitID) {
+        Path unitPath = ResourceHelper.getInstance().getUnitFile(unitID);
         if (unitPath == null) {
             LoggerHandler.log("Could not find unit: " + unitID);
             return null;
@@ -53,13 +54,13 @@ public class Tile {
     }
 
     @CheckForNull
-    public String getCCPath(String ccID) {
+    public Path getCCPath(String ccID) {
        return Mapper.getCCPath(ccID);
     }
 
     @CheckForNull
-    public String getAttachmentPath(String tokenID) {
-        String tokenPath = ResourceHelper.getInstance().getAttachmentFile(tokenID);
+    public Path getAttachmentPath(String tokenID) {
+        Path tokenPath = ResourceHelper.getInstance().getAttachmentFile(tokenID);
         if (tokenPath == null) {
 //            LoggerHandler.log("Could not find attachment token: " + tokenID);
             return null;
@@ -68,7 +69,7 @@ public class Tile {
     }
 
     @CheckForNull
-    public String getTokenPath(String tokenID) {
+    public Path getTokenPath(String tokenID) {
         return Mapper.getTokenPath(tokenID);
     }
 
@@ -197,9 +198,9 @@ public class Tile {
         return position != null ? position.toLowerCase() : null;
     }
 
-    public String getTilePath() {
+    public Path getTilePath() {
         String tileName = Mapper.getTileID(tileID);
-        String tilePath = ResourceHelper.getInstance().getTileFile(tileName);
+        Path tilePath = ResourceHelper.getInstance().getTileFile(tileName);
         if (tilePath == null) {
             LoggerHandler.log("Could not find tile: " + tileID);
         }
