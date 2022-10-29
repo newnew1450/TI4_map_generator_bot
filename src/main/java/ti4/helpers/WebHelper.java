@@ -1,6 +1,7 @@
 package ti4.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pngencoder.PngEncoder;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -82,20 +83,11 @@ public class WebHelper {
                     .contentType("image/png")
                     .build();
 
-            ImageWriter imageWriter = ImageIO.getImageWritersByFormatName("png").next();
-            imageWriter.setOutput(ImageIO.createImageOutputStream(out));
-            ImageWriteParam defaultWriteParam = imageWriter.getDefaultWriteParam();
-            if (defaultWriteParam.canWriteCompressed()) {
-                defaultWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                defaultWriteParam.setCompressionQuality(0.01f);
-            }
 
-            try {
-                imageWriter.write(null, new IIOImage(img, null, null), defaultWriteParam);
-            } catch (IOException e) {
-                BotLogger.log("Could not write image to web server");
-                throw new RuntimeException(e);
-            }
+            new PngEncoder()
+                    .withBufferedImage(img)
+                    .withCompressionLevel(1)
+                    .toStream(out);
 
             s3.putObject(request, RequestBody.fromBytes(out.toByteArray()));
         } catch (Exception e) {
