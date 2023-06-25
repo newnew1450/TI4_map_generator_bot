@@ -37,6 +37,7 @@ import ti4.commands.statistics.StatisticsCommand;
 import ti4.commands.status.StatusCommand;
 import ti4.commands.tokens.*;
 import ti4.commands.units.*;
+import ti4.generator.InstallationHelper;
 import ti4.generator.Mapper;
 import ti4.generator.PositionMapper;
 import ti4.generator.TileHelper;
@@ -95,6 +96,7 @@ public class MapGenerator {
         MessageHelper.sendMessageToBotLogWebhook("BOT IS STARTING UP");
 
         TileHelper.init();
+        InstallationHelper.init();
         PositionMapper.init();
         Mapper.init();
         AliasHandler.init();

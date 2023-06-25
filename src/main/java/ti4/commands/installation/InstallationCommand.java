@@ -106,6 +106,7 @@ public class InstallationCommand implements Command {
         Collection<InstallationSubcommandData> subcommands = new HashSet<>();
         subcommands.add(new AddSweepToken());
         subcommands.add(new RemoveSweepToken());
+        subcommands.add(new AddInstallation());
         return subcommands;
     }
 

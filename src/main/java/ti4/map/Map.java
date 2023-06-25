@@ -1,5 +1,6 @@
 package ti4.map;
 
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,6 +27,7 @@ import ti4.helpers.Emojis;
 import ti4.helpers.Helper;
 import ti4.message.BotLogger;
 import ti4.message.MessageHelper;
+import ti4.model.Installation;
 
 import java.awt.*;
 import java.lang.reflect.Field;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 
 import java.util.*;
 
+@Data
 public class Map {
 
     private String ownerID;
@@ -61,6 +64,8 @@ public class Map {
 
     @JsonIgnore
     private HashMap<String, UnitHolder> planets = new HashMap<>();
+    @JsonIgnore
+    private HashMap<String, Installation> installations = new HashMap<>();
 
     @Nullable
     private DisplayType displayTypeForced = null;
@@ -283,6 +288,10 @@ public class Map {
             }
         }
         return returnValue;
+    }
+
+    public void addInstallation(String tile, Installation installation) {
+        installations.put(tile, installation);
     }
 
     public String getLatestCommand() {

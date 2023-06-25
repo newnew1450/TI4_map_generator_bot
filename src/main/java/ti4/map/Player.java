@@ -1,5 +1,6 @@
 package ti4.map;
 
+import lombok.Data;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
@@ -13,6 +14,7 @@ import ti4.helpers.AliasHandler;
 import ti4.helpers.Constants;
 import ti4.message.BotLogger;
 import ti4.model.FactionModel;
+import ti4.model.Installation;
 import ti4.model.PublicObjectiveModel;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.*;
 
+@Data
 public class Player {
 
     private String userID;
@@ -68,6 +71,7 @@ public class Player {
     private List<String> techs = new ArrayList<>();
     private List<String> exhaustedTechs = new ArrayList<>();
     private List<String> planets = new ArrayList<>();
+    private Map<String, Installation> installations = new HashMap<>();
     private List<String> exhaustedPlanets = new ArrayList<>();
     private List<String> exhaustedPlanetsAbilities = new ArrayList<>();
     private List<String> mahactCC = new ArrayList<>();
@@ -194,6 +198,14 @@ public class Player {
             return true; 
         }
         return false;
+    }
+
+    public void addInstallation(String tile, Installation installation) {
+        installations.put(tile, installation);
+    }
+
+    public void removeInstallation(String tile) {
+        installations.remove(tile);
     }
 
     public void setCardsInfoThreadID(String cardsInfoThreadID) {

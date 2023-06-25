@@ -16,11 +16,16 @@ import ti4.map.Map;
 import ti4.map.*;
 import ti4.message.BotLogger;
 import ti4.message.MessageHelper;
+import ti4.model.Installation;
+import ti4.model.InstallationModel;
 import ti4.model.PromissoryNoteModel;
 import ti4.model.TechnologyModel;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineBreakMeasurer;
+import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -28,6 +33,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -1283,8 +1290,71 @@ public class GenerateMap {
                 BotLogger.log("could not print out planet: " + planet.toLowerCase(), e);
             }
         }
+        printInstallationInfo(player, x, y-2, deltaX);
 
         return x + deltaX + 20;
+    }
+
+    private void printInstallationInfo(Player player, int x, int y, int xOffset) {
+        int padding = 4;
+        int installationRectWidth = 250;
+
+        for(Installation installation : player.getInstallations().values()){
+            Color mainColor = installation.isExhausted() ? Color.GRAY : Color.WHITE;
+            graphics.setColor(mainColor);
+            graphics.drawRect(x + xOffset, y, installationRectWidth, 152);
+            BufferedImage image = null;
+            try {
+                image = resizeImage(ImageIO.read(new File(ResourceHelper.getInstance().getTokenFile(Constants.INSTALLATION_TOKEN))), 0.5f);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            graphics.drawImage(image, x + xOffset + padding, y + padding, null); //Token icon
+            drawCenteredString(graphics, //Abbreviation on top of token icon
+                    installation.getModel().getAbbreviation(),
+                    new Rectangle(x + xOffset + padding, y + padding, 50, 50),
+                    Storage.getFont20());
+
+            graphics.setFont(Storage.getFont20());
+            graphics.setColor(Color.GRAY);
+            graphics.drawString(installation.getTile(), //Tile
+                    x + xOffset + padding,
+                    y + 50 + padding + graphics.getFontMetrics(Storage.getFont20()).getHeight());
+
+            graphics.setColor(mainColor);
+            graphics.setFont(Storage.getFont32());
+            graphics.drawString(installation.getModel().getName(), //Installation name
+                    x + xOffset + padding + 50 + padding,
+                    y + graphics.getFontMetrics(Storage.getFont32()).getHeight() - 8);
+
+            drawInstallationAbilityText(x, y, xOffset, installation.getModel().getEffect()); //Installation text
+
+            xOffset += installationRectWidth;
+        };
+    }
+
+    private void drawInstallationAbilityText(int x, int y, int xOffset, String abilityText) {
+        int padding = 4;
+        int installationRectWidth = 250;
+        float dy = 5f;
+        Graphics2D g2 = (Graphics2D) graphics;
+        FontRenderContext frc = g2.getFontRenderContext();
+
+        AttributedString text = new AttributedString(abilityText);
+        AttributedCharacterIterator paragraph = text.getIterator();
+
+        LineBreakMeasurer measurer = new LineBreakMeasurer(paragraph, frc);
+        measurer.setPosition(paragraph.getBeginIndex());
+        float wrappingWidth = installationRectWidth - 2*padding;
+
+        while (measurer.getPosition() < paragraph.getEndIndex()) {
+            TextLayout layout = measurer.nextLayout(wrappingWidth);
+            dy += layout.getAscent();
+            int abilityTextHeight = y + padding + 50 + padding + graphics.getFontMetrics(Storage.getFont20()).getHeight() + padding;
+
+            layout.draw(g2, x + xOffset + padding, abilityTextHeight + dy);
+            dy += layout.getDescent() + layout.getLeading();
+        }
     }
 
     private int techInfo(Player player, int x, int y, Map activeMap) {
@@ -2600,7 +2670,7 @@ public class GenerateMap {
 
                 if (spaceUnitHolder != null) {
                     addSleeperToken(tile, tileGraphics, spaceUnitHolder, GenerateMap::isValidCustodianToken);
-                    addToken(tile, tileGraphics, spaceUnitHolder);
+                    addToken(tile, tileGraphics, spaceUnitHolder, activeMap);
                     unitHolders.remove(spaceUnitHolder);
                     unitHolders.add(spaceUnitHolder);
                 }
@@ -2983,7 +3053,7 @@ public class GenerateMap {
         }
     }
 
-    private static void addToken(Tile tile, Graphics tileGraphics, UnitHolder unitHolder) {
+    private static void addToken(Tile tile, Graphics tileGraphics, UnitHolder unitHolder, Map activeMap) {
         HashSet<String> tokenList = unitHolder.getTokenList();
         Point centerPosition = unitHolder.getHolderCenterPosition();
         int x = 0;
@@ -3012,9 +3082,19 @@ public class GenerateMap {
                     if (spaceTokenPositions.size() > index) {
                         Point point = spaceTokenPositions.get(index);
                         tileGraphics.drawImage(tokenImage, TILE_PADDING + x + point.x, TILE_PADDING + y + point.y, null);
+                        if(tokenPath.contains(Constants.INSTALLATION))
+                            drawCenteredStringStatic(tileGraphics,
+                                    activeMap.getInstallations().get(tile.getPosition()).getModel().getAbbreviation(),
+                                    new Rectangle(TILE_PADDING + x + point.x, TILE_PADDING + y + point.y, 100, 100),
+                                    Storage.getFont32());
                         index++;
                     } else {
                         tileGraphics.drawImage(tokenImage, TILE_PADDING + x + deltaX, TILE_PADDING + y + deltaY, null);
+                        if(tokenPath.contains(Constants.INSTALLATION))
+                            drawCenteredStringStatic(tileGraphics,
+                                    activeMap.getInstallations().get(tile.getPosition()).getModel().getAbbreviation(),
+                                    new Rectangle(TILE_PADDING + x + deltaX, TILE_PADDING + y + deltaY, 100, 100),
+                                    Storage.getFont32());
                         deltaX += 30;
                         deltaY += 30;
                     }
@@ -3205,6 +3285,19 @@ public class GenerateMap {
      * @param rect The Rectangle to center the text in.
      */
     public void drawCenteredString(Graphics g, String text, Rectangle rect, Font font) {
+        // Get the FontMetrics
+        FontMetrics metrics = g.getFontMetrics(font);
+        // Determine the X coordinate for the text
+        int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
+        // Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
+        int y = rect.y + ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
+        // Set the font
+        g.setFont(font);
+        // Draw the String
+        g.drawString(text, x, y);
+    }
+
+    public static void drawCenteredStringStatic(Graphics g, String text, Rectangle rect, Font font) {
         // Get the FontMetrics
         FontMetrics metrics = g.getFontMetrics(font);
         // Determine the X coordinate for the text

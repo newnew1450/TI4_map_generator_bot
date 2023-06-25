@@ -713,6 +713,9 @@ public class Constants {
 
     //Installation constants
     public static final String INSTALLATION = "installation";
+    public static final String INSTALLATION_ID = "installation_id";
+    public static final String INSTALLATION_TOKEN = "token_installation.png";
+    public static final String ADD_INSTALLATION = "add_installation";
     public static final String ADD_SWEEP_TOKEN = "add_sweep_token";
     public static final String REMOVE_SWEEP_TOKEN = "remove_sweep_token";
 

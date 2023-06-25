@@ -55,7 +55,12 @@ public abstract class PlanetAddRemove extends PlayerSubcommandData{
         planetOptions.add(event.getOption(Constants.PLANET5));
         planetOptions.add(event.getOption(Constants.PLANET6));
 
-        LinkedHashSet<String> planetIDs = new LinkedHashSet<>(planetOptions.stream().filter(Objects::nonNull).map(p -> p.getAsString()).map(s -> AliasHandler.resolvePlanet(StringUtils.substringBefore(s, " (").replace(" ", ""))).toList());
+        LinkedHashSet<String> planetIDs = new LinkedHashSet<>(planetOptions.stream()
+                .filter(Objects::nonNull)
+                .map(OptionMapping::getAsString)
+                .map(s -> AliasHandler.resolvePlanet(StringUtils.substringBefore(s, " (")
+                        .replace(" ", "")))
+                .toList());
 
         sendMessage(getActionHeaderMessage(activeMap, player) + resolveSpendAs(event, planetIDs) + ":");
 
