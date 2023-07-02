@@ -146,7 +146,7 @@ public class AutoCompleteProvider {
             case Constants.RELIC -> {
                 String enteredValue = event.getFocusedOption().getValue().toLowerCase();
                 HashMap<String, String> relics = Mapper.getRelics();
-                if (activeMap != null && activeMap.isAbsolMode()){
+                if (activeMap != null && activeMap.hasAbsolRelics()){
                     List<Command.Choice> options = relics.entrySet().stream()
                             .filter(value -> value.getValue().toLowerCase().contains(enteredValue))
                             .filter(value -> value.getKey().startsWith("absol_") || value.getKey().equals("enigmaticdevice"))

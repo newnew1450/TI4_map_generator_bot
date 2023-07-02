@@ -11,6 +11,7 @@ import ti4.helpers.Constants;
 import ti4.helpers.DisplayType;
 import ti4.map.Map;
 import ti4.message.MessageHelper;
+import ti4.model.RelicDeckModel;
 
 public class Setup extends GameSubcommandData {
     public Setup() {
@@ -23,16 +24,17 @@ public class Setup extends GameSubcommandData {
         addOptions(new OptionData(OptionType.STRING, Constants.COMMUNITY_MODE, "Set to YES if want to allow Community Mode for map, FALSE to disable it").setRequired(false));
         addOptions(new OptionData(OptionType.STRING, Constants.ALLIANCE_MODE, "Set to YES if want to allow Alliance Mode for map, FALSE to disable it").setRequired(false));
         addOptions(new OptionData(OptionType.STRING, Constants.FOW_MODE, "Set to YES if want to allow FoW Mode for map, FALSE to disable it").setRequired(false));
-        addOptions(new OptionData(OptionType.BOOLEAN, Constants.ABSOL_MODE, "True to switch out the PoK Agendas & Relics for Absol's - do NOT change this mid-game"));
+        //addOptions(new OptionData(OptionType.BOOLEAN, Constants.ABSOL_MODE, "True to switch out the PoK Agendas & Relics for Absol's - do NOT change this mid-game"));
         addOptions(new OptionData(OptionType.BOOLEAN, Constants.DISCORDANT_STARS_MODE, "True to add the Discordant Stars factions to the pool."));
         addOptions(new OptionData(OptionType.STRING, Constants.LARGE_TEXT, "Small/medium/large, default small").setAutoComplete(true));
         addOptions(new OptionData(OptionType.STRING, Constants.STRAT_PINGS, "Set to YES if want to allow strategy card follow reminders, FALSE to disable it").setRequired(false));
         addOptions(new OptionData(OptionType.INTEGER, Constants.AUTO_PING, "Hours between auto pings. Min 1. Enter 0 to turn off."));
         addOptions(new OptionData(OptionType.BOOLEAN, Constants.BETA_TEST_MODE, "True to test new features that may not be released to all games yet."));
         addOptions(new OptionData(OptionType.STRING, Constants.VERBOSITY, "Verbosity of bot output. Verbose/Average/Minimal  (Default = Verbose)").setAutoComplete(true));
-       // addOptions(new OptionData(OptionType.STRING, Constants.HOMEBREW_SC_MODE, "Disable SC buttons. ON to turn on, or OFF to turn off."));
+        //addOptions(new OptionData(OptionType.STRING, Constants.HOMEBREW_SC_MODE, "Disable SC buttons. ON to turn on, or OFF to turn off."));
         addOptions(new OptionData(OptionType.STRING, Constants.CC_N_PLASTIC_LIMIT, "Pings for exceeding limits. ON to turn on. OFF to turn off"));
         addOptions(new OptionData(OptionType.STRING, Constants.AGENDA_DECK_TYPE, "Which agenda deck should be active - PoK (default), base game, absol."));
+        addOptions(new OptionData(OptionType.STRING, Constants.RELIC_DECK_TYPE, "Which relic deck should be active - PoK (default), base game, Absol, Lost Relics of Ixth."));
     }
 
     @Override
@@ -205,5 +207,9 @@ public class Setup extends GameSubcommandData {
         String agendaDeckType = event.getOption(Constants.AGENDA_DECK_TYPE, null, OptionMapping::getAsString);
         getActiveMap().setAgendaDeck(StringUtils.isBlank(agendaDeckType) ? AgendaDeckModel.AgendaDeckOptions.POK : AgendaDeckModel.getAgendaDeckFromString(agendaDeckType));
         getActiveMap().resetAgendas();
+
+        String relicDeckType = event.getOption(Constants.RELIC_DECK_TYPE, null, OptionMapping::getAsString);
+        getActiveMap().setRelicDeck(StringUtils.isBlank(relicDeckType) ? RelicDeckModel.RelicDeckOptions.POK : RelicDeckModel.getRelicDeckFromString(relicDeckType));
+        getActiveMap().resetRelics();
     }
 }

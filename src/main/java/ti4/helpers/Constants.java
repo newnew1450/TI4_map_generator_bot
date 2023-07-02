@@ -703,6 +703,7 @@ public class Constants {
     public static final String HACK_ELECTION_STATUS = "hack_election_status";
     public static final String CC_N_PLASTIC_LIMIT= "cc_n_plastic_limit";
     public static final String AGENDA_DECK_TYPE = "agenda_deck_type";
+    public static final String RELIC_DECK_TYPE = "relic_deck_type";
     public static final String LIST_MY_GAMES = "list_my_games";
     public static final String RELIC_SEND = "relic_send";
     public static final String FOLLOWED_SC = "followed_sc";

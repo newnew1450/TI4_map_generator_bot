@@ -28,6 +28,7 @@ import ti4.helpers.Helper;
 import ti4.message.BotLogger;
 import ti4.message.MessageHelper;
 import ti4.model.AgendaDeckModel;
+import ti4.model.RelicDeckModel;
 
 import java.awt.*;
 import java.lang.reflect.Field;
@@ -102,6 +103,8 @@ public class Map {
     private boolean absolMode = false;
     @ExportableField
     private AgendaDeckModel.AgendaDeckOptions agendaDeck;
+    @ExportableField
+    private RelicDeckModel.RelicDeckOptions relicDeck;
     @ExportableField
     private boolean discordantStarsMode = false;
     private String outputVerbosity = Constants.VERBOSITY_VERBOSE;
@@ -222,6 +225,7 @@ public class Map {
         Collections.shuffle(this.publicObjectives2);
 
         this.agendaDeck = AgendaDeckModel.AgendaDeckOptions.POK;
+        this.relicDeck = RelicDeckModel.RelicDeckOptions.POK;
 
         resetAgendas();
         resetRelics();
@@ -509,6 +513,10 @@ public class Map {
 
     public boolean hasAbsolAgendas() {
         return absolMode || agendaDeck.equals(AgendaDeckModel.AgendaDeckOptions.ABSOL);
+    }
+
+    public boolean hasAbsolRelics() {
+        return absolMode || relicDeck.equals(RelicDeckModel.RelicDeckOptions.ABSOL);
     }
 
     public boolean isDiscordantStarsMode() {
@@ -1932,11 +1940,12 @@ public class Map {
     }
 
     public void resetRelics() {
-        if (this.absolMode) {
+        this.relics = Mapper.getDecks().get(this.relicDeck.getDeckName()).getShuffledCardList();
+        /*if (this.absolMode) {
             this.relics = Mapper.getDecks().get("relics_absol").getShuffledCardList();
         } else {
             this.relics = Mapper.getDecks().get("relics_pok").getShuffledCardList();
-        }
+        }*/
         Collections.shuffle(this.relics);
     }
 
