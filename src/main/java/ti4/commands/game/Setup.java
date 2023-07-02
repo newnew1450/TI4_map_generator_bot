@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
+import org.apache.commons.lang3.StringUtils;
+import ti4.model.AgendaDeckModel;
 import ti4.helpers.Constants;
 import ti4.helpers.DisplayType;
 import ti4.map.Map;
@@ -29,8 +31,8 @@ public class Setup extends GameSubcommandData {
         addOptions(new OptionData(OptionType.BOOLEAN, Constants.BETA_TEST_MODE, "True to test new features that may not be released to all games yet."));
         addOptions(new OptionData(OptionType.STRING, Constants.VERBOSITY, "Verbosity of bot output. Verbose/Average/Minimal  (Default = Verbose)").setAutoComplete(true));
        // addOptions(new OptionData(OptionType.STRING, Constants.HOMEBREW_SC_MODE, "Disable SC buttons. ON to turn on, or OFF to turn off."));
-       addOptions(new OptionData(OptionType.STRING, Constants.CC_N_PLASTIC_LIMIT, "Pings for exceeding limits. ON to turn on. OFF to turn off"));
-
+        addOptions(new OptionData(OptionType.STRING, Constants.CC_N_PLASTIC_LIMIT, "Pings for exceeding limits. ON to turn on. OFF to turn off"));
+        addOptions(new OptionData(OptionType.STRING, Constants.AGENDA_DECK_TYPE, "Which agenda deck should be active - PoK (default), base game, absol."));
     }
 
     @Override
@@ -199,5 +201,8 @@ public class Setup extends GameSubcommandData {
 
         String verbosity = event.getOption(Constants.VERBOSITY, null, OptionMapping::getAsString);
         if (verbosity != null && Constants.VERBOSITY_OPTIONS.contains(verbosity)) activeMap.setOutputVerbosity(verbosity);
+
+        String agendaDeckType = event.getOption(Constants.AGENDA_DECK_TYPE, null, OptionMapping::getAsString);
+        getActiveMap().setAgendaDeck(StringUtils.isBlank(agendaDeckType) ? AgendaDeckModel.AgendaDeckOptions.POK : AgendaDeckModel.getAgendaDeckFromString(agendaDeckType));
     }
 }

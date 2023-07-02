@@ -1,5 +1,6 @@
 package ti4.map;
 
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,6 +27,7 @@ import ti4.helpers.Emojis;
 import ti4.helpers.Helper;
 import ti4.message.BotLogger;
 import ti4.message.MessageHelper;
+import ti4.model.AgendaDeckModel;
 
 import java.awt.*;
 import java.lang.reflect.Field;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 
 import java.util.*;
 
+@Data
 public class Map {
 
     private String ownerID;
@@ -97,6 +100,8 @@ public class Map {
     private String largeText = "small";
     @ExportableField
     private boolean absolMode = false;
+    @ExportableField
+    private AgendaDeckModel.AgendaDeckOptions agendaDeck;
     @ExportableField
     private boolean discordantStarsMode = false;
     private String outputVerbosity = Constants.VERBOSITY_VERBOSE;
@@ -1312,11 +1317,13 @@ public class Map {
     }
 
     public void resetAgendas() {
+        this.agendas = Mapper.getDecks().get(this.agendaDeck.getDeckName()).getShuffledCardList();
+        /*
         if (this.absolMode) {
             this.agendas = Mapper.getDecks().get("agendas_absol").getShuffledCardList();
         } else {
             this.agendas = Mapper.getDecks().get("agendas_pok").getShuffledCardList();
-        }
+        }*/
         Collections.shuffle(this.agendas);
         discardAgendas = new LinkedHashMap<>();
     }
