@@ -67,6 +67,7 @@ import ti4.map.MapSaveLoadManager;
 import ti4.map.Player;
 import ti4.message.BotLogger;
 import ti4.message.MessageHelper;
+import ti4.model.AgendaDeckModel;
 import ti4.model.AgendaModel;
 import ti4.model.TechnologyModel;
 import ti4.map.Tile;
@@ -1050,7 +1051,7 @@ public class ButtonListener extends ListenerAdapter {
                 String resMessage = "Please hold while people resolve shenanigans. " + losers.size()
                         + " players have the opportunity to play deadly plot.";
                 if ((!activeMap.isACInDiscard("Bribery") || !activeMap.isACInDiscard("Deadly Plot"))
-                        && (losers.size() > 0 || activeMap.isAbsolMode())) {
+                        && (losers.size() > 0 || activeMap.hasAbsolAgendas())) {
                     Button noDeadly = Button.primary("genericReact1", "No Deadly Plot");
                     Button noBribery = Button.primary("genericReact2", "No Bribery");
                     List<Button> deadlyActionRow = List.of(noBribery, noDeadly);

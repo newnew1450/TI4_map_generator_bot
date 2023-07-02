@@ -21,6 +21,11 @@ public class AgendaDeckModel {
         AgendaDeckOptions(String deckName) {
             this.deckName = deckName;
         }
+
+        @Override
+        public String toString() {
+            return super.toString().toLowerCase();
+        }
     }
     public static AgendaDeckOptions getAgendaDeckFromString(String deck) {
         Map<String, AgendaDeckOptions> allAgendaDecks = Arrays.stream(AgendaDeckOptions.values())

@@ -204,5 +204,6 @@ public class Setup extends GameSubcommandData {
 
         String agendaDeckType = event.getOption(Constants.AGENDA_DECK_TYPE, null, OptionMapping::getAsString);
         getActiveMap().setAgendaDeck(StringUtils.isBlank(agendaDeckType) ? AgendaDeckModel.AgendaDeckOptions.POK : AgendaDeckModel.getAgendaDeckFromString(agendaDeckType));
+        getActiveMap().resetAgendas();
     }
 }

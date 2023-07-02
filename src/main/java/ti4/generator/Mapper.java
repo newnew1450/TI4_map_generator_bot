@@ -128,10 +128,10 @@ public class Mapper {
         if (Mapper.isColorValid(color) && Mapper.isFaction(faction)) {
             for (PromissoryNoteModel pn : promissoryNotes.values()) {
                 if (pn.getColour().equals(color) || pn.getFaction().equalsIgnoreCase(faction)) {
-                    if (activeMap.isAbsolMode() && pn.getAlias().endsWith("_ps") && !pn.getSource().equalsIgnoreCase("Absol")) {
+                    if (activeMap.hasAbsolAgendas() && pn.getAlias().endsWith("_ps") && !pn.getSource().equalsIgnoreCase("Absol")) {
                         continue;
                     }
-                    if (!activeMap.isAbsolMode() && pn.getAlias().endsWith("_ps") && pn.getSource().equalsIgnoreCase("Absol")) {
+                    if (!activeMap.hasAbsolAgendas() && pn.getAlias().endsWith("_ps") && pn.getSource().equalsIgnoreCase("Absol")) {
                         continue;
                     }
                     pnList.add(pn.getAlias());

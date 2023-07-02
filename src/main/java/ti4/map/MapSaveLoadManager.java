@@ -1558,7 +1558,7 @@ public class MapSaveLoadManager {
                         StringTokenizer pnInfo = new StringTokenizer(pnToken.nextToken(), ",");
                         String id = pnInfo.nextToken();
                         //MIGRATE ABSOL'S PS
-                        if (activeMap.isAbsolMode() && id.endsWith("_ps") && !id.startsWith("absol_")) id = "absol_" + id;
+                        if (activeMap.hasAbsolAgendas() && id.endsWith("_ps") && !id.startsWith("absol_")) id = "absol_" + id;
                         //END MIGRATE
                         Integer index = Integer.parseInt(pnInfo.nextToken());
                         player.setPromissoryNote(id, index);

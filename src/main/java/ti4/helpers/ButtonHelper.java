@@ -2161,7 +2161,7 @@ public class ButtonHelper {
         String pnText = "";
 
         //Handle AbsolMode Political Secret
-        if (activeMap.isAbsolMode() && id.endsWith("_ps")) {
+        if (activeMap.hasAbsolAgendas() && id.endsWith("_ps")) {
             pnText = "Political Secret" + Emojis.Absol + ":  *When you cast votes:* You may exhaust up to 3 of the {colour} player's planets and cast additional votes equal to the combined influence value of the exhausted planets. Then return this card to the {colour} player.";
         } else {
             pnText = Mapper.getPromissoryNote(id, longPNDisplay);

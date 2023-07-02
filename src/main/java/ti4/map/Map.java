@@ -221,6 +221,8 @@ public class Map {
         this.publicObjectives2 = Mapper.getDecks().get("public_stage_2_objectives_pok").getShuffledCardList();
         Collections.shuffle(this.publicObjectives2);
 
+        this.agendaDeck = AgendaDeckModel.AgendaDeckOptions.POK;
+
         resetAgendas();
         resetRelics();
         
@@ -505,8 +507,8 @@ public class Map {
         return absolMode;
     }
 
-    public void setAbsolMode(boolean absolMode) {
-        this.absolMode = absolMode;
+    public boolean hasAbsolAgendas() {
+        return absolMode || agendaDeck.equals(AgendaDeckModel.AgendaDeckOptions.ABSOL);
     }
 
     public boolean isDiscordantStarsMode() {
