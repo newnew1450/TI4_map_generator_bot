@@ -16,6 +16,8 @@ import ti4.message.BotLogger;
 import ti4.model.FactionModel;
 import ti4.model.Installation;
 import ti4.model.PublicObjectiveModel;
+import ti4.model.TechnologyModel;
+import ti4.model.UnitModel;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +45,7 @@ public class Player {
     //abilities
     //factiontech
     //home
-
+    private String allianceMembers = "";
     private String color;
     private String autoCompleteRepresentation = null;
 
@@ -67,6 +69,7 @@ public class Player {
     private HashSet<String> abilities = new HashSet<>();
     private HashSet<String> exhaustedAbilities = new HashSet<>();
     private HashSet<String> promissoryNotesOwned = new HashSet<>();
+    private HashSet<String> unitsOwned = new HashSet<>();
     private List<String> promissoryNotesInPlayArea = new ArrayList<>();
     private List<String> techs = new ArrayList<>();
     private List<String> exhaustedTechs = new ArrayList<>();
@@ -79,10 +82,10 @@ public class Player {
     @JsonProperty("leaders")
     private List<Leader> leaders = new ArrayList<>();
 
-    private HashMap<String,String> debt_tokens = new HashMap<>();
-    private HashMap<String,String> fow_seenTiles = new HashMap<>();
-    private HashMap<String,Integer> unitCaps = new HashMap<>();
-    private HashMap<String,String> fow_customLabels = new HashMap<>();
+    private Map<String, Integer> debt_tokens = new LinkedHashMap<>(); //colour, count
+    private HashMap<String, String> fow_seenTiles = new HashMap<>();
+    private HashMap<String, Integer> unitCaps = new HashMap<>();
+    private HashMap<String, String> fow_customLabels = new HashMap<>();
     private String fowFogFilter = null;
     private boolean fogInitialized = false;
 
@@ -199,6 +202,13 @@ public class Player {
         }
         return false;
     }
+    public boolean hasFF2Tech() {
+        if(getTechs().contains("ff2") ||getTechs().contains("hcf2") ||getTechs().contains("dsflorff") ||getTechs().contains("dslizhff"))
+        {
+            return true; 
+        }
+        return false;
+    }
 
     public void addInstallation(String tile, Installation installation) {
         installations.put(tile, installation);
@@ -223,8 +233,8 @@ public class Player {
 
         String threadName = Constants.CARDS_INFO_THREAD_PREFIX + activeMap.getName() + "-" + getUserName().replaceAll("/", "");
         if (activeMap.isFoWMode()) {
-                threadName = activeMap.getName() + "-" + "cards-info-"+ getUserName().replaceAll("/", "") + "-private";
-            }
+            threadName = activeMap.getName() + "-" + "cards-info-"+ getUserName().replaceAll("/", "") + "-private";
+        }
 
         //ATTEMPT TO FIND BY ID
         String cardsInfoThreadID = getCardsInfoThreadID();
@@ -290,6 +300,9 @@ public class Player {
         // CREATE NEW THREAD
         //Make card info thread a public thread in community mode
         boolean isPrivateChannel = (!activeMap.isCommunityMode() && !activeMap.isFoWMode());
+        if(activeMap.getName().contains("pbd100") || activeMap.getName().contains("pbd500")){
+            isPrivateChannel = true;
+        }
         ThreadChannelAction threadAction = actionsChannel.createThreadChannel(threadName, isPrivateChannel);
         threadAction.setAutoArchiveDuration(ThreadChannel.AutoArchiveDuration.TIME_24_HOURS);
         if (isPrivateChannel) {
@@ -412,6 +425,66 @@ public class Player {
 
     public List<String> getPromissoryNotesInPlayArea() {
         return promissoryNotesInPlayArea;
+    }
+
+    public HashSet<String> getUnitsOwned() {
+        return unitsOwned;
+    }
+
+    public void setUnitsOwned(HashSet<String> unitsOwned) {
+        this.unitsOwned = unitsOwned;
+    }
+
+    public boolean ownsUnit(String unitID) {
+        return unitsOwned.contains(unitID);
+    }
+
+    public boolean removeOwnedUnitByID(String unitID) {
+        return unitsOwned.remove(unitID);
+    }
+
+    public boolean addOwnedUnitByID(String unitID) {
+        return unitsOwned.add(unitID);
+    }
+
+    public UnitModel getUnitByType(String unitType) {
+        return getUnitsOwned().stream()
+                .map(unitID -> Mapper.getUnit(unitID))
+                .filter(unit -> unitType.equalsIgnoreCase(unit.getBaseType()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public UnitModel getUnitByAsyncID(String asyncID) {
+        return getUnitsOwned().stream()
+                .map(unitID -> Mapper.getUnit(unitID))
+                .filter(unit -> asyncID.equalsIgnoreCase(unit.getAsyncId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public UnitModel getUnitByID(String unitID) {
+        return Mapper.getUnit(unitID);
+    }
+
+    public String checkUnitsOwned() {
+        for (int count : getUnitsOwnedByBaseType().values()) {
+            if (count > 1) {
+                String message = "> Warning - Player: " + getUserName() + " has more than one of the same unit type.\n> Unit Counts: `" + getUnitsOwnedByBaseType() + "`\n> Units Owned: `" + getUnitsOwned() + "`";
+                BotLogger.log(message);
+                return message;
+            }
+        }
+        return null;
+    }
+
+    public Map<String, Integer> getUnitsOwnedByBaseType() {
+        Map<String, Integer> unitCount = new HashMap<>();
+        for (String unitID : getUnitsOwned()) {
+            UnitModel unitModel = Mapper.getUnit(unitID);
+            unitCount.merge(unitModel.getBaseType(), 1, (oldValue, newValue) -> oldValue + 1);
+        }
+        return unitCount;
     }
 
     public void setActionCard(String id) {
@@ -660,8 +733,8 @@ public class Player {
 
     public void addRelic(String relicID) {
         if (!relics.contains(relicID) || Constants.ENIGMATIC_DEVICE.equals(relicID)) {
-            if (relicID.equals("dynamiscore")){
-                commoditiesTotal += 2;
+            if (relicID.equals("dynamiscore") || relicID.equals("absol_dynamiscore")){
+                setCommoditiesTotal(getCommoditiesTotal() + 2);
             }
             relics.add(relicID);
         }
@@ -672,8 +745,8 @@ public class Player {
     }
 
     public void removeRelic(String relicID) {
-        if (relicID.equals("dynamiscore")){
-            commoditiesTotal -= 2;
+        if (relicID.equals("dynamiscore") || relicID.equals("absol_dynamiscore")){
+            setCommoditiesTotal(getCommoditiesTotal() - 2);
         }
         relics.remove(relicID);
     }
@@ -853,6 +926,24 @@ public class Player {
     public void setColor(String color) {
         if (!color.equals("null")) {
             this.color = AliasHandler.resolveColor(color);
+        }
+    }
+    public void addAllianceMember(String color) {
+        if (!color.equals("null")) {
+            this.allianceMembers = allianceMembers+color;
+        }
+    }
+    public void setAllianceMembers(String color) {
+        if (!color.equals("null")) {
+            this.allianceMembers = color;
+        }
+    }
+    public String getAllianceMembers() {
+        return allianceMembers;
+    }
+    public void removeAllianceMember(String color) {
+        if (!color.equals("null")) {
+            this.allianceMembers = allianceMembers.replace(color, "");
         }
     }
 
@@ -1064,6 +1155,12 @@ public class Player {
         this.planets = planets;
     }
 
+    public List<String> getReadiedPlanets() {
+        List<String> planets = new ArrayList<>(getPlanets());
+        planets.removeAll(getExhaustedPlanets());
+        return planets;
+    }
+
     public List<String> getExhaustedPlanets() {
         return exhaustedPlanets;
     }
@@ -1123,9 +1220,34 @@ public class Player {
         this.exhaustedTechs = exhaustedTechs;
     }
 
-    public void addTech(String tech) {
-        if (!techs.contains(tech)) {
-            techs.add(tech);
+    public void addTech(String techID) {
+        if (techs.contains(techID)) {
+            return;
+        }
+        techs.add(techID);
+
+        doAdditionalThingsWhenAddingTech(techID);
+    }
+
+    private void doAdditionalThingsWhenAddingTech(String techID) {
+        // Add Custodia Vigilia when researching IIHQ
+        if(techID.equalsIgnoreCase("iihq")){
+            addPlanet("custodiavigilia");
+            exhaustPlanet("custodiavigilia");
+        }
+
+        // Update Owned Units when Researching a Unit Upgrade
+        TechnologyModel techModel = Mapper.getTech(techID);
+        if (techID == null) return;
+
+        if (Constants.UNIT_UPGRADE.equalsIgnoreCase(techModel.getType())) {
+            UnitModel unitModel = Mapper.getUnitModelByTechUpgrade(techID);
+            if (unitModel != null && unitModel.getUpgradesFromUnitId() != null) {
+                if (getUnitsOwned().contains(unitModel.getUpgradesFromUnitId())) {
+                    removeOwnedUnitByID(unitModel.getUpgradesFromUnitId());
+                }
+                addOwnedUnitByID(unitModel.getId());
+            }
         }
     }
 
@@ -1144,6 +1266,7 @@ public class Player {
         boolean isRemoved = techs.remove(tech);
         if (isRemoved) removeTech(tech);
         refreshTech(tech);
+        //TODO: Remove unitupgrade -> fix owned units
     }
 
     public void addPlanet(String planet) {
@@ -1366,5 +1489,39 @@ public class Player {
 
     public void setHasFoundUnkFrag(boolean hasFoundUnkFrag) {
         this.hasFoundUnkFrag = hasFoundUnkFrag;
+    }
+
+    public Map<String, Integer> getDebtTokens() {
+        return debt_tokens;
+    }
+
+    public void setDebtTokens(Map<String, Integer> debt_tokens) {
+        this.debt_tokens = debt_tokens;
+    }
+
+    public void addDebtTokens(String tokenColour, int count) {
+        if (debt_tokens.containsKey(tokenColour)) {
+            debt_tokens.put(tokenColour, debt_tokens.get(tokenColour) + count);
+        } else {
+            debt_tokens.put(tokenColour, count);
+        }
+    }
+
+    public void removeDebtTokens(String tokenColour, int count) {
+        if (debt_tokens.containsKey(tokenColour)) {
+            debt_tokens.put(tokenColour, Math.max(debt_tokens.get(tokenColour) - count, 0));
+        }
+    }
+
+    public void clearAllDebtTokens(String tokenColour) {
+        debt_tokens.remove(tokenColour);
+    }
+
+    public int getDebtTokenCount(String tokenColour) {
+        if (debt_tokens.containsKey(tokenColour)) {
+            return debt_tokens.get(tokenColour);
+        } else {
+            return 0;
+        }
     }
 }

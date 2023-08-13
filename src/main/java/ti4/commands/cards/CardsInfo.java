@@ -92,12 +92,13 @@ public class CardsInfo implements Command {
             MessageHelper.sendMessageToChannel(event.getChannel(), "Player could not be found");
             return;
         }
+        activeMap.checkPromissoryNotes();
         PNInfo.checkAndAddPNs(activeMap, player);
         sendCardsInfo(activeMap, player, event);
     }
 
     public static void sendCardsInfo(Map activeMap, Player player, SlashCommandInteractionEvent event) {
-        String headerText = Helper.getPlayerRepresentation(player, activeMap) + " used `" + event.getCommandString() + "`";
+        String headerText = Helper.getPlayerRepresentation(player, activeMap, activeMap.getGuild(), true) + " used `" + event.getCommandString() + "`";
         MessageHelper.sendMessageToPlayerCardsInfoThread(player, activeMap, headerText);
         sendCardsInfo(activeMap, player);
     }

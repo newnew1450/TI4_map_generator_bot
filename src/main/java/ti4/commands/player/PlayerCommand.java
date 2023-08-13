@@ -105,31 +105,21 @@ public class PlayerCommand implements Command {
     private Collection<PlayerSubcommandData> getSubcommands() {
         Collection<PlayerSubcommandData> subcommands = new HashSet<>();
         subcommands.add(new Stats());
-        // subcommands.add(new Planets());
         subcommands.add(new Setup());
         subcommands.add(new SCPlay());
         subcommands.add(new Pass());
-        subcommands.add(new TechAdd());
-        subcommands.add(new TechRemove());
-        subcommands.add(new TechExhaust());
-        subcommands.add(new TechRefresh());
-        subcommands.add(new TechInfo());
         subcommands.add(new AbilityInfo());
         subcommands.add(new Turn());
         subcommands.add(new SCPick());
         subcommands.add(new SCUnpick());
-        subcommands.add(new PlanetAdd());
-        subcommands.add(new PlanetRemove());
-        subcommands.add(new PlanetExhaust());
-        subcommands.add(new PlanetRefresh());
-        subcommands.add(new PlanetExhaustAbility());
-        subcommands.add(new PlanetRefreshAbility());
-        subcommands.add(new PlanetRefreshAll());
-        subcommands.add(new PlanetExhaustAll());
         subcommands.add(new Speaker());
         subcommands.add(new SendTG());
         subcommands.add(new SendCommodities());
-        //subcommands.add(new ChangeColor());
+        subcommands.add(new SendDebt());
+        subcommands.add(new ClearDebt());
+        subcommands.add(new ChangeColor());
+        subcommands.add(new UnitInfo());
+        subcommands.add(new AddAllianceMember());
         subcommands.add(new InstallationAdd());
         return subcommands;
     }

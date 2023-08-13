@@ -1,7 +1,6 @@
 package ti4.helpers;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.commons.lang3.StringUtils;
 import ti4.ResourceHelper;
 import ti4.generator.TileHelper;
@@ -19,6 +18,7 @@ public class AliasHandler {
     private static HashMap<String, String> tilemapAliasList = new HashMap<>();
     private static HashMap<String, String> unitAliasList = new HashMap<>();
     private static ArrayList<String> unitValuesList = new ArrayList<>();
+    private static Map<String, String> unitListForHelp = new HashMap<>();
     private static HashMap<String, String> cctokenAliasList = new HashMap<>();
     private static HashMap<String, String> attachmentAliasList = new HashMap<>();
     private static HashMap<String, String> tokenAliasList = new HashMap<>();
@@ -35,13 +35,14 @@ public class AliasHandler {
     private static HashMap<String, String> ttpgAttachmentAliasList = new HashMap<>();
     private static HashMap<String, String> ttpgTokenAliasList = new HashMap<>();
     private static HashMap<String, String> ttpgUnitAliasList = new HashMap<>();
-    private static final java.util.Map<String, String> allTileAliases = new HashMap<>();
-    private static final java.util.Map<String, String> allPlanetAliases = new HashMap<>();
+    private static final Map<String, String> allTileAliases = new HashMap<>();
+    private static final Map<String, String> allPlanetAliases = new HashMap<>();
 
     public static void init() {
         readAliasFile("tilemap_alias.properties", tilemapAliasList, "Could not read tilemap alias file");
         readAliasFile("unit_alias.properties", unitAliasList, "Could not read unit alias file");
         readAliasFile("unit_alias.properties", unitValuesList, false);
+        readAliasFile("unit_alias.properties", unitListForHelp);
         readAliasFile("cc_token_alias.properties", cctokenAliasList, "Could not read cc token alias file");
         readAliasFile("attachment_alias.properties", attachmentAliasList, "Could not read attachement token alias file");
         readAliasFile("tokens_alias.properties", tokenAliasList, "Could not read token alias file");
@@ -138,18 +139,18 @@ public class AliasHandler {
     }
 
     public static void initAliases() {
-        TileHelper.getAllTiles().values().forEach(
-                tileModel -> {
-                    Optional.ofNullable(tileModel.getAliases()).orElse(new ArrayList<>())
-                            .forEach(alias -> allTileAliases.put(alias, tileModel.getId()));
-                }
-        );
-        TileHelper.getAllPlanets().values().forEach(
-                planetModel -> {
-                    Optional.ofNullable(planetModel.getAliases()).orElse(new ArrayList<>())
-                            .forEach(alias -> allPlanetAliases.put(alias, planetModel.getId()));
-                }
-        );
+        TileHelper.getAllTiles().values().forEach(AliasHandler::addNewTileAliases);
+        TileHelper.getAllPlanets().values().forEach(AliasHandler::addNewPlanetAliases);
+    }
+
+    public static void addNewPlanetAliases(PlanetModel planetModel) {
+        Optional.ofNullable(planetModel.getAliases()).orElse(new ArrayList<>())
+                .forEach(alias -> allPlanetAliases.put(alias.toLowerCase(), planetModel.getId()));
+    }
+
+    public static void addNewTileAliases(TileModel tileModel) {
+        Optional.ofNullable(tileModel.getAliases()).orElse(new ArrayList<>())
+                .forEach(alias -> allTileAliases.put(alias.toLowerCase(), tileModel.getId()));
     }
 
     public static String resolveTile(String name) {
@@ -212,6 +213,10 @@ public class AliasHandler {
 
     public static ArrayList<String> getUnitValuesList() {
         return unitValuesList;
+    }
+
+    public static Map<String, String> getUnitListForHelp() {
+        return unitListForHelp;
     }
 
     public static List<String> getPlanetKeyList() {

@@ -29,6 +29,11 @@ public class ShowAllPN extends PNCardsSubcommandData {
             sendMessage("Player could not be found");
             return;
         }
+        Player targetPlayer = Helper.getPlayer(activeMap, null, event);
+        if (targetPlayer == null) {
+            sendMessage("Target player not found");
+            return;
+        }
 
         OptionMapping longPNOption = event.getOption(Constants.LONG_PN_DISPLAY);
         boolean longPNDisplay = false;
@@ -36,12 +41,10 @@ public class ShowAllPN extends PNCardsSubcommandData {
             longPNDisplay = longPNOption.getAsString().equalsIgnoreCase("y") || longPNOption.getAsString().equalsIgnoreCase("yes");
         }
 
+        showAll(player, targetPlayer, activeMap, longPNDisplay);
+    }
 
-        Player targetPlayer = Helper.getPlayer(activeMap, null, event);
-        if (targetPlayer == null) {
-            sendMessage("Target player not found");
-            return;
-        }
+    public void showAll(Player player, Player targetPlayer, Map activeMap, boolean longPNDisplay) {
         StringBuilder sb = new StringBuilder();
         sb.append("Game: ").append(activeMap.getName()).append("\n");
         sb.append("Player: ").append(player.getUserName()).append("\n");
@@ -54,7 +57,7 @@ public class ShowAllPN extends PNCardsSubcommandData {
             index++;
         }
 
-        MessageHelper.sendPrivateMessageToPlayer(targetPlayer, activeMap, sb.toString());
-        sendMessage("all PNs shown");
+        MessageHelper.sendMessageToPlayerCardsInfoThread(targetPlayer, activeMap, sb.toString());
+        MessageHelper.sendMessageToPlayerCardsInfoThread(player, activeMap, "All PNs shown to player");
     }
 }

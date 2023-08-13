@@ -65,7 +65,6 @@ public class SCPlay extends PlayerSubcommandData {
 
         Integer scToPlay = event.getOption(Constants.STRATEGY_CARD, Collections.min(player.getSCs()), OptionMapping::getAsInt);
         playSC(event, scToPlay, activeMap, mainGameChannel, player);
-
     }
 
     public void playSC(GenericInteractionCreateEvent event, Integer scToPlay, Map activeMap, MessageChannel mainGameChannel, Player player) {
@@ -122,15 +121,16 @@ public class SCPlay extends PlayerSubcommandData {
         }
 
         if (activeMap.getOutputVerbosity().equals(Constants.VERBOSITY_VERBOSE)) {
-            MessageHelper.sendMessageToChannel(mainGameChannel, Helper.getSCImageLink(scToDisplay));
+            MessageHelper.sendFileToChannel(mainGameChannel, Helper.getSCImageFile(scToDisplay, activeMap));
+            //MessageHelper.sendMessageToChannel(mainGameChannel, Helper.getSCImageLink(scToDisplay, activeMap));
         }
-
-
-        
             MessageCreateBuilder baseMessageObject = new MessageCreateBuilder().addContent(message);
             //GET BUTTONS
             ActionRow actionRow = null;
             List<Button> scButtons = new ArrayList<>(getSCButtons(scToDisplay, activeMap));
+            if(!activeMap.isFoWMode() && scToDisplay == 7 && Helper.getPlayerFromAbility(activeMap, "propagation") != null){
+                scButtons.add(Button.secondary("nekroFollowTech", "Get CCs").withEmoji(Emoji.fromFormatted(Helper.getFactionIconFromDiscord("nekro"))));
+            }
             if (scButtons != null && !scButtons.isEmpty()) actionRow = ActionRow.of(scButtons);
             if (actionRow != null) baseMessageObject.addComponents(actionRow);
 
@@ -171,17 +171,44 @@ public class SCPlay extends PlayerSubcommandData {
             });
 
         //POLITICS - SEND ADDITIONAL ASSIGN SPEAKER BUTTONS
+       
         if (!activeMap.isFoWMode() && scToPlay == 3) {
             String assignSpeakerMessage = Helper.getPlayerRepresentation(player, activeMap) + ", please click a faction below to assign Speaker " + Emojis.SpeakerToken;
+
             List<Button> assignSpeakerActionRow = getPoliticsAssignSpeakerButtons(activeMap);
             MessageHelper.sendMessageToChannelWithButtons(activeMap.getMainGameChannel(), assignSpeakerMessage, assignSpeakerActionRow);
         }
 
         if (scToPlay == 3 && !activeMap.isHomeBrewSCMode()) {
+             String assignSpeakerMessage2 = Helper.getPlayerRepresentation(player, activeMap) + " after assigning speaker, Use this button to draw agendas into your cards info thread.";
+            
             List<Button> drawAgendaButton = new ArrayList<Button>();
             Button draw2Agenda = Button.success("FFCC_"+player.getFaction()+"_"+"drawAgenda_2", "Draw 2 agendas");
             drawAgendaButton.add(draw2Agenda);
-            MessageHelper.sendMessageToChannelWithButtons((MessageChannel)player.getCardsInfoThread(activeMap), Helper.getPlayerRepresentation(player, activeMap, activeMap.getGuild(), false)+" click this after assigning speaker.", drawAgendaButton);
+            MessageHelper.sendMessageToChannelWithButtons(ButtonHelper.getCorrectChannel(player, activeMap), assignSpeakerMessage2, drawAgendaButton);
+
+        }
+
+        if(scToPlay != 1 ){
+            //"scepterE_follow_") || buttonID.startsWith("mahactA_follow_")){
+            List<Button> empNMahButtons = new ArrayList<Button>();
+            Button deleteB = Button.danger("deleteButtons", "Delete These Buttons");
+            empNMahButtons.add(deleteB);
+            Button emelpar = Button.danger("scepterE_follow_"+scToPlay, "Exhaust Scepter of Emelpar");
+            Button mahactA = Button.danger("mahactA_follow_"+scToPlay, "Use Mahact Agent").withEmoji(Emoji.fromFormatted(Helper.getFactionIconFromDiscord("mahact")));
+            for(Player player3 : activeMap.getPlayers().values()){
+                if(player3 == player){
+                    continue;
+                }
+                if(player3.hasRelic("emelpar") && !player3.getExhaustedRelics().contains("emelpar")){
+                    empNMahButtons.add(0,emelpar);    
+                    MessageHelper.sendMessageToChannelWithButtons(player3.getCardsInfoThread(activeMap), Helper.getPlayerRepresentation(player3, activeMap, activeMap.getGuild(), true)+" You can follow SC #"+scToPlay+" with the scepter of emelpar", empNMahButtons);
+                }
+                if(player3.hasLeader("mahactagent") && !player3.getLeader("mahactagent").isExhausted() && ButtonHelper.getTilesWithYourCC(player, activeMap, event).size() > 0){
+                    empNMahButtons.add(0,mahactA);
+                    MessageHelper.sendMessageToChannelWithButtons(player3.getCardsInfoThread(activeMap), Helper.getPlayerRepresentation(player3, activeMap, activeMap.getGuild(), true)+" You can follow SC #"+scToPlay+" with mahact agent", empNMahButtons);
+                }
+            }
         }
 
         List<Button> conclusionButtons = new ArrayList<Button>();
@@ -194,13 +221,11 @@ public class SCPlay extends PlayerSubcommandData {
         conclusionButtons.add(deleteButton);
         MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), "Use the buttons to end turn or take another action.", conclusionButtons);
 
-
-
-        if (player.getFaction().equalsIgnoreCase("winnu")&& scToPlay != 1) {
+        if (player.ownsPromissoryNote("acq") && scToPlay != 1) {
             for (Player player2 :activeMap.getPlayers().values()) {
                 if (!player2.getPromissoryNotes().isEmpty()) {
                     for (String pn : player2.getPromissoryNotes().keySet()) {
-                        if (!player2.getFaction().equalsIgnoreCase("winnu") && pn.equalsIgnoreCase("acq")) {
+                        if (!player2.ownsPromissoryNote("acq") && pn.equalsIgnoreCase("acq")) {
                             String acqMessage = Helper.getPlayerRepresentation(player2, activeMap, event.getGuild(), true) + " reminder you can use Winnu's PN!";
                             if (activeMap.isFoWMode()) {
                                 MessageHelper.sendMessageToChannel(player2.getPrivateChannel(), acqMessage);

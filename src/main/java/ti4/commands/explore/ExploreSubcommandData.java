@@ -3,8 +3,6 @@ package ti4.commands.explore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
@@ -18,12 +16,13 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import ti4.commands.cardsac.ACInfo;
 import ti4.commands.cardsso.SOInfo;
-import ti4.commands.player.PlanetAdd;
-import ti4.commands.player.PlanetRefresh;
+import ti4.commands.planet.PlanetAdd;
+import ti4.commands.planet.PlanetRefresh;
 import ti4.commands.units.AddUnits;
 import ti4.generator.Mapper;
 import ti4.helpers.AliasHandler;
 import ti4.helpers.ButtonHelper;
+import ti4.helpers.ButtonHelperFactionSpecific;
 import ti4.helpers.Constants;
 import ti4.helpers.Emojis;
 import ti4.helpers.FoWHelper;
@@ -143,7 +142,7 @@ public abstract class ExploreSubcommandData extends SubcommandData {
 
                 PlanetModel planetInfo = Mapper.getPlanet(planetName);
                 if (Optional.ofNullable(planetInfo).isPresent()) {
-                    if (Optional.ofNullable(planetInfo.getTechSpecialties()).orElse(new ArrayList<>()).size() > 0) {
+                    if (Optional.ofNullable(planetInfo.getTechSpecialties()).orElse(new ArrayList<>()).size() > 0  || ButtonHelper.doesPlanetHaveAttachmentTechSkip(tile, planetName)) {
                         if ((token.equals(Constants.WARFARE) ||
                              token.equals(Constants.PROPULSION) ||
                              token.equals(Constants.CYBERNETIC) ||
@@ -163,6 +162,12 @@ public abstract class ExploreSubcommandData extends SubcommandData {
                 tile.addToken(tokenFilename, planetName);
                 activeMap.purgeExplore(cardID);
                 message = "Token added to planet";
+                if(player.getLeaderIDs().contains("solcommander") && !player.hasLeaderUnlocked("solcommander")){
+                    ButtonHelper.commanderUnlockCheck(player, activeMap, "sol", event);
+                }
+                if(player.getLeaderIDs().contains("xxchacommander") && !player.hasLeaderUnlocked("xxchacommander")){
+                    ButtonHelper.commanderUnlockCheck(player, activeMap, "xxcha", event);
+                }
             } else {
                 message = "Invalid token, tile, or planet";
             }
@@ -170,8 +175,17 @@ public abstract class ExploreSubcommandData extends SubcommandData {
             String token = cardInfo[5];
             String tokenFilename = Mapper.getTokenID(token);
             if (tokenFilename != null && tile != null) {
-                tile.addToken(tokenFilename, Constants.SPACE);
-                message = "Token added to map";
+                if("ionalpha".equalsIgnoreCase(token)){
+                    message = "Use buttons to decide to place either an alpha or a beta ionstorm";
+                    List<Button> buttonIon = new ArrayList<Button>();
+                    buttonIon.add(Button.success("addIonStorm_beta_"+tile.getPosition(), "Put down a beta"));
+                     buttonIon.add(Button.secondary("addIonStorm_alpha_"+tile.getPosition(), "Put down an alpha"));
+                     MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), "Use buttons", buttonIon);
+                }else{
+                    tile.addToken(tokenFilename, Constants.SPACE);
+                    message = "Token added to map";
+                }
+                
                 if (Constants.MIRAGE.equalsIgnoreCase(token)) {
                     Helper.addMirageToTile(tile);
                     activeMap.clearPlanetsCache();
@@ -182,7 +196,8 @@ public abstract class ExploreSubcommandData extends SubcommandData {
                 message = "Invalid token or tile";
             }
         }
-
+        cardID = cardID.replace("extra1", "");
+        cardID = cardID.replace("extra2", "");
         switch (cardID) {
             case "lc1", "lc2" -> {
                 boolean hasSchemingAbility = player.hasAbility("scheming");
@@ -217,6 +232,7 @@ public abstract class ExploreSubcommandData extends SubcommandData {
                 message = "Replenished Commodities (" +player.getCommodities() +"->"+player.getCommoditiesTotal()+"). Reminder that this is optional, and that you can instead convert your existing comms.";
                 player.setCommodities(player.getCommoditiesTotal());
                 MessageHelper.sendMessageToChannel((MessageChannel)event.getChannel(), messageText + "\n" + "\n" + message);
+                ButtonHelper.resolveMinisterOfCommerceCheck(activeMap, player, event);
             }
             case "mirage" -> {
                 String mirageID = Constants.MIRAGE;
@@ -232,6 +248,13 @@ public abstract class ExploreSubcommandData extends SubcommandData {
                 if (exploreID == null) {
                     sendMessage("Planet cannot be explored: " + mirageID + "\n> The Cultural deck may be empty");
                     return;
+                }
+                if(activeMap.getActivePlayer() != null && !(activeMap.getActivePlayer().equalsIgnoreCase("")) && player.hasAbility("scavenge") && event != null)
+                {
+                    String fac = Helper.getFactionIconFromDiscord(player.getFaction());
+                    MessageHelper.sendMessageToChannel(event.getMessageChannel(), fac+" gained 1tg from Scavenge ("+player.getTg()+"->"+(player.getTg()+1)+"). Reminder that this is optional, but was done automatically for convenience. You do not legally have this tg prior to exploring." );
+                    player.setTg(player.getTg()+1);
+                    ButtonHelperFactionSpecific.pillageCheck(player, activeMap);
                 }
                 StringBuilder exploredMessage = new StringBuilder(Helper.getPlayerRepresentation(player, activeMap)).append(" explored ");
                 exploredMessage.append(Helper.getEmojiFromDiscord(planetTrait));
@@ -278,17 +301,17 @@ public abstract class ExploreSubcommandData extends SubcommandData {
                     case "minent" -> {
                         player.setTg(player.getTg()+1);
                         message = "Gained 1" + Emojis.tg + " (" +(player.getTg()-1) +" -> **"+player.getTg()+"**) ";
-                        ButtonHelper.pillageCheck(player, activeMap);
+                        ButtonHelperFactionSpecific.pillageCheck(player, activeMap);
                     }
                     case "ent" -> {
                         player.setTg(player.getTg()+2);
                         message = "Gained 2" + Emojis.tg + " (" +(player.getTg()-2) +" -> **"+player.getTg()+"**) ";
-                        ButtonHelper.pillageCheck(player, activeMap);
+                        ButtonHelperFactionSpecific.pillageCheck(player, activeMap);
                     }
                     case "majent" -> {
                         player.setTg(player.getTg()+3);
                         message = "Gained 3" + Emojis.tg + " (" +(player.getTg()-3) +" -> **"+player.getTg()+"**) ";
-                        ButtonHelper.pillageCheck(player, activeMap);
+                        ButtonHelperFactionSpecific.pillageCheck(player, activeMap);
                     }
                     default -> message = "";
                 }

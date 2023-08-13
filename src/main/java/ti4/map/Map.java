@@ -1,5 +1,9 @@
 package ti4.map;
 
+import lombok.Getter;
+import lombok.Setter;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.collections4.CollectionUtils;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +23,7 @@ import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
 import net.dv8tion.jda.internal.utils.tuple.Pair;
 import ti4.MapGenerator;
 import ti4.commands.milty.MiltyDraftManager;
-import ti4.commands.player.PlanetRemove;
+import ti4.commands.planet.PlanetRemove;
 import ti4.generator.Mapper;
 import ti4.helpers.Constants;
 import ti4.helpers.DisplayType;
@@ -27,6 +31,9 @@ import ti4.helpers.Emojis;
 import ti4.helpers.Helper;
 import ti4.message.BotLogger;
 import ti4.message.MessageHelper;
+import ti4.model.BorderAnomalyHolder;
+import ti4.model.BorderAnomalyModel;
+import ti4.model.DeckModel;
 import ti4.model.Installation;
 
 import java.awt.*;
@@ -41,7 +48,6 @@ import java.util.stream.Collectors;
 
 import java.util.*;
 
-@Data
 public class Map {
 
     private String ownerID;
@@ -64,7 +70,7 @@ public class Map {
 
     @JsonIgnore
     private HashMap<String, UnitHolder> planets = new HashMap<>();
-    @JsonIgnore
+    @JsonIgnore @Getter @Setter
     private HashMap<String, Installation> installations = new HashMap<>();
 
     @Nullable
@@ -72,8 +78,6 @@ public class Map {
     @ExportableField
     private int playerCountForMap = 6;
 
-    @ExportableField
-    private int ringCount = 3;
     @ExportableField
     private int activationCount = 0;
     @ExportableField
@@ -102,12 +106,17 @@ public class Map {
     private String largeText = "small";
     @ExportableField
     private boolean absolMode = false;
+
+    @Getter @Setter @ExportableField
+    private String scSet = null;
     @ExportableField
     private boolean discordantStarsMode = false;
     private String outputVerbosity = Constants.VERBOSITY_VERBOSE;
     private boolean testBetaFeaturesMode = false;
     private boolean hasEnded = false;
     private long endedDate;
+    @Getter @Setter
+    private List<BorderAnomalyHolder> borderAnomalies = new ArrayList<>();
     @Nullable
     private String tableTalkChannelID = null;
     @Nullable
@@ -181,6 +190,8 @@ public class Map {
 
     private List<String> publicObjectives1 = new ArrayList<>();
     private List<String> publicObjectives2 = new ArrayList<>();
+    private List<String> publicObjectives1Peakable = new ArrayList<>();
+    private List<String> publicObjectives2Peakable = new ArrayList<>();
     private ArrayList<String> soToPoList = new ArrayList<>();
 
     @JsonIgnore
@@ -199,6 +210,8 @@ public class Map {
     @JsonIgnore
     List<SimpleEntry<String, String>> planetNameAutocompleteOptionsCache = null;
 
+    private ArrayList<String> runDataMigrations = new ArrayList<>();
+
     public Map() {
         creationDate = Helper.getDateRepresentation(new Date().getTime());
         lastModifiedDate = new Date().getTime();
@@ -207,10 +220,20 @@ public class Map {
 
         //Card Decks
         this.secretObjectives = Mapper.getDecks().get("secret_objectives_pok").getShuffledCardList();
+        Collections.shuffle(this.secretObjectives);
+
         this.actionCards = Mapper.getDecks().get("action_cards_pok").getShuffledCardList();
+        Collections.shuffle(this.actionCards);
+
         this.explore = Mapper.getDecks().get("explores_pok").getShuffledCardList();
+        Collections.shuffle(this.explore);
+
         this.publicObjectives1 = Mapper.getDecks().get("public_stage_1_objectives_pok").getShuffledCardList();
+        Collections.shuffle(this.publicObjectives1);
+
         this.publicObjectives2 = Mapper.getDecks().get("public_stage_2_objectives_pok").getShuffledCardList();
+        Collections.shuffle(this.publicObjectives2);
+
         resetAgendas();
         resetRelics();
         
@@ -256,6 +279,23 @@ public class Map {
     public int getNumberOfSOsInTheDeck(){
         return secretObjectives.size();
     }
+
+    public boolean hasBorderAnomalyOn(String tile, Integer direction) {
+        List anomaliesOnBorder = this.borderAnomalies.stream()
+                .filter(anomaly -> !anomaly.getType().equals(BorderAnomalyModel.BorderAnomalyType.ARROW))
+                .filter(anomaly -> anomaly.getTile().equals(tile))
+                .filter(anomaly -> anomaly.getDirection() == direction)
+                .collect(Collectors.toList());
+        return CollectionUtils.isNotEmpty(anomaliesOnBorder);
+    }
+    public void addBorderAnomaly(String tile, Integer direction, BorderAnomalyModel.BorderAnomalyType anomalyType) {
+        this.borderAnomalies.add(new BorderAnomalyHolder(tile, direction, anomalyType));
+    }
+
+    public void removeBorderAnomaly(String tile, Integer direction) {
+        this.borderAnomalies.removeIf(anom -> anom.getTile().equals(tile) && anom.getDirection() == direction);
+    }
+
     public int getNumberOfSOsInPlayersHands(){
         int soNum = 0;
         for(Player player : getPlayers().values()){
@@ -360,6 +400,10 @@ public class Map {
     public void addActionCardDuplicates(List<String> ACs) {
         actionCards.addAll(ACs);
         Collections.shuffle(this.actionCards);
+    }
+    public void addSecretDuplicates(List<String> SOs) {
+        secretObjectives.addAll(SOs);
+        Collections.shuffle(this.secretObjectives);
     }
 
     public void setPurgedPNs(ArrayList<String> purgedPN) {
@@ -706,6 +750,10 @@ public class Map {
     }
 
     public int getRingCount() {
+        if (getTileMap().isEmpty()) return 0;
+        HashMap<String, Tile> tileMap = new HashMap<>(getTileMap());
+        String highestPosition = tileMap.keySet().stream().filter(pos -> Helper.isInteger(pos)).max(Comparator.comparingInt(Integer::parseInt)).get();
+        int ringCount = Integer.parseInt(StringUtils.left(highestPosition, highestPosition.length() - 2));
         return ringCount;
     }
 
@@ -717,14 +765,8 @@ public class Map {
         return naaluAgent;
     }
 
-    
-
     public boolean getComponentAction() {
         return componentAction;
-    }
-
-    public void setRingCount(int ringCount) {
-        this.ringCount = ringCount;
     }
 
     public void setNaaluAgent(boolean onStatus) {
@@ -916,13 +958,14 @@ public class Map {
         sentAgendas.put(id, identifier);
     }
 
-    public void addDiscardAgenda(String id) {
+    public int addDiscardAgenda(String id) {
         Collection<Integer> values = discardAgendas.values();
         int identifier = new Random().nextInt(1000);
         while (values.contains(identifier)) {
             identifier = new Random().nextInt(1000);
         }
         discardAgendas.put(id, identifier);
+        return identifier;
     }
 
     public void addRevealedPublicObjective(String id) {
@@ -990,22 +1033,103 @@ public class Map {
     public List<String> getPublicObjectives1() {
         return publicObjectives1;
     }
+    public List<String> getPublicObjectives1Peakable() {
+        return publicObjectives1Peakable;
+    }
 
     public List<String> getPublicObjectives2() {
         return publicObjectives2;
     }
+    public List<String> getPublicObjectives2Peakable() {
+        return publicObjectives2Peakable;
+    }
 
     public java.util.Map.Entry<String, Integer> revealState1() {
-        return revealObjective(publicObjectives1);
+        if(publicObjectives1Peakable.isEmpty()){
+            return revealObjective(publicObjectives1);
+        }else{
+            return revealObjective(publicObjectives1Peakable);
+        }
     }
 
     public java.util.Map.Entry<String, Integer> revealState2() {
-        return revealObjective(publicObjectives2);
+        if(publicObjectives2Peakable.isEmpty()){
+            return revealObjective(publicObjectives2);
+        }else{
+            return revealObjective(publicObjectives2Peakable);
+        }
+    }
+
+    public void setUpPeakableObjectives(int num) {
+        for(int x = 0; x < num; x++){
+            if (!publicObjectives1.isEmpty()) {
+                Collections.shuffle(publicObjectives1);
+                String id = publicObjectives1.get(0);
+                publicObjectives1.remove(id);
+                publicObjectives1Peakable.add(id);
+            }
+            if (!publicObjectives2.isEmpty()) {
+                Collections.shuffle(publicObjectives2);
+                String id = publicObjectives2.get(0);
+                publicObjectives2.remove(id);
+                publicObjectives2Peakable.add(id);
+            }
+        }
+    }
+    public String peakAtStage1(int place) {
+        return peakAtObjective(publicObjectives1Peakable, place);
+    }
+    public String peakAtStage2(int place) {
+        return peakAtObjective(publicObjectives2Peakable, place);
+    }
+    public java.util.Map.Entry<String, Integer> revealSpecificStage1(String id) {
+        return revealSpecificObjective(publicObjectives1, id);
+    }
+    public java.util.Map.Entry<String, Integer> revealSpecificStage2(String id) {
+        return revealSpecificObjective(publicObjectives2, id);
+    }
+
+    public void swapStage1(int place1, int place2) {
+        swapObjective(publicObjectives1Peakable, place1, place2);
+    }
+    public void swapStage2(int place1, int place2) {
+        swapObjective(publicObjectives2Peakable, place1, place2);
+    }
+
+    public void swapObjective(List<String> objectiveList, int place1, int place2) {
+        if (!objectiveList.isEmpty()) {
+            place1 = place1 - 1;
+            place2 = place2 - 1;
+            String id = objectiveList.get(place1);
+            String id2 = objectiveList.get(place2);
+            objectiveList.set(place1, id2);
+            objectiveList.set(place2, id);
+        }
+    }
+    public String peakAtObjective(List<String> objectiveList, int place) {
+        if (!objectiveList.isEmpty()) {
+            place = place -1;
+            String id = objectiveList.get(place);
+            return id;
+        }
+        return null;
     }
 
     public java.util.Map.Entry<String, Integer> revealObjective(List<String> objectiveList) {
         if (!objectiveList.isEmpty()) {
             String id = objectiveList.get(0);
+            objectiveList.remove(id);
+            addRevealedPublicObjective(id);
+            for (java.util.Map.Entry<String, Integer> entry : revealedPublicObjectives.entrySet()) {
+                if (entry.getKey().equals(id)) {
+                    return entry;
+                }
+            }
+        }
+        return null;
+    }
+    public java.util.Map.Entry<String, Integer> revealSpecificObjective(List<String> objectiveList, String id) {
+        if (objectiveList.contains(id)) {
             objectiveList.remove(id);
             addRevealedPublicObjective(id);
             for (java.util.Map.Entry<String, Integer> entry : revealedPublicObjectives.entrySet()) {
@@ -1208,6 +1332,13 @@ public class Map {
     public void setPublicObjectives2(ArrayList<String> publicObjectives2) {
         this.publicObjectives2 = publicObjectives2;
     }
+    public void setPublicObjectives1Peakable(ArrayList<String> publicObjectives1) {
+        this.publicObjectives1Peakable = publicObjectives1;
+    }
+
+    public void setPublicObjectives2Peakable(ArrayList<String> publicObjectives2) {
+        this.publicObjectives2Peakable = publicObjectives2;
+    }
 
     public void removePublicObjective1(String key) {
         publicObjectives1.remove(key);
@@ -1316,6 +1447,7 @@ public class Map {
         } else {
             this.agendas = Mapper.getDecks().get("agendas_pok").getShuffledCardList();
         }
+        Collections.shuffle(this.agendas);
         discardAgendas = new LinkedHashMap<>();
     }
 
@@ -1375,6 +1507,42 @@ public class Map {
         }
         if (!id.isEmpty()) {
 
+            Collection<Integer> values = laws.values();
+            int identifier = new Random().nextInt(1000);
+            while (values.contains(identifier)) {
+                identifier = new Random().nextInt(1000);
+            }
+            discardAgendas.remove(id);
+            laws.put(id, identifier);
+            if (optionalText != null) {
+                lawsInfo.put(id, optionalText);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean reviseLaw(Integer idNumber, String optionalText) {
+
+        String id = "";
+        for (java.util.Map.Entry<String, Integer> ac : laws.entrySet()) {
+            if (ac.getValue().equals(idNumber)) {
+                id = ac.getKey();
+                break;
+            }
+        }
+        if (!id.isEmpty()) {
+            laws.remove(id);
+            lawsInfo.remove(id);
+            idNumber=addDiscardAgenda(id);
+        }
+        for (java.util.Map.Entry<String, Integer> agendas : discardAgendas.entrySet()) {
+            if (agendas.getValue().equals(idNumber)) {
+                id = agendas.getKey();
+                break;
+            }
+        }
+        if (!id.isEmpty()) {
             Collection<Integer> values = laws.values();
             int identifier = new Random().nextInt(1000);
             while (values.contains(identifier)) {
@@ -1578,20 +1746,33 @@ public class Map {
 
     public String drawExplore(String reqType) {
         List<String> deck = getExplores(reqType, explore);
+        String result = null;
+
+        //MIGRATION CODE TODO: Remove this once we are fairly certain no exising games have an existing empty deck - implemented 2023-07
+        if (deck.isEmpty()) {
+            shuffleDiscardsIntoExploreDeck(reqType);
+            deck = getExplores(reqType, explore);
+            BotLogger.log("Map: `" + getName() + "` MIGRATION CODE TRIGGERED: Explore " + reqType + " deck was empty, shuffling discards into deck.");
+        } //end of migration code
+
         if (!deck.isEmpty()) {
             String id = deck.get(0);
             discardExplore(id);
-            return id;
-        } else {
-            deck = getExplores(reqType, discardExplore);
-            if (!deck.isEmpty()) {
-                explore.addAll(deck);
-                Collections.shuffle(explore);
-                discardExplore.removeAll(deck);
-                return drawExplore(reqType);
-            }
+            result = id;
         }
-        return null;
+
+        // If deck is empty after draw, auto refresh deck from discard
+        if (getExplores(reqType, explore).isEmpty()) {
+            shuffleDiscardsIntoExploreDeck(reqType);
+        }
+        return result;
+    }
+
+    public void shuffleDiscardsIntoExploreDeck(String reqType) {
+        List<String> discardsOfType = getExplores(reqType, discardExplore);
+        explore.addAll(discardsOfType);
+        Collections.shuffle(explore);
+        discardExplore.removeAll(discardsOfType);
     }
 
     public void discardExplore(String id) {
@@ -1620,9 +1801,44 @@ public class Map {
         explore.addAll(exp);
     }
 
+    public void triplicateExplores() {
+        this.explore = Mapper.getDecks().get("explores_pok").getShuffledCardList();
+        Collections.shuffle(this.explore);
+        for(String relic : Mapper.getDecks().get("explores_pok").getShuffledCardList()){
+            String copy1 = relic + "extra1";
+            String copy2 = relic + "extra2";
+            explore.add(copy1);
+            explore.add(copy2);
+        }
+        Collections.shuffle(this.explore);
+    }
+     public void triplicateACs() {
+        this.actionCards = Mapper.getDecks().get("action_cards_pok").getShuffledCardList();
+        Collections.shuffle(this.actionCards);
+        for(String relic : Mapper.getDecks().get("action_cards_pok").getShuffledCardList()){
+            String copy1 = relic + "extra1";
+            String copy2 = relic + "extra2";
+            actionCards.add(copy1);
+            actionCards.add(copy2);
+        }
+        Collections.shuffle(this.actionCards);
+    }
+    public void triplicateSOs() {
+        this.secretObjectives = Mapper.getDecks().get("secret_objectives_pok").getShuffledCardList();
+        Collections.shuffle(this.secretObjectives);
+        for(String relic : Mapper.getDecks().get("secret_objectives_pok").getShuffledCardList()){
+            String copy1 = relic + "extra1";
+            String copy2 = relic + "extra2";
+            secretObjectives.add(copy1);
+            secretObjectives.add(copy2);
+        }
+        Collections.shuffle(this.secretObjectives);
+    }
+
     public String drawRelic() {
         ArrayList<String> relics_ = new ArrayList<>(relics);
-        relics_.remove(Constants.ENIGMATIC_DEVICE);
+        Collections.shuffle(relics_);
+        relics_.remove(Constants.ENIGMATIC_DEVICE); //Legacy, deck no longer includes this - can be removed once all games before pbd682 are finished
         if (relics_.isEmpty()) {
             return "";
         }
@@ -1925,6 +2141,28 @@ public class Map {
         } else {
             this.relics = Mapper.getDecks().get("relics_pok").getShuffledCardList();
         }
+        Collections.shuffle(this.relics);
+    }
+    public void triplicateRelics() {
+        if (this.absolMode) {
+            this.relics = Mapper.getDecks().get("relics_absol").getShuffledCardList();
+            for(String relic : Mapper.getDecks().get("relics_absol").getShuffledCardList()){
+                String copy1 = relic + "extra1";
+                String copy2 = relic + "extra2";
+                relics.add(copy1);
+                relics.add(copy2);
+            }
+        } else {
+            this.relics = Mapper.getDecks().get("relics_pok").getShuffledCardList();
+            for(String relic : Mapper.getDecks().get("relics_pok").getShuffledCardList()){
+                String copy1 = relic + "extra1";
+                String copy2 = relic + "extra2";
+                relics.add(copy1);
+                relics.add(copy2);
+            }
+        }
+
+        Collections.shuffle(this.relics);
     }
 
     public void setSecretObjectives(List<String> secretObjectives) {
@@ -1933,6 +2171,28 @@ public class Map {
 
     public void setActionCards(List<String> actionCards) {
         this.actionCards = actionCards;
+    }
+
+    public void validateAndSetActionCardDeck(SlashCommandInteractionEvent event, DeckModel deck) {
+        if (this.getDiscardActionCards().size() > 0) {
+            MessageHelper.sendMessageToChannel(event.getChannel(), "Cannot change action card deck while there are action cards in the discard pile.");
+            return;
+        }
+        for (Player player : this.getPlayers().values()) {
+            if (player.getActionCards().size() > 0) {
+                MessageHelper.sendMessageToChannel(event.getChannel(), "Cannot change action card deck while there are action cards in player hands.");
+                return;
+            }
+        }
+        this.setActionCards(deck.getShuffledCardList());
+    }
+
+    public void validateAndSetAgendaDeck(SlashCommandInteractionEvent event, DeckModel deck) {
+        if (this.getDiscardAgendas().size() > 0) {
+            MessageHelper.sendMessageToChannel(event.getChannel(), "Cannot change agenda deck while there are agendas in the discard pile.");
+            return;
+        }
+        this.setAgendas(deck.getShuffledCardList());
     }
 
     @JsonSetter
@@ -2227,12 +2487,14 @@ public class Map {
             allOwnedPromissoryNotes.addAll(player.getPromissoryNotesOwned());
         }
 
+        // Find duplicate PNs - PNs that are in multiple players' hands or play areas
         if (Helper.findDuplicateInList(allPlayerHandPromissoryNotes).size() > 0) {
             BotLogger.log("`" + getName() + "`: there are duplicate promissory notes in the game:\n> `" + Helper.findDuplicateInList(allPlayerHandPromissoryNotes) + "`");
         }
 
         allPromissoryNotes.addAll(getPurgedPN());
 
+        // Find PNs that are extra - players have them but nobody "owns" them
         List<String> unOwnedPromissoryNotes = new ArrayList<>(allPromissoryNotes);
         unOwnedPromissoryNotes.removeAll(allOwnedPromissoryNotes);
         if (unOwnedPromissoryNotes.size() > 0) {
@@ -2240,6 +2502,19 @@ public class Map {
             getPurgedPN().removeAll(unOwnedPromissoryNotes);
         }
 
+        // Remove unowned PNs from all players hands
+        for (Player player : getPlayers().values()) {
+            List<String> pns = new ArrayList<String>();
+            pns.addAll(player.getPromissoryNotes().keySet());
+            for (String pnID : pns) {
+                if (unOwnedPromissoryNotes.contains(pnID)) {
+                    player.removePromissoryNote(pnID);
+                    BotLogger.log("`" + getName() + "`: removed promissory note `" + pnID + "` from player `" + player.getUserName() + "` because nobody 'owned' it");
+                }
+            }
+        }
+
+        // Report PNs that are missing from the game
         List<String> missingPromissoryNotes = new ArrayList<>(allOwnedPromissoryNotes);
         missingPromissoryNotes.removeAll(allPromissoryNotes);
         if (missingPromissoryNotes.size() > 0) {
@@ -2284,5 +2559,17 @@ public class Map {
 
     public void incrementMapImageGenerationCount() {
         this.mapImageGenerationCount++;
+    }
+
+    public boolean hasRunMigration(String string) {
+        return this.runDataMigrations.contains(string);
+    }
+
+    public void addMigration(String string) {
+        this.runDataMigrations.add(string);
+    }
+
+    public ArrayList<String> getRunMigrations(){
+        return this.runDataMigrations;
     }
 }

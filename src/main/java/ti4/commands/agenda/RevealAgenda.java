@@ -1,7 +1,6 @@
 package ti4.commands.agenda;
 
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -53,7 +52,7 @@ public class RevealAgenda extends AgendaSubcommandData {
 
         if(agendaName.equalsIgnoreCase("Emergency Session"))
         {
-            MessageHelper.sendMessageToChannel(channel, Helper.getGamePing(activeMap.getGuild(), activeMap)+" Emergency Session revealed, flipping next agenda");
+            MessageHelper.sendMessageToChannel(channel, "# "+Helper.getGamePing(activeMap.getGuild(), activeMap)+" Emergency Session revealed. This agenda phase will have an additional agenda compared to normal. Flipping next agenda");
             revealAgenda(event, revealFromBottom, activeMap, channel);
             return;
         }
@@ -71,7 +70,7 @@ public class RevealAgenda extends AgendaSubcommandData {
             {
                 if(agendaName.equalsIgnoreCase("Emergency Session"))
                 {
-                    String id3 = activeMap.revealAgenda(revealFromBottom);
+                    activeMap.revealAgenda(revealFromBottom);
                     MessageHelper.sendMessageToChannel(channel, Helper.getGamePing(activeMap.getGuild(), activeMap)+" Emergency Session revealed underneath Covert Legislation, discarding it.");
                 }
                 String id2 = activeMap.getNextAgenda(revealFromBottom);
@@ -99,7 +98,7 @@ public class RevealAgenda extends AgendaSubcommandData {
         activeMap.setLatestOutcomeVotedFor("");
         activeMap.setLatestWhenMsg("");
         activeMap.setLatestAfterMsg("");
-        MessageHelper.sendMessageToChannel(event.getMessageChannel(), Helper.getAgendaRepresentation(id, uniqueID));
+        MessageHelper.sendMessageToChannel(channel, Helper.getAgendaRepresentation(id, uniqueID));
         String text = Helper.getGamePing(event, activeMap) + " Please indicate whether you abstain from playing whens/afters by pressing the buttons below. If you have an action card with those windows, you can simply play it.";
 
         
@@ -108,15 +107,17 @@ public class RevealAgenda extends AgendaSubcommandData {
         List<Button> whenButtons = AgendaHelper.getWhenButtons(activeMap);
         List<Button> afterButtons = AgendaHelper.getAfterButtons(activeMap);
 
-        MessageHelper.sendMessageToChannel(event.getMessageChannel(), text);
+        MessageHelper.sendMessageToChannel(channel, text);
 
         MessageHelper.sendMessageToChannelWithPersistentReacts(channel, Emojis.nowhens, activeMap, whenButtons, "when");
         MessageHelper.sendMessageToChannelWithPersistentReacts(channel, Emojis.noafters,activeMap, afterButtons,"after");
 
         ListVoteCount.turnOrder(event, activeMap, channel);
-        Button proceed = Button.danger( "proceedToVoting", "Proceed to voting without waiting for everyone to react");
+        Button proceed = Button.danger( "proceedToVoting", "Skip waiting and start the voting for everyone");
         List<Button> proceedButtons = new ArrayList<>(List.of(proceed));
-        MessageHelper.sendMessageToChannelWithButtons(channel, "Press this button if the last person forgot to react, but verbally said no whens/afters", proceedButtons);
+        Button transaction = Button.primary("transaction", "Transaction");
+        proceedButtons.add(transaction);
+        MessageHelper.sendMessageToChannelWithButtons(channel, "Press this button if the last person forgot to react, but verbally said no whens/afters. Also a transaction button", proceedButtons);
 
     }
 }

@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -114,16 +115,33 @@ public class GameEnd extends GameSubcommandData {
                 MessageHelper.sendMessageToChannel(event.getChannel(), msg);
                 
             });
-            TextChannel bothelperLoungeChannel = MapGenerator.guildPrimary.getTextChannelsByName("bothelper-lounge", true).get(0);
-            if (bothelperLoungeChannel != null) MessageHelper.sendMessageToChannel(bothelperLoungeChannel, "Game: **" + gameName + "** on server **" + event.getGuild().getName() + "** has concluded.");
-            
         }
+        TextChannel bothelperLoungeChannel = MapGenerator.guildPrimary.getTextChannelsByName("bothelper-lounge", true).get(0);
+        //if (bothelperLoungeChannel != null) MessageHelper.sendMessageToChannel(bothelperLoungeChannel, "Game: **" + gameName + "** on server **" + event.getGuild().getName() + "** has concluded.");
+        List<ThreadChannel> threadChannels = bothelperLoungeChannel.getThreadChannels();
+        if (threadChannels == null){
+             return;
+        }
+        String threadName = "game-starts-and-ends";
+        // SEARCH FOR EXISTING OPEN THREAD
+        for (ThreadChannel threadChannel_ : threadChannels) {
+            if (threadChannel_.getName().equals(threadName)) {
+                MessageHelper.sendMessageToChannel((MessageChannel) threadChannel_,
+                        "Game: **" + gameName + "** on server **" + event.getGuild().getName() + "** has concluded.");
+            }
+        }
+            
+        
         
         //MOVE CHANNELS TO IN-LIMBO
         Category inLimboCategory = event.getGuild().getCategoriesByName("The in-limbo PBD Archive", true).get(0);
         TextChannel tableTalkChannel = (TextChannel) userActiveMap.getTableTalkChannel();
         TextChannel actionsChannel = (TextChannel) userActiveMap.getMainGameChannel();
         if (inLimboCategory != null) {
+            if (inLimboCategory.getChannels().size() > 40) {
+                String holytispoonMention = event.getJDA().getUserById("150809002974904321").getAsMention();
+                MessageHelper.sendMessageToChannel(bothelperLoungeChannel, inLimboCategory.getName() + " category on server " + inLimboCategory.getGuild().getName() + " is almost full. " + holytispoonMention + " - please make room soon!");
+            }
             if (inLimboCategory.getChannels().size() > 48) { //HANDLE FULL IN-LIMBO
                 MessageHelper.sendMessageToChannel(event.getChannel(), inLimboCategory.getName() + " Category is full. " + bothelperMention + " - please make room and manually move these channels.");
             } else {
@@ -168,17 +186,17 @@ public class GameEnd extends GameSubcommandData {
         HashMap<String, Player> players = activeMap.getPlayers();
         int index = 1;
         for (Player player : players.values()) {
-            if (player.getFaction() != null && !player.isDummy()) {
-                int playerVP = player.getTotalVictoryPoints(activeMap);
-                sb.append("> `").append(index).append(".` ");
-                sb.append(Helper.getFactionIconFromDiscord(player.getFaction()));
-                sb.append(Helper.getColourAsMention(MapGenerator.guildPrimary, player.getColor()));
-                sb.append(event.getJDA().getUserById(player.getUserID()).getAsMention());
-                sb.append(" - *").append(playerVP).append("VP* ");
-                if (playerVP >= activeMap.getVp()) sb.append(" - **WINNER**");
-                sb.append("\n");
-                index++;
-            }
+            if (player.getFaction() == null || player.isDummy()) continue;
+            
+            int playerVP = player.getTotalVictoryPoints(activeMap);
+            sb.append("> `").append(index).append(".` ");
+            sb.append(Helper.getFactionIconFromDiscord(player.getFaction()));
+            sb.append(Helper.getColourAsMention(MapGenerator.guildPrimary, player.getColor()));
+            sb.append(event.getJDA().getUserById(player.getUserID()).getAsMention());
+            sb.append(" - *").append(playerVP).append("VP* ");
+            if (playerVP >= activeMap.getVp()) sb.append(" - **WINNER**");
+            sb.append("\n");
+            index++;
         }
 
         sb.append("\n");

@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import ti4.commands.player.PlanetRefresh;
+import ti4.commands.planet.PlanetRefresh;
 import ti4.commands.units.AddRemoveUnits;
 import ti4.generator.Mapper;
 import ti4.helpers.AliasHandler;
@@ -78,7 +78,8 @@ public class ExpPlanet extends ExploreSubcommandData {
             return;
         }
 
-        if (player.getFaction().equalsIgnoreCase("naaz")) {
+
+        if (player.hasAbility("distant_suns")) {
             if (Helper.mechCheck(planetName, activeMap, player)) {
                 if (!NRACheck) {
                     if (player.hasTech("pfa")) { //Pre-Fab Arcologies

@@ -1,7 +1,6 @@
 package ti4.model;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -31,11 +30,27 @@ public class WormholeModel {
         PHI,
         CHI,
         PSI,
-        OMEGA;
+        OMEGA,
+        CUSTOM_ERONOUS_WHEPSILON,
+        CUSTOM_ERONOUS_WHETA,
+        CUSTOM_ERONOUS_WHIOTA,
+        CUSTOM_ERONOUS_WHTHETA,
+        CUSTOM_ERONOUS_WHZETA,
+        WHNARROWS,
+        WHPROBABILITY,
+        WHCHAMPION,
+        WHVOYAGE;
 
         @Override
         public String toString() {
             return super.toString().toLowerCase();
+        }
+
+        public String getWhString() {
+            if(!super.toString().startsWith("wh") && !super.toString().startsWith("custom")) {
+                return "wh" + super.toString().toLowerCase();
+            }
+            return super.toString();
         }
     }
     public Wormhole getWormholeFromString(String wh) {
@@ -46,8 +61,8 @@ public class WormholeModel {
                                 (wormholeModel -> wormholeModel)
                         )
                 );
-        if (allWormholes.containsKey(wh))
-            return allWormholes.get(wh);
+        if (allWormholes.containsKey(wh.toLowerCase()))
+            return allWormholes.get(wh.toLowerCase());
         return null;
     }
 }

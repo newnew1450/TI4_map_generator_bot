@@ -1,16 +1,15 @@
 package ti4.generator;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ti4.ResourceHelper;
 import ti4.helpers.AliasHandler;
-import ti4.map.Tile;
 import ti4.message.BotLogger;
 import ti4.model.*;
 
@@ -24,7 +23,7 @@ import java.util.stream.Stream;
 
 public class Mapper {
     private static final Properties tiles = new Properties();
-    private static final Properties units = new Properties();
+    private static final Properties unitImageSuffixes = new Properties();
     private static final Properties colors = new Properties();
     private static final Properties cc_tokens = new Properties();
     private static final Properties attachment_tokens = new Properties();
@@ -54,9 +53,12 @@ public class Mapper {
     private static final HashMap<String, SecretObjectiveModel> secretObjectives = new HashMap<>();
     private static final HashMap<String, PromissoryNoteModel> promissoryNotes = new HashMap<>();
     private static final HashMap<String, TechnologyModel> technologies = new HashMap<>();
+    private static final HashMap<String, UnitModel> units = new HashMap<>();
+    @Getter
+    private static final HashMap<String, StrategyCardModel> strategyCardSets = new HashMap<>();
 
     public static void init() {
-        readData("units.properties", units, "Could not read unit name file");
+        readData("unit_image_suffixes.properties", unitImageSuffixes, "Could not read unit image suffix file");
         readData("color.properties", colors, "Could not read color name file");
         readData("cc_tokens.properties", cc_tokens, "Could not read cc token name file");
         readData("attachments.properties", attachment_tokens, "Could not read attachment token name file");
@@ -83,7 +85,9 @@ public class Mapper {
         readData("agenda_representation.properties", agendaRepresentation, "Could not read agenda representaion file");
         readData("hyperlanes.properties", hyperlaneAdjacencies, "Could not read hyperlanes file");
         readData("DS_handcards.properties", ds_handcards, "Could not read ds_handcards file");
-        importJsonObjects("decks.json", decks, DeckModel.class, "couild not read decks file");
+        importJsonObjects("decks.json", decks, DeckModel.class, "could not read decks file");
+        importJsonObjects("units.json", units, UnitModel.class, "could not read units file");
+        importJsonObjects("strategyCardSets.json", strategyCardSets, StrategyCardModel.class, "could not read strat cards file");
     }
 
     private static void readData(String propertyFileName, Properties properties, String s) {
@@ -112,7 +116,7 @@ public class Mapper {
                 BotLogger.log(e.getMessage());
             }
         }
-        
+
         allObjects.forEach(obj -> {
             if (obj.isValid()) {
                 objectMap.put(obj.getAlias(), obj);
@@ -176,7 +180,9 @@ public class Mapper {
     }
 
     public static List<String> getFrontierTileIds() {
+        final List<String> exclusionList = List.of("Hyperlane", "", "Mallice (Locked)");
         return TileHelper.getAllTiles().values().stream()
+                .filter(tileModel -> !exclusionList.contains(tileModel.getNameNullSafe()))
                 .filter(tileModel -> tileModel.getPlanetIds().size() == 0)
                 .map(TileModel::getId)
                 .toList();
@@ -202,7 +208,11 @@ public class Mapper {
     }
 
     public static Set<String> getWormholes(String tileID) {
+        if(TileHelper.getAllTiles().get(tileID).getWormholes() == null){
+            return null;
+        }
         return TileHelper.getAllTiles().get(tileID).getWormholes().stream()
+                .filter(Objects::nonNull)
                 .map(WormholeModel.Wormhole::toString)
                 .collect(Collectors.toSet());
     }
@@ -210,8 +220,13 @@ public class Mapper {
     public static Set<String> getWormholesTiles(String wormholeID) {
         WormholeModel wormholeModel = new WormholeModel();
         WormholeModel.Wormhole wormhole = wormholeModel.getWormholeFromString(wormholeID);
+        if(wormhole == null){
+            Set<String> empty = new HashSet<String>();
+            return empty;
+        }
+
         return TileHelper.getAllTiles().values().stream()
-                .filter(tileModel -> tileModel.getWormholes().contains(wormhole))
+                .filter(tileModel -> tileModel.getWormholes() != null && tileModel.getWormholes().contains(wormhole))
                 .map(TileModel::getId)
                 .collect(Collectors.toSet());
     }
@@ -224,13 +239,28 @@ public class Mapper {
         return general.getProperty(id);
     }
 
-    public static Map<String, String> getUnits() {
+    public static Map<String, String> getUnitImageSuffixes() {
         Map<String, String> unitMap = new HashMap<>();
-        for (Map.Entry<Object, Object> entry : units.entrySet()) {
+        for (Map.Entry<Object, Object> entry : unitImageSuffixes.entrySet()) {
             String representation = (String) unit_representation.get(entry.getKey());
             unitMap.put((String) entry.getValue(), representation);
         }
         return unitMap;
+    }
+
+    public static Map<String, UnitModel> getUnits() {
+        return units;
+    }
+
+    public static UnitModel getUnit(String unitID) {
+        return units.get(unitID);
+    }
+
+    public static UnitModel getUnitModelByTechUpgrade(String techID) {
+        return units.values().stream()
+                .filter(unitModel -> techID.equals(unitModel.getRequiredTechId()))
+                .findFirst()
+                .orElse(null);
     }
 
     public static Map<String, String> getColorToId() {
@@ -250,11 +280,11 @@ public class Mapper {
 
     public static String getUnitID(String unitID, String color) {
         String property = colors.getProperty(color);
-        return property + units.getProperty(unitID);
+        return property + unitImageSuffixes.getProperty(unitID);
     }
 
     public static List<String> getUnitIDList() {
-        return units.keySet().stream().filter(unit -> unit instanceof String)
+        return unitImageSuffixes.keySet().stream().filter(unit -> unit instanceof String)
                 .map(unit -> (String) unit)
                 .sorted()
                 .collect(Collectors.toList());
@@ -324,6 +354,8 @@ public class Mapper {
     }
 
     public static SecretObjectiveModel getSecretObjective(String id) {
+        id = id.replace("extra1", "");
+        id = id.replace("extra2", "");
         return secretObjectives.get(id);
     }
 
@@ -366,6 +398,9 @@ public class Mapper {
     }
 
     public static String getPromissoryNoteOwner(String id) {
+        if(promissoryNotes.get(id) == null){
+            return "finNullDodger";
+        }
         return promissoryNotes.get(id).getOwner();
     }
 
@@ -378,10 +413,14 @@ public class Mapper {
     }
 
     public static String getExplore(String id) {
+        id = id.replace("extra1", "");
+        id = id.replace("extra2", "");
         return (String) explore.get(id);
     }
 
     public static String getRelic(String id) {
+        id = id.replace("extra1", "");
+        id = id.replace("extra2", "");
         return (String) relics.get(id);
     }
 
@@ -452,6 +491,14 @@ public class Mapper {
         return soList;
     }
 
+    public static HashMap<String, SecretObjectiveModel> getSecretObjectives(String extra) {
+        HashMap<String, SecretObjectiveModel> soList = new HashMap<>();
+        for (Map.Entry<String, SecretObjectiveModel> entry : secretObjectives.entrySet()) {
+            soList.put(entry.getKey() + extra, entry.getValue());
+        }
+        return soList;
+    }
+
     public static Map<String, String> getPlanetRepresentations() {
         return TileHelper.getAllPlanets().values().stream()
                 .collect(Collectors.toMap(PlanetModel::getId, PlanetModel::getNameNullSafe));
@@ -517,7 +564,19 @@ public class Mapper {
         }
         return agendaList;
     }
-
+    public static HashMap<String, String> getAgendaJustNames(ti4.map.Map activeMap) {
+        HashMap<String, String> agendaList = new HashMap<>();
+        for (AgendaModel agenda : agendas.values()) {
+            if(activeMap.isAbsolMode() && agenda.getAlias().contains("absol_")){
+                agendaList.put(agenda.getAlias(), agenda.getName());
+            }
+            if(!activeMap.isAbsolMode() && !agenda.getAlias().contains("absol_")){
+                agendaList.put(agenda.getAlias(), agenda.getName());
+            }
+            
+        }
+        return agendaList;
+    }
     @Nullable
     public static String getCCPath(String ccID) {
         String ccPath = ResourceHelper.getInstance().getCCFile(ccID);
@@ -569,6 +628,10 @@ public class Mapper {
         return technologies;
     }
 
+    public static TechnologyModel getTech(String id) {
+        return technologies.get(id);
+    }
+
     public static boolean isValidTech(String id) {
         return technologies.get(id) != null;
     }
@@ -603,6 +666,15 @@ public class Mapper {
         return poList;
     }
 
+    public static HashMap<String, String> getExplores(String extra) {
+        HashMap<String, String> expList = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : explore.entrySet()) {
+            StringTokenizer tokenizer = new StringTokenizer((String) entry.getValue(), ";");
+            expList.put((String) entry.getKey()+extra, tokenizer.nextToken());
+        }
+        return expList;
+    }
+
     public static HashMap<String, String> getExplores() {
         HashMap<String, String> expList = new HashMap<>();
         for (Map.Entry<Object, Object> entry : explore.entrySet()) {
@@ -610,6 +682,14 @@ public class Mapper {
             expList.put((String) entry.getKey(), tokenizer.nextToken());
         }
         return expList;
+    }
+    public static HashMap<String, String> getRelics(String extra) {
+        HashMap<String, String> relicList = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : relics.entrySet()) {
+            StringTokenizer tokenizer = new StringTokenizer((String) entry.getValue(), ";");
+            relicList.put((String) entry.getKey()+extra, tokenizer.nextToken());
+        }
+        return relicList;
     }
 
     public static HashMap<String, String> getRelics() {

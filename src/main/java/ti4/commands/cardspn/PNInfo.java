@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -59,6 +60,12 @@ public class PNInfo extends PNCardsSubcommandData {
                 cardsInfoThreadChannel.sendMessage(message).queue();
             }
         }
+        List<Button> buttons = new ArrayList<Button>();
+        Button transaction = Button.primary("transaction", "Transaction");
+        buttons.add(transaction);
+        Button modify = Button.secondary("getModifyTiles", "Modify Units");
+        buttons.add(modify);
+        MessageHelper.sendMessageToChannelWithButtons((MessageChannel)player.getCardsInfoThread(activeMap), "You can use this button to resolve a transaction or to modify units", buttons);
     }
 
     private static List<Button> getPlayablePNButtons(Map activeMap, Player player) {
@@ -154,7 +161,11 @@ public class PNInfo extends PNCardsSubcommandData {
         if (!Mapper.isColorValid(playerColor) || !Mapper.isFaction(playerFaction)) {
             return;
         }
+
+        // All PNs a Player brought to the game (owns)
         List<String> promissoryNotes = new ArrayList<>(player.getPromissoryNotesOwned());
+
+        // Remove PNs in other players' hands and player areas and purged PNs
         for (Player player_ : activeMap.getPlayers().values()) {
             promissoryNotes.removeAll(player_.getPromissoryNotes().keySet());
             promissoryNotes.removeAll(player_.getPromissoryNotesInPlayArea());
@@ -163,6 +174,7 @@ public class PNInfo extends PNCardsSubcommandData {
         promissoryNotes.removeAll(player.getPromissoryNotesInPlayArea());
         promissoryNotes.removeAll(activeMap.getPurgedPN());
         
+        // Any remaining PNs are missing from the game and can be re-added to the player's hand
         if (!promissoryNotes.isEmpty()) {
             for (String promissoryNote : promissoryNotes) {
                 player.setPromissoryNote(promissoryNote);

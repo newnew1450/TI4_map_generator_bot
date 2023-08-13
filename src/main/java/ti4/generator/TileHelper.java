@@ -1,16 +1,13 @@
 package ti4.generator;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
-import ti4.ResourceHelper;
 import ti4.helpers.Storage;
-import ti4.message.BotLogger;
 import ti4.model.PlanetModel;
 import ti4.model.TileModel;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +15,8 @@ import java.util.stream.Stream;
 
 public class TileHelper {
 
-    private static final java.util.Map<String, TileModel> allTiles = new HashMap<>();
-    private static final java.util.Map<String, PlanetModel> allPlanets = new HashMap<>();
+    private static java.util.Map<String, TileModel> allTiles = new HashMap<>();
+    private static java.util.Map<String, PlanetModel> allPlanets = new HashMap<>();
 
     public static void init() {
         initPlanetsFromJson();
@@ -92,5 +89,29 @@ public class TileHelper {
 
     public static void addNewPlanetToList(PlanetModel planet) {
         allPlanets.put(planet.getId(), planet);
+    }
+
+    public static void exportAllPlanets() {
+        ObjectMapper mapper = new ObjectMapper();
+        String resourcePath = Storage.getResourcePath() + File.separator + "planets" + File.separator;
+        allPlanets.values().forEach(planetModel -> {
+            try {
+                mapper.writeValue(new File(resourcePath + planetModel.getId() + ".json"), planetModel);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static void exportAllTiles() {
+        ObjectMapper mapper = new ObjectMapper();
+        String resourcePath = Storage.getResourcePath() + File.separator + "systems" + File.separator;
+        allTiles.values().forEach(tileModel -> {
+            try {
+                mapper.writeValue(new File(resourcePath + tileModel.getId() + ".json"), tileModel);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }

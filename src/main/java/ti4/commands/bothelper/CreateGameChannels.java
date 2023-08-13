@@ -168,24 +168,26 @@ public class CreateGameChannels extends BothelperSubcommandData {
 
         //CHECK IF GUILD HAS ALL PLAYERS LISTED
         List<String> guildMemberIDs = guild.getMembers().stream().map(m -> m.getId()).toList();
-        boolean sendInviteLink = false;
+        List<Member> missingMembers = new ArrayList<>();
         for (Member member : members) {
             if (!guildMemberIDs.contains(member.getId())) {
-                sendMessage(member.getAsMention() + " is not a member of the server **" + guild.getName() + "**. Please use the invite below to join the server and then try this command again.");
-                sendInviteLink = true;
+                missingMembers.add(member);
             }
         }
-        if (sendInviteLink) {
+        if (missingMembers.size() > 0) {
+            sendMessage("Sorry for the inconvenience! Due to Discord's limits on Role/Channel/Thread count, we need to create this game on another server.\nThe following players are not members of the server **" + guild.getName() + "**.\nPlease use the invite below to join the server and then try this command again.\nAdd a react to your name below once you've joined!");
+            for (Member member : missingMembers) {
+                sendMessage("> " + member.getAsMention());
+            }
             sendMessage(Helper.getGuildInviteURL(guild));
             return;
         }
 
         //CREATE ROLE
         Role role = guild.createRole()
-        .setName(gameName)
-        .setMentionable(true)
-        .complete();
-
+            .setName(gameName)
+            .setMentionable(true)
+            .complete();
 
         //ADD PLAYERS TO ROLE
         for (Member member : members) {
@@ -254,7 +256,7 @@ public class CreateGameChannels extends BothelperSubcommandData {
         message.append("> " + actionsChannel.getAsMention()).append("\n");
         message.append("> " + botThread.getAsMention()).append("\n");
         sendMessage(message.toString());
-
+        
         MapSaveLoadManager.saveMap(newMap, event);
     }
 
@@ -266,6 +268,7 @@ public class CreateGameChannels extends BothelperSubcommandData {
         int nextPBDNumber = Collections.max(getAllExistingPBDNumbers()) + 1;
         return "pbd" + nextPBDNumber;
     }
+    
 
     private static boolean gameOrRoleAlreadyExists(String name) {
         List<Guild> guilds = MapGenerator.jda.getGuilds();
@@ -321,6 +324,39 @@ public class CreateGameChannels extends BothelperSubcommandData {
                 pbdNumbers.add(Integer.parseInt(pbdNum));
             }
         }
+        pbdNumbers.remove(1000); //TODO: remove this after 1001 is created - this is a fix for 1000 being created early
+        return pbdNumbers;
+    }
+    private static ArrayList<Integer> getAllExistingFOWNumbers() {
+        List<Guild> guilds = MapGenerator.jda.getGuilds();
+        ArrayList<Integer> pbdNumbers = new ArrayList<>();
+
+        // GET ALL PBD ROLES FROM ALL GUILDS
+        for (Guild guild : guilds) {
+            System.out.println(guild.getName());
+            List<Role> pbdRoles = guild.getRoles().stream()
+                .filter(r -> r.getName().startsWith("fow"))
+                .toList();
+
+            //EXISTING ROLE NAMES
+            for (Role role : pbdRoles) {
+                String pbdNum = role.getName().replace("fow", "");
+                if (Helper.isInteger(pbdNum)) {
+                    pbdNumbers.add(Integer.parseInt(pbdNum));
+                }
+            }
+        }
+
+        // GET ALL EXISTING PBD MAP NAMES
+        List<String> mapNames = MapManager.getInstance().getMapList().keySet().stream()
+            .filter(mapName -> mapName.startsWith("fow"))
+            .toList();
+        for (String mapName : mapNames) {
+            String pbdNum = mapName.replace("fow", "");
+            if (Helper.isInteger(pbdNum)) {
+                pbdNumbers.add(Integer.parseInt(pbdNum));
+            }
+        }
         return pbdNumbers;
     }
 
@@ -362,13 +398,17 @@ public class CreateGameChannels extends BothelperSubcommandData {
         return true;
     }
 
-    private static String getCategoryNameForGame(String gameName) {
+    public static String getCategoryNameForGame(String gameName) {
         if (!gameName.startsWith("pbd")) return null;
         String gameNumber = StringUtils.substringAfter(gameName, "pbd");
         if (!Helper.isInteger(gameNumber)) return null;
         int gameNum = Integer.parseInt(gameNumber);
         int lowerBound = gameNum - gameNum % 25 + 1;
         int upperBound = lowerBound + 24;
+        if (gameNum % 25 == 0) {
+            lowerBound = gameNum - 24;
+            upperBound = gameNum;
+        }
         return "PBD #" + lowerBound + "-" + upperBound;
     }
     

@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import ti4.generator.TileHelper;
 import ti4.generator.UnitTokenPosition;
+import ti4.helpers.AliasHandler;
 import ti4.helpers.Constants;
 import ti4.helpers.Storage;
 import ti4.message.BotLogger;
@@ -31,11 +32,12 @@ public class CreatePlanet extends BothelperSubcommandData {
         addOptions(new OptionData(OptionType.INTEGER, Constants.PLANET_POSITION_Y, "The y-coordinate of the planet's position in the tile image").setRequired(true));
         addOptions(new OptionData(OptionType.INTEGER, Constants.PLANET_RESOURCES, "The planet's resource value").setRequired(true));
         addOptions(new OptionData(OptionType.INTEGER, Constants.PLANET_INFLUENCE, "The planet's influence value").setRequired(true));
-        addOptions(new OptionData(OptionType.STRING, Constants.PLANET_TYPE, "Planet type - valid values are Hazardous, Industrial, Cultural, None.").setRequired(true));
-        addOptions(new OptionData(OptionType.STRING, Constants.PLANET_TECH_SKIPS, "Comma-separated list of skips (Biotic, Cybernetic, Propulsion, Warfare, Unitskip, Nonunitskip)").setRequired(false));
+        addOptions(new OptionData(OptionType.STRING, Constants.PLANET_TYPE, "Planet type - valid values are Hazardous, Industrial, Cultural, None.").setRequired(true).setAutoComplete(true));
+        addOptions(new OptionData(OptionType.STRING, Constants.PLANET_TECH_SKIPS, "Comma-separated list of skips (Biotic, Cybernetic, Propulsion, Warfare, Unitskip, Nonunitskip)").setRequired(false).setAutoComplete(true));
         addOptions(new OptionData(OptionType.STRING, Constants.PLANET_LEGENDARY_NAME, "If the planet has a legendary ability, this is its name. An ability must have both a name and text.").setRequired(false));
         addOptions(new OptionData(OptionType.STRING, Constants.PLANET_LEGENDARY_TEXT, "If the planet has a legendary ability, this is its text. An ability must have both a name and text.").setRequired(false));
         addOptions(new OptionData(OptionType.STRING, Constants.PLANET_FACTION_HOMEWORLD, "If this planet is in a faction's home system, put that faction's ID here").setRequired(false));
+        addOptions(new OptionData(OptionType.STRING, Constants.PLANET_SHORT_NAME, "A shortened name to display on the planet \"card\". MAX 10 CHARACTERS, INCLUDING SPACES").setRequired(false));
     }
 
     @Override
@@ -45,24 +47,45 @@ public class CreatePlanet extends BothelperSubcommandData {
         String legendaryName = Optional.ofNullable(event.getOption(Constants.PLANET_LEGENDARY_NAME)).isPresent() ? event.getOption(Constants.PLANET_LEGENDARY_NAME).getAsString() : null;
         String legendaryAbility = Optional.ofNullable(event.getOption(Constants.PLANET_LEGENDARY_TEXT)).isPresent() ? event.getOption(Constants.PLANET_LEGENDARY_TEXT).getAsString() : null;
         String factionHomeworld = Optional.ofNullable(event.getOption(Constants.PLANET_FACTION_HOMEWORLD)).isPresent() ? event.getOption(Constants.PLANET_FACTION_HOMEWORLD).getAsString() : null;
-
-        PlanetModel planet = createPlanetModel(event.getOption(Constants.PLANET_ID).getAsString(),
-                event.getOption(Constants.PLANET_TILE_ID).getAsString(),
-                event.getOption(Constants.PLANET_NAME).getAsString(),
-                event.getOption(Constants.PLANET_ALIASES).getAsString(),
-                event.getOption(Constants.PLANET_POSITION_X).getAsInt(),
-                event.getOption(Constants.PLANET_POSITION_Y).getAsInt(),
-                event.getOption(Constants.PLANET_RESOURCES).getAsInt(),
-                event.getOption(Constants.PLANET_INFLUENCE).getAsInt(),
-                event.getOption(Constants.PLANET_TYPE).getAsString(),
-                techString,
-                legendaryName,
-                legendaryAbility,
-                factionHomeworld
-        );
-        exportPlanetModelToJson(planet);
-        TileHelper.addNewPlanetToList(planet);
-        sendMessage("Created new planet! Please check and make sure everything generated properly.");
+        String shortName = Optional.ofNullable(event.getOption(Constants.PLANET_SHORT_NAME)).isPresent() ? event.getOption(Constants.PLANET_SHORT_NAME).getAsString() : null;
+        PlanetModel planet = null;
+        try {
+            planet = createPlanetModel(event.getOption(Constants.PLANET_ID).getAsString(),
+                    event.getOption(Constants.PLANET_TILE_ID).getAsString(),
+                    event.getOption(Constants.PLANET_NAME).getAsString(),
+                    event.getOption(Constants.PLANET_ALIASES).getAsString(),
+                    event.getOption(Constants.PLANET_POSITION_X).getAsInt(),
+                    event.getOption(Constants.PLANET_POSITION_Y).getAsInt(),
+                    event.getOption(Constants.PLANET_RESOURCES).getAsInt(),
+                    event.getOption(Constants.PLANET_INFLUENCE).getAsInt(),
+                    event.getOption(Constants.PLANET_TYPE).getAsString(),
+                    techString,
+                    legendaryName,
+                    legendaryAbility,
+                    factionHomeworld,
+                    shortName
+            );
+        } catch (Exception e) {
+            BotLogger.log("Something went wrong creating the planet! "
+                    + e.getMessage() + "\n" + e.getStackTrace());
+        }
+        if(Optional.ofNullable(planet).isPresent()) {
+            try {
+                exportPlanetModelToJson(planet);
+            } catch (Exception e) {
+                BotLogger.log("Something went wrong exporting the planet to json! "
+                        + e.getMessage() + "\n" +e.getStackTrace());
+            }
+            try {
+                TileHelper.addNewPlanetToList(planet);
+                AliasHandler.addNewPlanetAliases(planet);
+            } catch (Exception e) {
+                BotLogger.log("Something went wrong adding the planet to the active planets list! " +
+                        e.getMessage() + "\n" + e.getStackTrace());
+            }
+            sendMessage("Created new planet! Please check and make sure everything generated properly. This is the model:\n" +
+                    "```json\n" + TileHelper.getAllPlanets().get(event.getOption(Constants.PLANET_ID).getAsString()) + "\n```");
+        }
     }
 
     private static PlanetModel createPlanetModel(String planetId,
@@ -77,11 +100,12 @@ public class CreatePlanet extends BothelperSubcommandData {
                                                 String skips,
                                                 String legendaryName,
                                                 String legendaryText,
-                                                String factionHomeworld) {
+                                                String factionHomeworld,
+                                                String shortName) {
         PlanetTypeModel typeModel = new PlanetTypeModel();
 
         PlanetModel planet = new PlanetModel();
-        planet.setId(planetId);
+        planet.setId(planetId.toLowerCase());
         planet.setTileId(planetTileId);
         planet.setName(planetName);
         planet.setAliases(getAliasListFromString(planetAliases));
@@ -91,12 +115,14 @@ public class CreatePlanet extends BothelperSubcommandData {
         planet.setPlanetType(typeModel.getPlanetTypeFromString(planetType));
         if(Optional.ofNullable(skips).isPresent())
             planet.setTechSpecialties(getTechSpecialtiesFromString(skips));
+        if(Optional.ofNullable(factionHomeworld).isPresent())
+            planet.setFactionHomeworld(factionHomeworld);
+        if(Optional.ofNullable(shortName).isPresent())
+            planet.setShortName(shortName);
         if(Optional.ofNullable(legendaryName).isPresent()) {
             planet.setLegendaryAbilityName(legendaryName);
             planet.setLegendaryAbilityText(legendaryText);
         }
-        if(Optional.ofNullable(factionHomeworld).isPresent())
-            planet.setFactionHomeworld(factionHomeworld);
         planet.setUnitPositions(createDefaultUnitTokenPosition(planet));
 
         return planet;

@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import ti4.generator.GenerateMap;
 import ti4.helpers.AliasHandler;
 import ti4.helpers.ButtonHelper;
+import ti4.helpers.ButtonHelperFactionSpecific;
 import ti4.helpers.Constants;
 import ti4.helpers.Emojis;
 import ti4.helpers.FoWHelper;
@@ -53,10 +54,18 @@ public class Stats extends PlayerSubcommandData {
 			return;
 		}
 
+		OptionMapping playerOption = event.getOption(Constants.PLAYER);
+		OptionMapping factionColorOption = event.getOption(Constants.FACTION_COLOR);
 		List<OptionMapping> optionMappings = event.getOptions();
+		optionMappings.remove(playerOption);
+		optionMappings.remove(factionColorOption);
 		//NO OPTIONS SELECTED, JUST DISPLAY STATS
-		if (optionMappings.isEmpty() && !activeMap.isFoWMode()) {
-			sendMessage(getPlayersCurrentStatsText(player, activeMap));
+		if (optionMappings.isEmpty()) {
+			if (activeMap.isFoWMode()) {
+				MessageHelper.sendMessageToChannel(player.getPrivateChannel(), getPlayersCurrentStatsText(player, activeMap));
+			} else {
+				sendMessage(getPlayersCurrentStatsText(player, activeMap));
+			}
 			return;
 		}
 
@@ -114,7 +123,7 @@ public class Stats extends PlayerSubcommandData {
 		OptionMapping optionTG = event.getOption(Constants.TG);
 		if (optionTG != null) {
 			if(optionTG.getAsString().contains("+")){
-				ButtonHelper.pillageCheck(player, activeMap);
+				ButtonHelperFactionSpecific.pillageCheck(player, activeMap);
 			}
 			setValue(event, activeMap, player, optionTG, player::setTg, player::getTg);
 
@@ -228,6 +237,7 @@ public class Stats extends PlayerSubcommandData {
 			sb.append("      No SC Picked");
 		}
 		sb.append("\n");
+		sb.append("> Debt: ").append(player.getDebtTokens()).append("\n");
 		sb.append("> Speaker: ").append(getActiveMap().getSpeaker().equals(player.getUserID())).append("\n");
 		sb.append("> Passed: ").append(player.isPassed()).append("\n");
 		sb.append("> Dummy: ").append(player.isDummy()).append("\n");
@@ -236,8 +246,10 @@ public class Stats extends PlayerSubcommandData {
 		sb.append("> Planets: ").append(player.getPlanets()).append("\n");
 		sb.append("> Techs: ").append(player.getTechs()).append("\n");
 		sb.append("> Relics: ").append(player.getRelics()).append("\n");
+		sb.append("> Mahact CC: ").append(player.getMahactCC()).append("\n");
 		sb.append("> Leaders: ").append(player.getLeaderIDs()).append("\n");
 		sb.append("> Owned PNs: ").append(player.getPromissoryNotesOwned()).append("\n");
+		sb.append("> Owned Units: ").append(player.getUnitsOwned()).append("\n");
 		sb.append("\n");
 
 		return sb.toString();
@@ -293,7 +305,7 @@ public class Stats extends PlayerSubcommandData {
 				int tg = player.getTg();
 				tg += tgCount;
 				messageToSend = Helper.getColourAsMention(event.getGuild(),player.getColor()) +" gained "+tgCount +" tgs from picking SC #"+scNumber;
-				MessageHelper.sendMessageToChannel((MessageChannel)event.getChannel(),"You gained "+tgCount +" tgs from picking SC #"+scNumber);
+				MessageHelper.sendMessageToChannel((MessageChannel)event.getChannel(),Helper.getPlayerRepresentation(player,activeMap)+" gained "+tgCount +" tgs from picking SC #"+scNumber);
 				if (activeMap.isFoWMode()) {
 					FoWHelper.pingAllPlayersWithFullStats(activeMap, event, player, messageToSend);
 				}
@@ -302,7 +314,7 @@ public class Stats extends PlayerSubcommandData {
 				if(player.getLeaderIDs().contains("hacancommander") && !player.hasLeaderUnlocked("hacancommander")){
 					ButtonHelper.commanderUnlockCheck(player, activeMap, "hacan", event);
 				}
-				ButtonHelper.pillageCheck(player, activeMap);
+				ButtonHelperFactionSpecific.pillageCheck(player, activeMap);
 			}
 			return true;
 

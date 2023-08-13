@@ -27,18 +27,20 @@ public class SCPick extends PlayerSubcommandData {
         addOptions(new OptionData(OptionType.INTEGER, Constants.SC4, "4th"));
         addOptions(new OptionData(OptionType.INTEGER, Constants.SC5, "5th"));
         addOptions(new OptionData(OptionType.INTEGER, Constants.SC6, "6th"));
+        addOptions(new OptionData(OptionType.STRING, Constants.FACTION_COLOR,"Faction or Color for which you set stats").setAutoComplete(true));
 
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        Map activeMap = getActiveMap();
-        Player player = activeMap.getPlayer(getUser().getId());
-        player = Helper.getGamePlayer(activeMap, player, event, null);
-        if (player == null) {
-            sendMessage("You're not a player of this game");
-            return;
-        }
+		Map activeMap = getActiveMap();
+		Player player = activeMap.getPlayer(getUser().getId());
+		player = Helper.getGamePlayer(activeMap, player, event, null);
+		player = Helper.getPlayer(activeMap, player, event);
+		if (player == null) {
+			sendMessage("Player could not be found");
+			return;
+		}
 
         Collection<Player> activePlayers = activeMap.getPlayers().values().stream()
                 .filter(player_ -> player_.isRealPlayer())
@@ -101,6 +103,9 @@ public class SCPick extends PlayerSubcommandData {
                 .filter(player_ -> player_.isRealPlayer())
                 .collect(Collectors.toList());
         int maxSCsPerPlayer = activeMap.getSCList().size() / activePlayers.size();
+        if(maxSCsPerPlayer < 1){
+            maxSCsPerPlayer = 1;
+        }
 
         StringBuilder sb = new StringBuilder();
         sb.append(Helper.getPlayerRepresentation(player, activeMap, event.getGuild(), true));
@@ -120,6 +125,7 @@ public class SCPick extends PlayerSubcommandData {
             int player_SCCount = player_.getSCs().size();
             if (nextCorrectPing && player_SCCount < maxSCsPerPlayer && player_.getFaction() != null) {
                 msgExtra += Helper.getPlayerRepresentation(player_, activeMap, event.getGuild(), true) + " To Pick SC";
+                activeMap.setCurrentPhase("strategy");
                 privatePlayer = player_;
                 allPicked = false;
                 break;
@@ -151,6 +157,10 @@ public class SCPick extends PlayerSubcommandData {
                 }
             }
 
+            for (int sc : scPickedList) {
+                activeMap.setScTradeGood(sc, 0);
+            }
+
             Player nextPlayer = null;
             int lowestSC = 100;
             for (Player player_ : activePlayers) {
@@ -171,6 +181,10 @@ public class SCPick extends PlayerSubcommandData {
                 msgExtra += " " + Helper.getPlayerRepresentation(nextPlayer, activeMap) + " is up for an action";
                 privatePlayer = nextPlayer;
                 activeMap.updateActivePlayer(nextPlayer);
+                if(activeMap.isFoWMode()){
+                    FoWHelper.pingAllPlayersWithFullStats(activeMap, event, nextPlayer, "started turn");
+                }
+                
                 activeMap.setCurrentPhase("action");
             }
         }
@@ -189,13 +203,12 @@ public class SCPick extends PlayerSubcommandData {
             
             if(!allPicked)
             {
-                MessageHelper.sendMessageToChannelWithButtons(privatePlayer.getPrivateChannel(), "Use Buttons to Pick SC", Helper.getRemainingSCButtons(event, activeMap));
+                activeMap.setCurrentPhase("strategy");
+                MessageHelper.sendMessageToChannelWithButtons(privatePlayer.getPrivateChannel(), "Use Buttons to Pick SC", Helper.getRemainingSCButtons(event, activeMap, privatePlayer));
             }
             else{
                    
-                MessageHelper.sendMessageToChannelWithButtons(privatePlayer.getPrivateChannel(), msgExtra + "\n Use Buttons to do turn.", ButtonHelper.getStartOfTurnButtons(privatePlayer, activeMap, false, event));
-
-                    
+                MessageHelper.sendMessageToChannelWithButtons(privatePlayer.getPrivateChannel(), msgExtra + "\n Use Buttons to do turn.", ButtonHelper.getStartOfTurnButtons(privatePlayer, activeMap, false, event));     
                     
                 }
 
@@ -207,7 +220,8 @@ public class SCPick extends PlayerSubcommandData {
                 if(!allPicked && !activeMap.isHomeBrewSCMode())
                 {
                     activeMap.updateActivePlayer(privatePlayer);
-                    MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), msgExtra+"\nUse Buttons to Pick SC", Helper.getRemainingSCButtons(event, activeMap));
+                    MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), msgExtra+"\nUse Buttons to Pick SC", Helper.getRemainingSCButtons(event, activeMap, privatePlayer));
+                    activeMap.setCurrentPhase("strategy");
                 }
                 else{
                     if(allPicked)

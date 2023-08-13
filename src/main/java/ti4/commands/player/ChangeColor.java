@@ -27,8 +27,8 @@ public class ChangeColor extends PlayerSubcommandData {
         Map activeMap = getActiveMap();
 
         @SuppressWarnings("ConstantConditions")
-        String color = AliasHandler.resolveColor(event.getOption(Constants.COLOR).getAsString().toLowerCase());
-        if (!Mapper.isColorValid(color)) {
+        String newColour = AliasHandler.resolveColor(event.getOption(Constants.COLOR).getAsString().toLowerCase());
+        if (!Mapper.isColorValid(newColour)) {
             sendMessage("Color not valid");
             return;
         }
@@ -43,17 +43,22 @@ public class ChangeColor extends PlayerSubcommandData {
         LinkedHashMap<String, Player> players = activeMap.getPlayers();
         for (Player playerInfo : players.values()) {
             if (playerInfo != player) {
-                if (color.equals(playerInfo.getColor())) {
-                    sendMessage("Player:" + playerInfo.getUserName() + " already uses color:" + color);
+                if (newColour.equals(playerInfo.getColor())) {
+                    sendMessage("Player:" + playerInfo.getUserName() + " already uses color:" + newColour);
                     return;
                 }
             }
         }
 
         String oldColor = player.getColor();
-        player.changeColor(color);
+        String oldColorKey = oldColor + "_";
+        String newColorKey = newColour + "_";
+        player.changeColor(newColour);
         String oldColorID = Mapper.getColorID(oldColor);
-        String colorID = Mapper.getColorID(color);
+        String colorID = Mapper.getColorID(newColour);
+        
+        String oldColorSuffix = "_" + oldColorID + ".";
+        String newColorSuffix = "_" + colorID + ".";
 
         for (Player playerInfo : players.values()) {
             LinkedHashMap<String, Integer> promissoryNotes = playerInfo.getPromissoryNotes();
@@ -62,33 +67,52 @@ public class ChangeColor extends PlayerSubcommandData {
             for (java.util.Map.Entry<String, Integer> pn : promissoryNotes.entrySet()) {
                 String key = pn.getKey();
                 Integer value = pn.getValue();
-                String replacedKey = key.replace(oldColor, color);
-                promissoryNotesChanged.put(replacedKey, value);
+                String newKey = key;
+                if (key.startsWith(oldColorKey)) {
+                    newKey = key.replace(oldColorKey, newColorKey);
+                }
+                promissoryNotesChanged.put(newKey, value);
             }
             playerInfo.setPromissoryNotes(promissoryNotesChanged);
 
             List<String> promissoryNotesInPlayArea = playerInfo.getPromissoryNotesInPlayArea();
             List<String> promissoryNotesInPlayAreaChanged = new ArrayList<>();
             for (String pn : promissoryNotesInPlayArea) {
-                String replacedPN = pn.replace(oldColor, color);
-                promissoryNotesInPlayAreaChanged.add(replacedPN);
+                String newKey = pn;
+                if (pn.startsWith(oldColorKey)) {
+                    newKey = pn.replace(oldColorKey, newColorKey);
+                }
+                promissoryNotesInPlayAreaChanged.add(newKey);
             }
             playerInfo.setPromissoryNotesInPlayArea(promissoryNotesInPlayAreaChanged);
+            
             List<String> mahactCC = new ArrayList<>(playerInfo.getMahactCC());
             for (String cc : mahactCC) {
-                String replacedCC = cc.replace(oldColor, color);
-                replacedCC = replacedCC.replace(oldColorID, colorID);
-                playerInfo.removeMahactCC(cc);
-                playerInfo.addMahactCC(replacedCC);
+                if (cc.equals(oldColor)) {
+                    String replacedCC = cc.replace(oldColor, newColour);
+                    playerInfo.removeMahactCC(cc);
+                    playerInfo.addMahactCC(replacedCC);
+                }
+            }
+
+            java.util.Map<String, Integer> debtTokens = new LinkedHashMap<>(playerInfo.getDebtTokens());
+            for (String colour : debtTokens.keySet()) {
+                if (colour.equals(oldColor)) {
+                    Integer count = debtTokens.get(colour);
+                    playerInfo.clearAllDebtTokens(colour);
+                    playerInfo.addDebtTokens(newColour, count);
+                }
             }
         }
 
         Set<String> ownedPromissoryNotes = player.getPromissoryNotesOwned();
         HashSet<String> ownedPromissoryNotesChanged = new HashSet<>();
         for (String pn : ownedPromissoryNotes) {
-            String key = pn;
-            String replacedKey = key.replace(oldColor, color);
-            ownedPromissoryNotesChanged.add(replacedKey);
+            String newKey = pn;
+            if (pn.startsWith(oldColorKey)) {
+                newKey = pn.replace(oldColorKey, newColorKey);
+            }
+            ownedPromissoryNotesChanged.add(newKey);
         }
         player.setPromissoryNotesOwned(ownedPromissoryNotesChanged);
 
@@ -99,15 +123,17 @@ public class ChangeColor extends PlayerSubcommandData {
                 HashMap<String, Integer> unitDamage = new HashMap<>(unitHolder.getUnitDamage());
                 for (java.util.Map.Entry<String, Integer> unitDmg : unitDamage.entrySet()) {
                     String key = unitDmg.getKey();
+                    if (!key.startsWith(oldColorID)) continue;
                     Integer value = unitDmg.getValue();
                     String replacedKey = key.replace(oldColorID, colorID);
-                    unitHolder.removeUnit(key, value);
-                    unitHolder.addUnit(replacedKey, value);
+                    unitHolder.removeUnitDamage(key, value);
+                    unitHolder.addUnitDamage(replacedKey, value);
                 }
 
                 HashMap<String, Integer> units = new HashMap<>(unitHolder.getUnits());
                 for (java.util.Map.Entry<String, Integer> unit : units.entrySet()) {
                     String key = unit.getKey();
+                    if (!key.startsWith(oldColorID)) continue;
                     Integer value = unit.getValue();
                     String replacedKey = key.replace(oldColorID, colorID);
                     unitHolder.removeUnit(key, value);
@@ -116,15 +142,17 @@ public class ChangeColor extends PlayerSubcommandData {
 
                 HashSet<String> controlList = new HashSet<>(unitHolder.getControlList());
                 for (String control : controlList) {
+                    if (!control.contains(oldColorID)) continue;
                     unitHolder.removeControl(control);
                     control = control.replace(oldColorID, colorID);
                     unitHolder.addControl(control);
                 }
 
+                
                 HashSet<String> ccList = new HashSet<>(unitHolder.getCCList());
                 for (String cc : ccList) {
                     unitHolder.removeCC(cc);
-                    cc = cc.replace(oldColorID, colorID);
+                    cc = cc.replace(oldColorSuffix, newColorSuffix);
                     unitHolder.addCC(cc);
                 }
             }

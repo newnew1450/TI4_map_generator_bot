@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import ti4.commands.cardspn.PNInfo;
 import ti4.commands.leaders.LeaderInfo;
+import ti4.commands.planet.PlanetAdd;
+import ti4.commands.tech.TechInfo;
 import ti4.commands.units.AddRemoveUnits;
 import ti4.generator.Mapper;
 import ti4.generator.PositionMapper;
@@ -144,10 +146,13 @@ public class Setup extends PlayerSubcommandData {
                        position = "bl";
                    } else {
                        position = "tl";
+
                        Tile mallice = activeMap.getTile(position);
-                       mallice.setPosition("tr");
-                       activeMap.removeTile("tl");
-                       activeMap.setTile(mallice);
+                       if(mallice != null){
+                            mallice.setPosition("tr");
+                            activeMap.removeTile("tl");
+                            activeMap.setTile(mallice);
+                       }
                    }
                 } else {
                     if (positionNumber == 1 || positionNumber == 2 || positionNumber == 3 ){
@@ -159,9 +164,11 @@ public class Setup extends PlayerSubcommandData {
                     } else {
                         position = "tl";
                         Tile mallice = activeMap.getTile(position);
-                        mallice.setPosition("tr");
-                        activeMap.removeTile("tl");
-                        activeMap.setTile(mallice);
+                        if(mallice != null){
+                            mallice.setPosition("tr");
+                            activeMap.removeTile("tl");
+                            activeMap.setTile(mallice);
+                        }
                     }
                 }
             }
@@ -205,10 +212,15 @@ public class Setup extends PlayerSubcommandData {
         HashSet<String> playerPNs = new HashSet<>(player.getPromissoryNotes().keySet());
         player.setPromissoryNotesOwned(playerPNs);
 
+        //STARTING OWNED UNITS
+        HashSet<String> playerOwnedUnits = new HashSet<>(setupInfo.getUnits());
+        player.setUnitsOwned(playerOwnedUnits);
+
         //SEND STUFF
         AbilityInfo.sendAbilityInfo(activeMap, player, event);
         TechInfo.sendTechInfo(activeMap, player, event);
         LeaderInfo.sendLeadersInfo(activeMap, player, event);
+        UnitInfo.sendUnitInfo(activeMap, player, event);
         PNInfo.sendPromissoryNoteInfo(activeMap, player, false, event);
     }
 

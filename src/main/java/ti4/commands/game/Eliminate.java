@@ -1,22 +1,20 @@
 package ti4.commands.game;
-
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import ti4.commands.cardspn.PNInfo;
 import ti4.commands.tokens.AddCC;
 import ti4.commands.tokens.RemoveCC;
 import ti4.generator.Mapper;
-import ti4.helpers.ButtonHelper;
 import ti4.helpers.Constants;
 import ti4.helpers.Helper;
 import ti4.map.Map;
@@ -131,6 +129,12 @@ public class Eliminate extends AddRemovePlayer {
                 }
             }
             activeMap.removePlayer(extraUser.getId());
+            Guild guild = event.getGuild();
+            Member removedMember = guild.getMemberById(extraUser.getId());
+            List<Role> roles = guild.getRolesByName(activeMap.getName(), true);
+            if (removedMember != null && roles != null && roles.size() == 1) {
+                guild.removeRoleFromMember(removedMember, roles.get(0)).queue();
+            }
             sb.append("Eliminated player: ").append(extraUser.getName()).append(" from game: ").append(activeMap.getName()).append("\n");
             MessageHelper.sendMessageToChannel(event.getChannel(),sb.toString());
         }

@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import ti4.commands.Command;
-import ti4.commands.player.PlanetAdd;
+import ti4.commands.planet.PlanetAdd;
 import ti4.generator.GenerateMap;
 import ti4.generator.Mapper;
 import ti4.helpers.AliasHandler;
@@ -64,7 +64,7 @@ abstract public class AddRemoveUnits implements Command {
 
         unitParsingForTile(event, color, tile, activeMap);
         for (UnitHolder unitHolder_ : tile.getUnitHolders().values()) {
-            addPlanetToPlayArea(event, tile, unitHolder_.getName());
+            addPlanetToPlayArea(event, tile, unitHolder_.getName(), activeMap);
         }
 
         MapSaveLoadManager.saveMap(activeMap, event);
@@ -162,7 +162,7 @@ abstract public class AddRemoveUnits implements Command {
             unitAction(event, tile, count, planetName, unitID, color);
 
 
-            addPlanetToPlayArea(event, tile, planetName);
+            addPlanetToPlayArea(event, tile, planetName, activeMap);
         }
         if (activeMap.isFoWMode()) {
             boolean pingedAlready = false;
@@ -239,7 +239,7 @@ abstract public class AddRemoveUnits implements Command {
             unitAction(event, tile, count, planetName, unitID, color);
 
 
-            addPlanetToPlayArea(event, tile, planetName);
+            addPlanetToPlayArea(event, tile, planetName, activeMap);
         }
         if (activeMap.isFoWMode()) {
             boolean pingedAlready = false;
@@ -317,7 +317,7 @@ abstract public class AddRemoveUnits implements Command {
             unitAction(event, tile, count, planetName, unitID, color);
 
 
-            addPlanetToPlayArea(event, tile, planetName);
+            addPlanetToPlayArea(event, tile, planetName, activeMap);
         }
         if (activeMap.isFoWMode()) {
             boolean pingedAlready = false;
@@ -350,8 +350,8 @@ abstract public class AddRemoveUnits implements Command {
         return color;
     }
 
-    public void unitParsing(ButtonInteractionEvent event, String color, Tile tile, String unitList, Map activeMap) {
-        unitList = unitList.replace(", ", ",");
+    public void unitParsing(GenericInteractionCreateEvent event, String color, Tile tile, String unitList, Map activeMap) {
+        unitList = unitList.replace(", ", ",").replace("-","").replace("'","").toLowerCase();
         StringTokenizer unitListTokenizer = new StringTokenizer(unitList, ",");
         while (unitListTokenizer.hasMoreTokens()) {
             String unitListToken = unitListTokenizer.nextToken();
@@ -359,7 +359,7 @@ abstract public class AddRemoveUnits implements Command {
 
             int tokenCount = unitInfoTokenizer.countTokens();
             if (tokenCount > 3) {
-                MessageHelper.sendMessageToChannel(event.getChannel(), "Warning: Unit list should have a maximum of 3 parts `{count} {unit} {planet}` - `" + unitListToken + "` has " + tokenCount + " parts. There may be errors.");
+                MessageHelper.sendMessageToChannel(event.getMessageChannel(), "Warning: Unit list should have a maximum of 3 parts `{count} {unit} {planet}` - `" + unitListToken + "` has " + tokenCount + " parts. There may be errors.");
             }
 
             int count = 1;
@@ -381,7 +381,7 @@ abstract public class AddRemoveUnits implements Command {
             String unitID = Mapper.getUnitID(unit, color);
             String unitPath = Tile.getUnitPath(unitID);
             if (unitPath == null) {
-                MessageHelper.sendMessageToChannel(event.getChannel(), "Unit `" + unit + "` is not valid and not supported. Please redo this part: `" + unitListToken + "`");
+                MessageHelper.sendMessageToChannel(event.getMessageChannel(), "Unit `" + unit + "` is not valid and not supported. Please redo this part: `" + unitListToken + "`");
                 continue;
             }
             if (unitInfoTokenizer.hasMoreTokens()) {
@@ -395,7 +395,7 @@ abstract public class AddRemoveUnits implements Command {
 
             planetName = getPlanet(event, tile, planetName);
             unitAction(event, tile, count, planetName, unitID, color);
-            addPlanetToPlayArea(event, tile, planetName);
+            addPlanetToPlayArea(event, tile, planetName, activeMap);
         }
         if (activeMap.isFoWMode()) {
             boolean pingedAlready = false;
@@ -413,17 +413,22 @@ abstract public class AddRemoveUnits implements Command {
             if (!pingedAlready) {
                 String colorMention = Helper.getColourAsMention(event.getGuild(), color);
                 FoWHelper.pingSystem(activeMap, (GenericInteractionCreateEvent) event, tile.getPosition(), colorMention + " has modified units in the system. Refresh map to see what changed");
-                activeMap.setPingSystemCounter(count);
-                activeMap.setTileAsPinged(count, tile.getPosition());
+                  if (count <10) {
+                    activeMap.setPingSystemCounter(count);
+                    activeMap.setTileAsPinged(count, tile.getPosition());
+                  }
             }
         }
     }
 
-    public void addPlanetToPlayArea(GenericInteractionCreateEvent event, Tile tile, String planetName) {
+    public void addPlanetToPlayArea(GenericInteractionCreateEvent event, Tile tile, String planetName, Map activeMap) {
         String userID = event.getUser().getId();
         MapManager mapManager = MapManager.getInstance();
-        Map activeMap = mapManager.getUserActiveMap(userID);
-        if (!activeMap.isAllianceMode() && !Constants.SPACE.equals(planetName)){
+        if(activeMap == null){
+            activeMap = mapManager.getUserActiveMap(userID);
+        }
+       // Map activeMap = mapManager.getUserActiveMap(userID);
+        if (!Helper.isAllianceModeAndPreviouslyOwnedCheck(activeMap, planetName) && !Constants.SPACE.equals(planetName)){
             UnitHolder unitHolder = tile.getUnitHolders().get(planetName);
             if (unitHolder != null){
                 Set<String> allUnitsOnPlanet = unitHolder.getUnits().keySet();

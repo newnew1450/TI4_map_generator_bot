@@ -26,6 +26,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import ti4.commands.Command;
 import ti4.commands.CommandManager;
 import ti4.commands.fow.Whisper;
+import ti4.generator.Mapper;
 import ti4.helpers.AgendaHelper;
 import ti4.helpers.AliasHandler;
 import ti4.helpers.Constants;
@@ -181,13 +182,20 @@ public class MessageListener extends ListenerAdapter {
                 if (activeMap.getAutoPingStatus() && activeMap.getAutoPingSpacer() != 0) {
                     String playerID = activeMap.getActivePlayer();
                     
-                    if (playerID != null) {
-                        Player player = activeMap.getPlayer(playerID);
-                        if (player != null) {
+                    if (playerID != null || activeMap.getCurrentPhase().equalsIgnoreCase("agendawaiting")) {
+                        Player player = null;
+                        if(playerID != null){
+                            player = activeMap.getPlayer(playerID);
+                        }
+                        if (player != null || activeMap.getCurrentPhase().equalsIgnoreCase("agendawaiting")) {
                             long milliSinceLastPing = new Date().getTime() - activeMap.getLastActivePlayerPing().getTime();
                             if (milliSinceLastPing > (60*60*multiplier* activeMap.getAutoPingSpacer())) {
-                                String realIdentity = Helper.getPlayerRepresentation(player, activeMap, activeMap.getGuild(), true);
-                                String ping = realIdentity + " this is a gentle reminder that the game is waiting on you.";
+                                String realIdentity = null;
+                                String ping = null;
+                                if(player != null){
+                                    realIdentity = Helper.getPlayerRepresentation(player, activeMap, activeMap.getGuild(), true);
+                                    ping = realIdentity + " this is a gentle reminder that the game is waiting on you.";
+                                }
                                 if(activeMap.getCurrentPhase().equalsIgnoreCase("agendawaiting")){
                                     AgendaHelper.pingMissingPlayers(activeMap);
                                 }else{
@@ -258,19 +266,17 @@ public class MessageListener extends ListenerAdapter {
         if (msg.getContentRaw().contains("used /fow whisper")) {
             msg.delete().queue();
         }
+        
+        List<String> colors = Mapper.getColors();
+        String message = msg.getContentRaw().toLowerCase();
+        boolean messageToColor = false;
+        for (String color : colors) {
+            if (message.startsWith("to" + color)) {
+                messageToColor = true;
+            }
+        }
 
-        if (msg.getContentRaw().toLowerCase().startsWith("tored") || msg.getContentRaw().toLowerCase().startsWith("topurple")
-        || msg.getContentRaw().toLowerCase().startsWith("toblue") || msg.getContentRaw().toLowerCase().startsWith("toyellow")
-        || msg.getContentRaw().toLowerCase().startsWith("toorange") || msg.getContentRaw().toLowerCase().startsWith("togreen") || msg.getContentRaw().toLowerCase().startsWith("tosunset")
-        || msg.getContentRaw().toLowerCase().startsWith("tobloodred") || msg.getContentRaw().toLowerCase().startsWith("tospring")
-        || msg.getContentRaw().toLowerCase().startsWith("togray") || msg.getContentRaw().toLowerCase().startsWith("tochocolate") || msg.getContentRaw().toLowerCase().startsWith("tochrome")
-        || msg.getContentRaw().toLowerCase().startsWith("togold") || msg.getContentRaw().toLowerCase().startsWith("tonavy")
-        || msg.getContentRaw().toLowerCase().startsWith("tolightgray") || msg.getContentRaw().toLowerCase().startsWith("toteal") || msg.getContentRaw().toLowerCase().startsWith("toforest")
-        || msg.getContentRaw().toLowerCase().startsWith("torose") || msg.getContentRaw().toLowerCase().startsWith("toturquoise")
-        || msg.getContentRaw().toLowerCase().startsWith("tolime") || msg.getContentRaw().toLowerCase().startsWith("toemerald") || msg.getContentRaw().toLowerCase().startsWith("topetrol")
-        || msg.getContentRaw().toLowerCase().startsWith("tobrown") || msg.getContentRaw().toLowerCase().startsWith("totan")
-        || msg.getContentRaw().toLowerCase().startsWith("toblack") || msg.getContentRaw().toLowerCase().startsWith("topink")||msg.getContentRaw().toLowerCase().startsWith("tolavender")) {
-
+        if (messageToColor) {
             String gameName = event.getChannel().getName();
 			gameName = gameName.substring(0, gameName.indexOf("-"));
 			Map activeMap = MapManager.getInstance().getMap(gameName);

@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import ti4.commands.cardsso.SOInfo;
 import ti4.generator.Mapper;
 import ti4.helpers.Constants;
 import ti4.helpers.Emojis;
@@ -32,6 +33,8 @@ public class DrawRelic extends GenericRelicAction {
             MessageHelper.sendMessageToChannel((MessageChannel) event.getMessageChannel(), "Relic deck is empty");
             return;
         }
+        relicID = relicID.replace("extra1","");
+        relicID = relicID.replace("extra2","");
         player.addRelic(relicID);
         String[] relicData = Mapper.getRelic(relicID).split(";");
         StringBuilder message = new StringBuilder();
@@ -43,6 +46,14 @@ public class DrawRelic extends GenericRelicAction {
                 message.append("Run the following commands to use Nanoforge:\n")
                        .append("     `/explore relic_purge relic: nanoforge`\n")
                        .append("     `/add_token token:nanoforge tile_name:{TILE} planet_name:{PLANET}`");
+            }
+            case "obsidian" -> {
+                activeMap.drawSecretObjective(player.getUserID());
+                if (activeMap.isFoWMode()) {
+                    FoWHelper.pingAllPlayersWithFullStats(activeMap, event, player, "Drew SO");
+                }
+                SOInfo.sendSecretObjectiveInfo(activeMap, player, event);
+                message.append("\nAn SO has been automatically drawn");
             }
             case "shard" -> {
                 Integer poIndex = activeMap.addCustomPO("Shard of the Throne", 1);

@@ -1,9 +1,11 @@
 package ti4.commands.tokens;
 
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 
 import ti4.commands.Command;
@@ -12,9 +14,9 @@ import ti4.generator.Mapper;
 import ti4.helpers.Constants;
 import ti4.map.*;
 import ti4.message.MessageHelper;
-import ti4.model.TileModel;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,7 +32,7 @@ public class AddFrontierTokens implements Command {
         return event.getName().equals(getActionID());
     }
 
-    void parsingForTile(SlashCommandInteractionEvent event, Map activeMap) {
+    public void parsingForTile(GenericInteractionCreateEvent event, Map activeMap) {
         Collection<Tile> tileList = activeMap.getTileMap().values();
         List<String> frontierTileList = Mapper.getFrontierTileIds();
         for (Tile tile : tileList) {
@@ -41,6 +43,11 @@ public class AddFrontierTokens implements Command {
                 }
                 if (!hasMirage) AddToken.addToken(event, tile, Constants.FRONTIER, activeMap);
             }
+        }
+        if(activeMap.getRound() == 1){
+            List<Button> buttons = new ArrayList<Button>();
+            buttons.add(Button.success("deal2SOToAll" , "Deal 2 SO To All"));
+            MessageHelper.sendMessageToChannelWithButtons(activeMap.getMainGameChannel(), "Press this button after every player is setup", buttons);
         }
     }
 
