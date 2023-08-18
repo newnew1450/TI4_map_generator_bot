@@ -863,4 +863,5 @@ public class Constants {
     public static final String UNIT_INFO = "unit_info";
     public static final String CLEAR_DEBT = "clear_debt";
     public static final String COMBAT = "combat";
+    public static final String EXPORT_CHANNEL = "export_channel";
 }

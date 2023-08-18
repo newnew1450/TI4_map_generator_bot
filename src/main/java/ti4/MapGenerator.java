@@ -60,6 +60,7 @@ import javax.security.auth.login.LoginException;
 public class MapGenerator {
 
     public static JDA jda;
+    public static String botToken;
     public static String userID;
     public static Guild guildPrimary = null;
     public static Guild guildSecondary = null;
@@ -78,8 +79,9 @@ public class MapGenerator {
 
         // Load settings
         GlobalSettings.loadSettings();
-
-        jda = JDABuilder.createDefault(args[0])
+        
+        botToken = args[0];
+        jda = JDABuilder.createDefault(botToken)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .enableIntents(GatewayIntent.MESSAGE_CONTENT)
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
