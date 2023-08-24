@@ -509,6 +509,10 @@ public class Player {
         trapCardsPlanets.put(id, planet);
     }
 
+    public void removeTrapCardPlanet(String id) {
+        trapCardsPlanets.remove(id);
+    }
+
     public void setPromissoryNote(String id) {
         Collection<Integer> values = promissoryNotes.values();
         int identifier = new Random().nextInt(100);
