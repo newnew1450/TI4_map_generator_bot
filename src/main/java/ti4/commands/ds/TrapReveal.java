@@ -68,8 +68,7 @@ public class TrapReveal extends DiscordantStarsSubcommandData {
                 String trap = entry.getKey();
                 if (planetName.equals(planet)) {
                     tile.removeToken(Constants.LIZHO_TRAP_PNG, unitHolder.getName());
-                    //player.setTrapCardPlanet(trap, null);
-                    player.removeTrapCardPlanet(trap);
+                    player.setTrapCardPlanet(trap, null);
                     player.setTrapCard(trap);
 
                     java.util.Map<String, String> dsHandcards = Mapper.getDSHandcards();
