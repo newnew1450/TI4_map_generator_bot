@@ -22,7 +22,7 @@ public class ImageHelper {
 
   private static final Cache<String, BufferedImage> imageCache = CacheBuilder.newBuilder()
       .maximumSize(1000)
-      .expireAfterAccess(60, TimeUnit.MINUTES)
+      .expireAfterAccess(24, TimeUnit.HOURS)
       .build();
 
   private ImageHelper() {}
