@@ -27,7 +27,6 @@ public class ReloadMap extends AdminSubcommandData {
             String mapName = option.getAsString();
             if (!GameManager.getInstance().getGameNameToGame().containsKey(mapName)) {
                 sendMessage("Game with such name does not exists, use /list_games");
-
                 return;
             }
             Game activeGame = GameManager.getInstance().getGame(mapName);
@@ -35,7 +34,6 @@ public class ReloadMap extends AdminSubcommandData {
             activeGame = GameManager.getInstance().getGame(mapName);
             File file = new MapGenerator().saveImage(activeGame, event);
             MessageHelper.replyToMessage(event, file);
-
         } else {
             sendMessage("No Game specified.");
         }

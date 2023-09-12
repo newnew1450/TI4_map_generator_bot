@@ -2,7 +2,11 @@ package ti4.generator;
 
 import static java.util.stream.Collectors.toSet;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -48,6 +52,9 @@ import java.util.stream.Collectors;
 
 public class MapGenerator {
 
+    private static final ExecutorService THREAD_POOL = Executors.newFixedThreadPool(
+        Math.max(2, Runtime.getRuntime().availableProcessors()));
+    private static final String TESTING = System.getenv("TESTING");
     private static final int DELTA_X = 8;
     private static final int DELTA_Y = 24;
     private static final int RING_MAX_COUNT = 8;
@@ -80,10 +87,7 @@ public class MapGenerator {
     private Player fowPlayer;
 
     public File saveImage(Game activeGame, @Nullable SlashCommandInteractionEvent event) {
-        if (activeGame.getDisplayTypeForced() != null) {
-            return saveImage(activeGame, activeGame.getDisplayTypeForced(), event);
-        }
-        return saveImage(activeGame, DisplayType.all, event);
+        return saveImage(activeGame, null, event);
     }
 
     public File saveImage(Game game, @Nullable DisplayType displayType, @Nullable GenericInteractionCreateEvent event) {
@@ -103,22 +107,21 @@ public class MapGenerator {
             if (displayType == DisplayType.all || displayType == DisplayType.map) {
                 setupDisplayTypeTiles(game, tilesToDisplay);
             }
+
             graphics.setFont(Storage.getFont32());
             graphics.setColor(Color.WHITE);
-            String timeStamp = getTimeStamp();
-            graphics.drawString(game.getName() + " " + timeStamp, 0, 34);
+            graphics.drawString(game.getName() + " " + getTimeStamp(), 0, 34);
 
-            gameInfo(game, event, displayType);
+            gameInfo(game, displayType);
 
-            String testing = System.getenv("TESTING");
-            if (testing == null && displayType == DisplayType.all && !fowPrivate) {
-                new Thread(() -> {
+            if (TESTING == null && displayType == DisplayType.all && !fowPrivate) {
+                THREAD_POOL.execute(() -> {
                     WebHelper.putMap(game.getName(), mainImage);
                     WebHelper.putData(game.getName(), game);
-                }).start();
+                });
             } else if (fowPrivate) {
                 Player player = getEventPlayer(game, event);
-                new Thread(() -> WebHelper.putMap(game.getName(), mainImage, true, player)).start();
+                THREAD_POOL.execute(() -> WebHelper.putMap(game.getName(), mainImage, true, player));
             }
         } catch (IOException e) {
             BotLogger.log(game.getName() + ": Could not save generated map");
@@ -126,8 +129,7 @@ public class MapGenerator {
 
         String timeStamp = getTimeStamp();
         String absolutePath = Storage.getMapImageDirectory() + "/" + game.getName() + "_" + timeStamp + ".jpg";
-        try (
-            FileOutputStream fileOutputStream = new FileOutputStream(absolutePath)) {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(absolutePath)) {
             BufferedImage convertedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             convertedImage.createGraphics().drawImage(mainImage, 0, 0, Color.black, null);
             boolean canWrite = ImageIO.write(convertedImage, "jpg", fileOutputStream);
@@ -137,6 +139,7 @@ public class MapGenerator {
         } catch (IOException e) {
             BotLogger.log("Could not save jpg file", e);
         }
+
         File jpgFile = new File(absolutePath);
         MapFileDeleter.addFileToDelete(jpgFile);
         return jpgFile;
@@ -308,7 +311,7 @@ public class MapGenerator {
         return null;
     }
 
-    private void gameInfo(Game game, GenericInteractionCreateEvent event, DisplayType displayType) throws IOException {
+    private void gameInfo(Game game, DisplayType displayType) throws IOException {
         graphics.setFont(Storage.getFont50());
         graphics.setColor(Color.WHITE);
         int y = heightForGameInfo + 60;
@@ -449,7 +452,6 @@ public class MapGenerator {
                     graphics.drawString("+" + additionalFleetSupply + " FS", x + 40, y + deltaY + 70);
                 }
                 graphics.drawString("T/F/S", x + 40, y + deltaY);
-
 
                 String soImage = "pa_cardbacks_so.png";
                 drawPAImage(x + 150, y + yDelta, soImage);

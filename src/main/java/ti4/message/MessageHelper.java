@@ -59,6 +59,8 @@ public class MessageHelper {
 		MessageFunction addFactionReact = (msg) -> addFactionReactToMessage(activeGame, player, msg);
 		splitAndSentWithAction(messageText, channel, addFactionReact, buttons);
 	}
+
+
 	public static void sendMessageToChannelWithPersistentReacts(MessageChannel channel, String messageText, Game activeGame, List<Button> buttons, String whenOrAfter) {
 		MessageFunction addFactionReact = (msg) -> {
 			StringTokenizer players;
@@ -80,13 +82,9 @@ public class MessageHelper {
 				Player player_ = Helper.getPlayerFromColorOrFaction(activeGame, player);
 				addFactionReactToMessage(activeGame, player_, msg);
 			}
-
-
 		};
-
 		splitAndSentWithAction(messageText, channel, addFactionReact, buttons);
 	}
-
 
 	public static void sendMessageToChannelAndPin(MessageChannel channel, String messageText) {
 		MessageFunction pin = (msg) -> msg.pin().queue();
@@ -94,35 +92,32 @@ public class MessageHelper {
 	}
 
 	public static void sendFileToChannel(MessageChannel channel, File file) {
-		if(channel.getName().contains("-actions")){
-			String threadName = channel.getName().replace("-actions","")  + "-bot-map-updates";
-			List<ThreadChannel> threadChannels = ((IThreadContainer) channel).getThreadChannels();
-			for (ThreadChannel threadChannel_ : threadChannels) {
-				if (threadChannel_.getName().equals(threadName)) {
-					channel = threadChannel_;
-				}
-			}
-		}
-		FileUpload fileUpload = FileUpload.fromData(file);
-		channel.sendFiles(fileUpload).queue();
+		channel = getThreadChannel(channel);
+		sendFileToAnyChannel(channel, file);
 	}
-	public static void sendFileToChannel(MessageChannel channel, File file, boolean SCPlay) {
-		FileUpload fileUpload = FileUpload.fromData(file);
-		channel.sendFiles(fileUpload).queue();
-	}
+
 	public static void sendFileToChannelWithButtonsAfter(MessageChannel channel, File file, String message, List<Button> buttons) {
-		if(channel.getName().contains("-actions")){
+		channel = getThreadChannel(channel);
+		sendFileToAnyChannel(channel, file);
+		splitAndSent(message, channel, buttons);
+	}
+
+	public static void sendFileToAnyChannel(MessageChannel channel, File file) {
+		FileUpload fileUpload = FileUpload.fromData(file);
+		channel.sendFiles(fileUpload).queue();
+	}
+
+	private static MessageChannel getThreadChannel(MessageChannel channel) {
+		if (channel.getName().contains("-actions")) {
 			String threadName = channel.getName().replace("-actions","")  + "-bot-map-updates";
 			List<ThreadChannel> threadChannels = ((IThreadContainer) channel).getThreadChannels();
 			for (ThreadChannel threadChannel_ : threadChannels) {
 				if (threadChannel_.getName().equals(threadName)) {
-					channel = threadChannel_;
+					return threadChannel_;
 				}
 			}
 		}
-		FileUpload fileUpload = FileUpload.fromData(file);
-		channel.sendFiles(fileUpload).queue();
-		splitAndSent(message, channel, buttons);
+		return channel;
 	}
 
 	public static void replyToMessage(GenericInteractionCreateEvent event, String messageText) {
@@ -153,8 +148,7 @@ public class MessageHelper {
 	}
 
 	public static void sendMessageWithFile(MessageChannel channel, File file, String messageText, boolean pinMessage) {
-		
-		if(channel.getName().contains("-actions")){
+		if (channel.getName().contains("-actions")){
 			String threadName = channel.getName().replace("-actions","")  + "-bot-map-updates";
 			List<ThreadChannel> threadChannels = ((IThreadContainer) channel).getThreadChannels();
 			for (ThreadChannel threadChannel_ : threadChannels) {

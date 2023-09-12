@@ -2,6 +2,7 @@ package ti4.commands.player;
 
 import java.util.*;
 
+import net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
@@ -112,8 +113,6 @@ public class SCPlay extends PlayerSubcommandData {
         String scName = Helper.getSCName(scToDisplay, activeGame).toLowerCase();
         String threadName = activeGame.getName() + "-round-" + activeGame.getRound() + "-" + scName + (pbd100or500 ? "-group_" + pbd100group : "");
 
-        TextChannel textChannel = (TextChannel) mainGameChannel;
-
         for (Player player2 : activeGame.getPlayers().values()) {
             if (!player2.isRealPlayer()) {
                 continue;
@@ -124,7 +123,7 @@ public class SCPlay extends PlayerSubcommandData {
         }
 
         if (activeGame.getOutputVerbosity().equals(Constants.VERBOSITY_VERBOSE)) {
-            MessageHelper.sendFileToChannel(mainGameChannel, Helper.getSCImageFile(scToDisplay, activeGame), true);
+            MessageHelper.sendFileToAnyChannel(mainGameChannel, Helper.getSCImageFile(scToDisplay, activeGame));
             //MessageHelper.sendMessageToChannel(mainGameChannel, Helper.getSCImageLink(scToDisplay, activeMap));
         }
         MessageCreateBuilder baseMessageObject = new MessageCreateBuilder().addContent(message);
@@ -152,7 +151,7 @@ public class SCPlay extends PlayerSubcommandData {
                 MessageHelper.sendPrivateMessageToPlayer(player, activeGame, response);
             } else {
                 // only do thread in non-fow games
-                ThreadChannelAction threadChannel = textChannel.createThreadChannel(threadName, message_.getId());
+                ThreadChannelAction threadChannel = ((IThreadContainer) mainGameChannel).createThreadChannel(threadName, message_.getId());
                 threadChannel = threadChannel.setAutoArchiveDuration(ThreadChannel.AutoArchiveDuration.TIME_1_HOUR);
                 threadChannel.queue(m5 -> {
                     List<ThreadChannel> threadChannels = activeGame.getActionsChannel().getThreadChannels();
