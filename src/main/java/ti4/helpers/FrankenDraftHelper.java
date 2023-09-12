@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import ti4.AsyncBot;
 import ti4.commands.milty.MiltyDraftTile;
 import ti4.generator.Mapper;
 import ti4.map.Game;
@@ -24,7 +25,7 @@ public class FrankenDraftHelper {
         for(int x = 0; x < count; x++){
             boolean foundOne = false;
             while(!foundOne){
-                int randNum = new Random().nextInt(0,keys.size());
+                int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
                 String ability = keys.get(randNum);
                 if(!factionAbilities.contains(ability)){
                     factionAbilities.add(ability);
@@ -42,7 +43,7 @@ public class FrankenDraftHelper {
         keys.removeAll(alreadyHeld);
         keys.removeIf(key -> !key.contains(leaderType));
         for(int x = 0; x < count; x++){
-            int randNum = new Random().nextInt(0,keys.size());
+            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);
@@ -56,7 +57,7 @@ public class FrankenDraftHelper {
         keys.removeAll(alreadyHeld);
         keys.removeIf(key -> !key.contains(unitType));
         for(int x = 0; x < count; x++){
-            int randNum = new Random().nextInt(0,keys.size());
+            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);
@@ -72,7 +73,7 @@ public class FrankenDraftHelper {
         }
         keys.removeAll(alreadyHeld);
         for(int x = 0; x < count; x++){
-            int randNum = new Random().nextInt(0,keys.size());
+            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);
@@ -99,7 +100,7 @@ public class FrankenDraftHelper {
         HashMap<String, TechnologyModel> allDesiredThings = Mapper.getTechs();
         HashMap<String, TechnologyModel> allDesiredThings2 = Mapper.getTechs();
         for(TechnologyModel bleh : allDesiredThings2.values()){
-            if(bleh.getFaction() == null || "".equalsIgnoreCase(bleh.getFaction()));
+            if(bleh.getFaction() == null || "".equalsIgnoreCase(bleh.getFaction()))
             {
                 String key = bleh.getAlias();
                 allDesiredThings.remove(key);
@@ -108,7 +109,7 @@ public class FrankenDraftHelper {
         List<String> keys = new ArrayList<>(allDesiredThings.keySet());
         keys.removeAll(alreadyHeld);
         for(int x = 0; x < count; x++){
-            int randNum = new Random().nextInt(0,keys.size());
+            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);

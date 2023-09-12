@@ -47,7 +47,7 @@ public class MessageListener extends ListenerAdapter {
 
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
-        if (!MapGenerator.readyToReceiveCommands) {
+        if (!AsyncBot.readyToReceiveCommands) {
             event.replyChoice("Please try again in a moment. The bot is rebooting.", 0).queue();
             return;
         }
@@ -62,7 +62,7 @@ public class MessageListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        if (!MapGenerator.readyToReceiveCommands) {
+        if (!AsyncBot.readyToReceiveCommands) {
             event.getInteraction().reply("Please try again in a moment. The bot is rebooting.").setEphemeral(true).queue();
             return;
         }

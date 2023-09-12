@@ -2,8 +2,6 @@ package ti4.generator;
 
 import static java.util.stream.Collectors.toSet;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,6 +13,7 @@ import net.dv8tion.jda.api.utils.ImageProxy;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import ti4.AsyncBot;
 import ti4.ResourceHelper;
 import ti4.helpers.*;
 import ti4.map.*;
@@ -52,8 +51,6 @@ import java.util.stream.Collectors;
 
 public class MapGenerator {
 
-    private static final ExecutorService THREAD_POOL = Executors.newFixedThreadPool(
-        Math.max(2, Runtime.getRuntime().availableProcessors()));
     private static final String TESTING = System.getenv("TESTING");
     private static final int DELTA_X = 8;
     private static final int DELTA_Y = 24;
@@ -115,13 +112,13 @@ public class MapGenerator {
             gameInfo(game, displayType);
 
             if (TESTING == null && displayType == DisplayType.all && !fowPrivate) {
-                THREAD_POOL.execute(() -> {
+                AsyncBot.THREAD_POOL.execute(() -> {
                     WebHelper.putMap(game.getName(), mainImage);
                     WebHelper.putData(game.getName(), game);
                 });
             } else if (fowPrivate) {
                 Player player = getEventPlayer(game, event);
-                THREAD_POOL.execute(() -> WebHelper.putMap(game.getName(), mainImage, true, player));
+                AsyncBot.THREAD_POOL.execute(() -> WebHelper.putMap(game.getName(), mainImage, true, player));
             }
         } catch (IOException e) {
             BotLogger.log(game.getName() + ": Could not save generated map");
@@ -299,7 +296,7 @@ public class MapGenerator {
 
     private Image getPlayerDiscordAvatar(Player player) {
         String userID = player.getUserID();
-        Member member = ti4.MapGenerator.guildPrimary.getMemberById(userID);
+        Member member = AsyncBot.guildPrimary.getMemberById(userID);
         if (member == null) return null;
         ImageProxy avatarProxy = member.getEffectiveAvatar();
         try (InputStream inputStream = avatarProxy.download().get()) {

@@ -370,7 +370,7 @@ public class AutoCompleteProvider {
             case Constants.CATEGORY -> {
                 String enteredValue = event.getFocusedOption().getValue();
                 List<Category> categories = new ArrayList<>();
-                for (Guild guild : MapGenerator.jda.getGuilds()) {
+                for (Guild guild : AsyncBot.jda.getGuilds()) {
                     categories.addAll(guild.getCategories());
                 }
                 List<Command.Choice> options = categories.stream()

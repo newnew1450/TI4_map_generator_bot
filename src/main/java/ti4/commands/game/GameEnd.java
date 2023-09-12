@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
+import ti4.AsyncBot;
 import ti4.generator.MapGenerator;
 import ti4.helpers.Constants;
 import ti4.helpers.DisplayType;
@@ -89,7 +90,7 @@ public class GameEnd extends GameSubcommandData {
 
         //CREATE POST IN #THE-PBD-CHRONICLES
         
-        TextChannel pbdChroniclesChannel = ti4.MapGenerator.guildPrimary.getTextChannelsByName("the-pbd-chronicles", true).get(0);
+        TextChannel pbdChroniclesChannel = AsyncBot.guildPrimary.getTextChannelsByName("the-pbd-chronicles", true).get(0);
         String channelMention = pbdChroniclesChannel == null ? "#the-pbd-chronicles" : pbdChroniclesChannel.getAsMention();
         if (pbdChroniclesChannel == null) {
             BotLogger.log(event, "`#the-pbd-chronicles` channel not found - `/game end` cannot post summary");
@@ -117,7 +118,7 @@ public class GameEnd extends GameSubcommandData {
                 MessageHelper.sendMessageToChannel(event.getChannel(), msg);
             });
         }
-        TextChannel bothelperLoungeChannel = ti4.MapGenerator.guildPrimary.getTextChannelsByName("bothelper-lounge", true).get(0);
+        TextChannel bothelperLoungeChannel = AsyncBot.guildPrimary.getTextChannelsByName("bothelper-lounge", true).get(0);
         //if (bothelperLoungeChannel != null) MessageHelper.sendMessageToChannel(bothelperLoungeChannel, "Game: **" + gameName + "** on server **" + event.getGuild().getName() + "** has concluded.");
         List<ThreadChannel> threadChannels = bothelperLoungeChannel.getThreadChannels();
         if (threadChannels == null){
@@ -190,7 +191,7 @@ public class GameEnd extends GameSubcommandData {
             int playerVP = player.getTotalVictoryPoints(activeGame);
             sb.append("> `").append(index).append(".` ");
             sb.append(Helper.getFactionIconFromDiscord(player.getFaction()));
-            sb.append(Helper.getColourAsMention(ti4.MapGenerator.guildPrimary, player.getColor()));
+            sb.append(Helper.getColourAsMention(AsyncBot.guildPrimary, player.getColor()));
             sb.append(event.getJDA().getUserById(player.getUserID()).getAsMention());
             sb.append(" - *").append(playerVP).append("VP* ");
             if (playerVP >= activeGame.getVp()) sb.append(" - **WINNER**");
