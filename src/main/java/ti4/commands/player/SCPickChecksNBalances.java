@@ -2,7 +2,7 @@ package ti4.commands.player;
 
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import ti4.commands.status.ListTurnOrder;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.helpers.ButtonHelper;
 import ti4.helpers.FoWHelper;
 import ti4.helpers.Helper;
@@ -79,7 +79,7 @@ public class SCPickChecksNBalances {
             int lowestSC = 100;
             for (Player player_ : activePlayers) {
                 int playersLowestSC = player_.getLowestSC();
-                String scNumberIfNaaluInPlay = GenerateMap.getSCNumberIfNaaluInPlay(player_, activeGame, Integer.toString(playersLowestSC));
+                String scNumberIfNaaluInPlay = activeGame.getSCNumberIfNaaluInPlay(player_, Integer.toString(playersLowestSC));
                 if (scNumberIfNaaluInPlay.startsWith("0/")) {
                     nextPlayer = player_; //no further processing, this player has the 0 token
                     break;
@@ -102,7 +102,7 @@ public class SCPickChecksNBalances {
         MessageHelper.sendMessageToChannel(event.getMessageChannel(), msg);
 
         //SEND EXTRA MESSAGE
-        if (isFowPrivateGame ) {
+        if (isFowPrivateGame) {
             if (allPicked) {
                 msgExtra = "# " + Helper.getPlayerRepresentation(privatePlayer, activeGame, event.getGuild(), true) + " UP NEXT";
             }
@@ -111,42 +111,31 @@ public class SCPickChecksNBalances {
             MessageHelper.sendPrivateMessageToPlayer(privatePlayer, activeGame, event, msgExtra, fail, success);
             activeGame.updateActivePlayer(privatePlayer);
             
-            if(!allPicked)
-            {
+            if (!allPicked) {
                 activeGame.setCurrentPhase("strategy");
                 MessageHelper.sendMessageToChannelWithButtons(privatePlayer.getPrivateChannel(), "Use Buttons to Pick SC", Helper.getRemainingSCButtons(event, activeGame, privatePlayer));
-            }
-            else{
-                   
+            } else {
                 MessageHelper.sendMessageToChannelWithButtons(privatePlayer.getPrivateChannel(), msgExtra + "\n Use Buttons to do turn.", ButtonHelper.getStartOfTurnButtons(privatePlayer, activeGame, false, event));
-                    
-                }
-
+            }
         } else {
             if (allPicked) {
                 ListTurnOrder.turnOrder(event, activeGame);
             }
             if (!msgExtra.isEmpty()) {
-                if(!allPicked && !activeGame.isHomeBrewSCMode())
-                {
+                if (!allPicked && !activeGame.isHomeBrewSCMode()) {
                     activeGame.updateActivePlayer(privatePlayer);
-                    MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), msgExtra+"\nUse Buttons to Pick SC", Helper.getRemainingSCButtons(event, activeGame, privatePlayer));
+                    MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(),
+                        msgExtra + "\nUse Buttons to Pick SC",
+                        Helper.getRemainingSCButtons(event, activeGame, privatePlayer));
                     activeGame.setCurrentPhase("strategy");
-                }
-                else{
-                    if(allPicked)
-                    {
-                        MessageHelper.sendMessageToChannel(activeGame.getMainGameChannel(), msgExtra);
-                        MessageHelper.sendMessageToChannelWithButtons(activeGame.getMainGameChannel(), "\n Use Buttons to do turn.", ButtonHelper.getStartOfTurnButtons(privatePlayer, activeGame, false, event));
-
-                    }
-                    else
-                    {
-                        MessageHelper.sendMessageToChannel(activeGame.getMainGameChannel(), msgExtra);
+                } else {
+                    MessageHelper.sendMessageToChannel(activeGame.getMainGameChannel(), msgExtra);
+                    if(allPicked) {
+                        MessageHelper.sendMessageToChannelWithButtons(
+                            activeGame.getMainGameChannel(), "\n Use Buttons to do turn.",
+                            ButtonHelper.getStartOfTurnButtons(privatePlayer, activeGame, false, event));
                     }
                 }
-
-
             }
         }
     }

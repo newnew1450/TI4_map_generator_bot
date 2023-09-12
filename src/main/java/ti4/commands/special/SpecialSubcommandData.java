@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 import org.jetbrains.annotations.NotNull;
 
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.map.Game;
 import ti4.map.GameManager;
 import ti4.map.GameSaveLoadManager;
@@ -55,6 +55,6 @@ public abstract class SpecialSubcommandData extends SubcommandData {
         Game activeGame = GameManager.getInstance().getUserActiveGame(userID);
         GameSaveLoadManager.saveMap(activeGame, event);
 
-        GenerateMap.getInstance().saveImage(activeGame, event);
+        new MapGenerator().saveImage(activeGame, event);
     }
 }

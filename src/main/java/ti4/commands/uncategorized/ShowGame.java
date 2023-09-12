@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import ti4.commands.Command;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.helpers.Constants;
 import ti4.helpers.DisplayType;
 import ti4.map.Game;
@@ -51,7 +51,6 @@ public class ShowGame implements Command {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-
         Game activeGame;
         OptionMapping option = event.getOption(Constants.GAME_NAME);
         GameManager gameManager = GameManager.getInstance();
@@ -73,9 +72,8 @@ public class ShowGame implements Command {
                 displayType = DisplayType.stats;
             } else if (temp.equals(DisplayType.split.getValue())) {
                 displayType = DisplayType.map;
-                File stats_file = GenerateMap.getInstance().saveImage(activeGame, displayType, event);
+                File stats_file = new MapGenerator().saveImage(activeGame, displayType, event);
                 MessageHelper.sendFileToChannel(event.getChannel(), stats_file);
-
                 displayType = DisplayType.stats;
             } else if (temp.equals(DisplayType.system.getValue())) {
                 displayType = DisplayType.system;
@@ -84,16 +82,18 @@ public class ShowGame implements Command {
         simpleShowGame(activeGame, event, displayType);
     }
     public void simpleShowGame(Game activeGame, GenericInteractionCreateEvent event, DisplayType displayType){
-        File file = GenerateMap.getInstance().saveImage(activeGame, displayType, event);
-       
-            List<Button> buttonsWeb = new ArrayList<>();
-            if(!activeGame.isFoWMode()){
-                Button linkToWebsite = Button.link("https://ti4.westaddisonheavyindustries.com/game/"+ activeGame.getName(),"Website View");
-                buttonsWeb.add(linkToWebsite);
-            }
-            buttonsWeb.add(Button.success("cardsInfo","Cards Info"));
-            buttonsWeb.add(Button.secondary("showGameAgain","Show Game"));
-            MessageHelper.sendFileToChannelWithButtonsAfter(event.getMessageChannel(), file, "",buttonsWeb);
+        long start = System.currentTimeMillis();
+        File file = new MapGenerator().saveImage(activeGame, displayType, event);
+        long end = System.currentTimeMillis() - start;
+        System.out.println(end);
+        List<Button> buttonsWeb = new ArrayList<>();
+        if(!activeGame.isFoWMode()){
+            Button linkToWebsite = Button.link("https://ti4.westaddisonheavyindustries.com/game/"+ activeGame.getName(),"Website View");
+            buttonsWeb.add(linkToWebsite);
+        }
+        buttonsWeb.add(Button.success("cardsInfo","Cards Info"));
+        buttonsWeb.add(Button.secondary("showGameAgain","Show Game"));
+        MessageHelper.sendFileToChannelWithButtonsAfter(event.getMessageChannel(), file, "",buttonsWeb);
         
     }
 

@@ -21,12 +21,11 @@ public class BorderAnomalyModel {
         private final String name;
 
         @Getter
-        private final File imageFile;
+        private final String imagePath;
 
         BorderAnomalyType(String name, String fileName) {
             this.name = name;
-            String filePath = ResourceHelper.getInstance().getResourceFromFolder("borders/", fileName, "Could not find file");
-            imageFile = new File(filePath);
+            imagePath = ResourceHelper.getInstance().getResourceFromFolder("borders/", fileName, "Could not find file");
         }
 
         @Override
@@ -43,7 +42,6 @@ public class BorderAnomalyModel {
         if (type == null) {
             return null;
         }
-        BorderAnomalyType.values();
         Map<String, BorderAnomalyType> allTypes = Arrays.stream(BorderAnomalyType.values())
                 .collect(
                         Collectors.toMap(

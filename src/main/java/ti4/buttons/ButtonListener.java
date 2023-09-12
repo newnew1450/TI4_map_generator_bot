@@ -2853,7 +2853,7 @@ public class ButtonListener extends ListenerAdapter {
                         event.getMessage().delete().queue();
                     }
                     case "scoreAnObjective" -> {
-                        List<Button> poButtons = new Turn().getScoreObjectiveButtons(event, activeGame);
+                        List<Button> poButtons = Turn.getScoreObjectiveButtons(activeGame);
                         poButtons.add(Button.danger("deleteButtons", "Delete These Buttons"));
                         MessageChannel channel = event.getMessageChannel();
                         if (activeGame.isFoWMode()) {

@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.helpers.AliasHandler;
 import ti4.helpers.ButtonHelper;
 import ti4.helpers.ButtonHelperFactionSpecific;
@@ -262,7 +262,7 @@ public class Stats extends PlayerSubcommandData {
 		Game activeGame = GameManager.getInstance().getUserActiveGame(userID);
 		GameSaveLoadManager.saveMap(activeGame, event);
 
-		GenerateMap.getInstance().saveImage(activeGame, event);
+		new MapGenerator().saveImage(activeGame, event);
 	}
 
 	public boolean pickSC(GenericInteractionCreateEvent event, Game activeGame, Player player, OptionMapping optionSC) {

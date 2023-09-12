@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import ti4.ResourceHelper;
 import ti4.commands.tokens.AddFrontierTokens;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.generator.Mapper;
 import ti4.generator.TileHelper;
 import ti4.helpers.AliasHandler;
@@ -96,7 +96,7 @@ public class AddTileList extends MapSubcommandData {
 
         GameSaveLoadManager.saveMap(userActiveGame, event);
 
-        File file = GenerateMap.getInstance().saveImage(userActiveGame, event);
+        File file = new MapGenerator().saveImage(userActiveGame, event);
         MessageHelper.replyToMessage(event, file);
         MessageHelper.sendMessageToChannel(event.getMessageChannel(), Emojis.Frontier + "Frontier Tokens have been added to empty spaces.");
     }

@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import ti4.ResourceHelper;
 import ti4.commands.tokens.AddCC;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.generator.Mapper;
 import ti4.generator.PositionMapper;
 import ti4.helpers.AliasHandler;
@@ -59,7 +59,7 @@ public class MoveUnits2 extends AddRemoveUnits {
         }
         GameSaveLoadManager.saveMap(activeGame, event);
 
-        File file = GenerateMap.getInstance().saveImage(activeGame, event);
+        File file = new MapGenerator().saveImage(activeGame, event);
         MessageHelper.replyToMessage(event, file);
 
     }

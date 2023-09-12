@@ -78,7 +78,7 @@ public class ScorePublic extends StatusSubcommandData {
 
 	public static String getNameNEMoji(Game activeGame, int poID){
 		String id = "";
-		LinkedHashMap<String, Integer> revealedPublicObjectives = activeGame.getRevealedPublicObjectives();
+		Map<String, Integer> revealedPublicObjectives = activeGame.getRevealedPublicObjectives();
 		for (Map.Entry<String, Integer> po : revealedPublicObjectives.entrySet()) {
             if (po.getValue().equals(poID)) {
                 id = po.getKey();

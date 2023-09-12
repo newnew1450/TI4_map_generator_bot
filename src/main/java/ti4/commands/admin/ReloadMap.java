@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.helpers.Constants;
 import ti4.map.Game;
 import ti4.map.GameManager;
@@ -33,7 +33,7 @@ public class ReloadMap extends AdminSubcommandData {
             Game activeGame = GameManager.getInstance().getGame(mapName);
             GameSaveLoadManager.reload(activeGame);
             activeGame = GameManager.getInstance().getGame(mapName);
-            File file = GenerateMap.getInstance().saveImage(activeGame, event);
+            File file = new MapGenerator().saveImage(activeGame, event);
             MessageHelper.replyToMessage(event, file);
 
         } else {

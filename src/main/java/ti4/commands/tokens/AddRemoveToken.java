@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import ti4.commands.Command;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.generator.Mapper;
 import ti4.helpers.AliasHandler;
 import ti4.helpers.Constants;
@@ -77,7 +77,7 @@ abstract public class AddRemoveToken implements Command {
                 parsingForTile(event, colors, tile, activeGame);
                 GameSaveLoadManager.saveMap(activeGame, event);
 
-                File file = GenerateMap.getInstance().saveImage(activeGame, event);
+                File file = new MapGenerator().saveImage(activeGame, event);
                 //MessageHelper.replyToMessage(event, file);
                 
                     List<Button> buttonsWeb = new ArrayList<>();

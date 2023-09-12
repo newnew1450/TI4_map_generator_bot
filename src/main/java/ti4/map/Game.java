@@ -192,7 +192,6 @@ public class Game {
     private List<String> secretObjectives;
     private List<String> actionCards;
     private LinkedHashMap<String, Integer> discardActionCards = new LinkedHashMap<>();
-    private final LinkedHashMap<String, Integer> purgedActionCards = new LinkedHashMap<>();
     private HashMap<String, Integer> displacedUnitsFrom1System = new HashMap<>();
     private HashMap<String, Integer> displacedUnitsFromEntireTacticalAction = new HashMap<>();
     private String phaseOfGame = "";
@@ -212,7 +211,6 @@ public class Game {
 
     @JsonProperty("adjacentTileOverrides")
     @JsonDeserialize(keyUsing = MapPairKeyDeserializer.class)
-    // @JsonDeserialize(keyUsing = MapPairKeyDeserializer.class)
     private LinkedHashMap<Pair<String, Integer>, String> adjacencyOverrides = new LinkedHashMap<>();
 
     private List<String> publicObjectives1;
@@ -233,9 +231,7 @@ public class Game {
 
     //AUTOCOMPLETE CACHE
     @JsonIgnore
-    List<SimpleEntry<String, String>> tileNameAutocompleteOptionsCache;
-    @JsonIgnore
-    List<SimpleEntry<String, String>> planetNameAutocompleteOptionsCache;
+    private List<SimpleEntry<String, String>> tileNameAutocompleteOptionsCache;
 
     private final ArrayList<String> runDataMigrations = new ArrayList<>();
 
@@ -692,8 +688,7 @@ public class Game {
         } catch (Exception e) {
             ThreadChannel threadChannel; //exists and is not locked
             List<ThreadChannel> botChannels = MapGenerator.jda.getThreadChannelsByName(getName() + Constants.BOT_CHANNEL_SUFFIX, true);
-            if (botChannels.size() == 1) { //found a matching thread
-            } else { //can't find it, might be archived
+            if (botChannels.size() != 1) { //can't find it, might be archived
                 for (ThreadChannel threadChannel_ : getActionsChannel().retrieveArchivedPublicThreadChannels()) {
                     if (threadChannel_.getName().equals(getName() + Constants.BOT_CHANNEL_SUFFIX)) {
                         threadChannel = threadChannel_;
@@ -771,11 +766,12 @@ public class Game {
         return getScPlayed().entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).collect(Collectors.toSet());
     }
 
+    @Nullable
     public DisplayType getDisplayTypeForced() {
         return displayTypeForced;
     }
 
-    public void setDisplayTypeForced(DisplayType displayTypeForced) {
+    public void setDisplayTypeForced(@Nullable DisplayType displayTypeForced) {
         this.displayTypeForced = displayTypeForced;
     }
 
@@ -1054,7 +1050,7 @@ public class Game {
     public List<Integer> getSCList() {
         return (new ArrayList<>(getScTradeGoods().keySet()));
     }
-    public LinkedHashMap<String, Integer> getRevealedPublicObjectives() {
+    public Map<String, Integer> getRevealedPublicObjectives() {
         return revealedPublicObjectives;
     }
 
@@ -2568,6 +2564,26 @@ public class Game {
         if (missingPromissoryNotes.size() > 0) {
             BotLogger.log("`" + getName() + "`: there are promissory notes that should be in the game but are not:\n> `" + missingPromissoryNotes + "`");
         }
+    }
+
+    public String getSCNumberIfNaaluInPlay(Player player, String scText) {
+        if (player.hasAbility("telepathic")) { // naalu 0 token ability
+            boolean giftPlayed = false;
+            Collection<Player> activePlayers = getPlayers().values().stream()
+                .filter(Player::isRealPlayer).toList();
+            for (Player player_ : activePlayers) {
+                if (player != player_ && player_.getPromissoryNotesInPlayArea().contains(Constants.NAALU_PN)) {
+                    giftPlayed = true;
+                    break;
+                }
+            }
+            if (!giftPlayed) {
+                scText = "0/" + scText;
+            }
+        } else if (player.getPromissoryNotesInPlayArea().contains(Constants.NAALU_PN)) {
+            scText = "0/" + scText;
+        }
+        return scText;
     }
 
     public boolean playerHasLeaderUnlockedOrAlliance(Player player, String leaderID) {

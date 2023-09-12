@@ -3,7 +3,7 @@ package ti4.commands.status;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.helpers.Constants;
 import ti4.helpers.Emojis;
 import ti4.helpers.Helper;
@@ -27,7 +27,6 @@ public class ListTurnOrder extends StatusSubcommandData {
     }
 
     public static void turnOrder(GenericInteractionCreateEvent event, Game activeGame) {
-
         if (activeGame.isFoWMode()) {
             MessageHelper.replyToMessage(event, "Turn order does not display when `/game setup fow_mode:YES`");
             return;
@@ -37,7 +36,7 @@ public class ListTurnOrder extends StatusSubcommandData {
         int naaluSC = 0;
         for (Player player : activeGame.getRealPlayers()) {
             int sc = player.getLowestSC();
-            String scNumberIfNaaluInPlay = GenerateMap.getSCNumberIfNaaluInPlay(player, activeGame, Integer.toString(sc));
+            String scNumberIfNaaluInPlay = activeGame.getSCNumberIfNaaluInPlay(player, Integer.toString(sc));
             if (scNumberIfNaaluInPlay.startsWith("0/")) {
                 naaluSC = sc;
             }

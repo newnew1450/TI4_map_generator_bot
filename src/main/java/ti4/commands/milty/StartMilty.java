@@ -10,11 +10,12 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import ti4.ResourceHelper;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.generator.Mapper;
 import ti4.generator.TileHelper;
 import ti4.helpers.Constants;
 import ti4.helpers.Helper;
+import ti4.helpers.ImageHelper;
 import ti4.helpers.Storage;
 import ti4.map.*;
 import ti4.message.BotLogger;
@@ -229,13 +230,12 @@ public class StartMilty extends MiltySubcommandData {
         BufferedImage sliceImage = new BufferedImage(900, 900, BufferedImage.TYPE_INT_ARGB);
         Graphics graphics = sliceImage.getGraphics();
 
-        Point equadistant = new Point(0, 150);
+        Point equidistant = new Point(0, 150);
         Point left = new Point(0, 450);
         Point farFront = new Point(260, 0);
         Point front = new Point(260, 300);
         Point hs = new Point(260, 600);
         Point right = new Point(520, 450);
-
 
         File file = Storage.getMapImageStorage("temp_slice.png");
         try {
@@ -249,7 +249,7 @@ public class StartMilty extends MiltySubcommandData {
 
                 MiltyDraftTile equadistantSlice = slice.getEquadistant();
                 image = ImageIO.read(new File(equadistantSlice.getTile().getTilePath()));
-                graphics.drawImage(image, equadistant.x, equadistant.y, null);
+                graphics.drawImage(image, equidistant.x, equidistant.y, null);
 
                 MiltyDraftTile farFrontSlice = slice.getFarFront();
                 image = ImageIO.read(new File(farFrontSlice.getTile().getTilePath()));
@@ -281,12 +281,16 @@ public class StartMilty extends MiltySubcommandData {
                 graphics.drawString(resources + "/" + influence, hs.x + 130, hs.y + 130);
                 graphics.drawString("(" + resourcesMilty + "/" + influenceMilty + ")", hs.x + 70, hs.y + 190);
 
-                BufferedImage resizedSlice = GenerateMap.resizeImage(sliceImage, scale);
-                graphicsMain.drawImage(resizedSlice, deltaX, deltaY, null);
+                int scaledWidth = (int) (image.getWidth() * scale);
+                int scaledHeight = (int) (image.getHeight() * scale);
+                Image scaledImage = image.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_FAST);
+                BufferedImage outputImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
+                outputImage.getGraphics().drawImage(scaledImage, 0, 0, null);
+                graphicsMain.drawImage(outputImage, deltaX, deltaY, null);
                 index++;
 
-                int heightSlice = resizedSlice.getHeight();
-                int widthSlice = resizedSlice.getWidth();
+                int heightSlice = outputImage.getHeight();
+                int widthSlice = outputImage.getWidth();
 
                 deltaX += widthSlice;
                 if (index % 5 == 0) {

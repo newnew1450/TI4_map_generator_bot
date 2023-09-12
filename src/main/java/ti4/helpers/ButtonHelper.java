@@ -43,7 +43,7 @@ import ti4.commands.tokens.RemoveCC;
 import ti4.commands.units.AddUnits;
 import ti4.commands.units.MoveUnits;
 import ti4.commands.units.RemoveUnits;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.generator.GenerateTile;
 import ti4.generator.Mapper;
 import ti4.helpers.DiceHelper.Die;
@@ -738,7 +738,7 @@ public class ButtonHelper {
         String threadName = activeGame.getName() + "-bot-map-updates";
         List<ThreadChannel> threadChannels = activeGame.getActionsChannel().getThreadChannels();
         boolean foundsomething = false;
-        File file = GenerateMap.getInstance().saveImage(activeGame, DisplayType.all, event);
+        File file = new MapGenerator().saveImage(activeGame, DisplayType.all, event);
         if (!activeGame.isFoWMode()) {
             for (ThreadChannel threadChannel_ : threadChannels) {
                 if (threadChannel_.getName().equals(threadName)) {
@@ -2706,7 +2706,7 @@ public static List<Button> getButtonsForRemovingAllUnitsInSystem(Player player, 
         msgExtra += Helper.getGamePing(event, activeGame) + "\nAll players picked SC";
         for (Player player_ : activePlayers) {
             int playersLowestSC = player_.getLowestSC();
-            String scNumberIfNaaluInPlay = GenerateMap.getSCNumberIfNaaluInPlay(player_, activeGame, Integer.toString(playersLowestSC));
+            String scNumberIfNaaluInPlay = activeGame.getSCNumberIfNaaluInPlay(player_, Integer.toString(playersLowestSC));
             if (scNumberIfNaaluInPlay.startsWith("0/")) {
                 nextPlayer = player_; //no further processing, this player has the 0 token
                 break;
@@ -2773,7 +2773,7 @@ public static List<Button> getButtonsForRemovingAllUnitsInSystem(Player player, 
                 playersWithSCs = -30;
                 if(!activeGame.isFoWMode()){
                     DisplayType displayType = DisplayType.map;
-                    File stats_file = GenerateMap.getInstance().saveImage(activeGame, displayType, event);
+                    File stats_file = new MapGenerator().saveImage(activeGame, displayType, event);
                     MessageHelper.sendFileToChannel(activeGame.getActionsChannel(), stats_file);
                 }
             }
@@ -3913,7 +3913,7 @@ public static List<Button> getButtonsForRemovingAllUnitsInSystem(Player player, 
             List<Button> systemButtons = getStartOfTurnButtons(p1, activeGame, true, event);
             MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), message, systemButtons);
         }
-        File file = GenerateMap.getInstance().saveImage(activeGame, DisplayType.all, event);
+        new MapGenerator().saveImage(activeGame, DisplayType.all, event);
     }
 
      public static void offerNanoforgeButtons(Player player, Game activeGame, GenericInteractionCreateEvent event) {

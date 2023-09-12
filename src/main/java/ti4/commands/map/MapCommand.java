@@ -1,5 +1,6 @@
 package ti4.commands.map;
 
+import java.util.concurrent.TimeUnit;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -7,7 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import ti4.commands.Command;
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.helpers.Constants;
 import ti4.map.Game;
 import ti4.map.GameManager;
@@ -63,7 +64,7 @@ public class MapCommand implements Command {
         String userID = event.getUser().getId();
         Game activeGame = GameManager.getInstance().getUserActiveGame(userID);
         if (activeGame == null) return;
-        File file = GenerateMap.getInstance().saveImage(activeGame, event);
+        File file = new MapGenerator().saveImage(activeGame, event);
         MessageHelper.replyToMessage(event, file);
     }
 

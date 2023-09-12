@@ -8,7 +8,7 @@ import java.io.File;
 
 import org.jetbrains.annotations.NotNull;
 
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.map.Game;
 import ti4.map.GameManager;
 import ti4.map.GameSaveLoadManager;
@@ -47,7 +47,7 @@ public abstract class InstallationSubcommandData extends SubcommandData {
         Game activeGame = GameManager.getInstance().getUserActiveGame(userID);
         GameSaveLoadManager.saveMap(activeGame, event);
 
-        File file = GenerateMap.getInstance().saveImage(activeGame, event);
+        File file = new MapGenerator().saveImage(activeGame, event);
         MessageHelper.replyToMessage(event, file);
     }
 }

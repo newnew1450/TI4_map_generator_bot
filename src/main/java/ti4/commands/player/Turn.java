@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import org.apache.commons.collections4.ListUtils;
 
-import ti4.generator.GenerateMap;
+import ti4.generator.MapGenerator;
 import ti4.generator.Mapper;
 import ti4.map.Game;
 import ti4.model.PromissoryNoteModel;
@@ -70,26 +70,26 @@ public class Turn extends PlayerSubcommandData {
         if (!nextMessage.isEmpty()) MessageHelper.sendMessageToChannel(event.getMessageChannel(), nextMessage);
     }
 
-    public String pingNextPlayer(GenericInteractionCreateEvent event, Game activeGame, Player mainPlayer) {
-        activeGame.setComponentAction(false);
+    public String pingNextPlayer(GenericInteractionCreateEvent event, Game game, Player mainPlayer) {
+        game.setComponentAction(false);
         int scNext = -1;
         boolean naaluPresent = false;
         int naaluSC = 0;
-        Integer max = Collections.max(activeGame.getScTradeGoods().keySet());
+        Integer max = Collections.max(game.getScTradeGoods().keySet());
 
-        boolean isFowPrivateGame  = FoWHelper.isPrivateGame(activeGame, event);
+        boolean isFowPrivateGame  = FoWHelper.isPrivateGame(game, event);
 
         //MAKE ALL NON-REAL PLAYERS PASSED
-        for (Player player : activeGame.getPlayers().values()) {
+        for (Player player : game.getPlayers().values()) {
             if (!player.isRealPlayer()){
                 player.setPassed(true);
             }
         }
         LinkedHashSet<Integer> naaluSCs = null;
         //DETERMINE IF NAALU IS PRESENT AND GET THEIR SC
-        for (Player player : activeGame.getPlayers().values()) {
+        for (Player player : game.getPlayers().values()) {
             int sc = player.getLowestSC();
-            String scNumberIfNaaluInPlay = GenerateMap.getSCNumberIfNaaluInPlay(player, activeGame, Integer.toString(sc));
+            String scNumberIfNaaluInPlay = game.getSCNumberIfNaaluInPlay(player, Integer.toString(sc));
             if (scNumberIfNaaluInPlay.startsWith("0/")) {
                 naaluSC = sc;
                 naaluPresent = true;
@@ -106,11 +106,11 @@ public class Turn extends PlayerSubcommandData {
        // }
 
         //FIND CURRENT PLAYER AND if they are holding the highest possible SC, it sets the next SC as 1, otherwise, sets the next SC as current SC+1. 
-        for (Player player : activeGame.getPlayers().values()) {
+        for (Player player : game.getPlayers().values()) {
             if (mainPlayer.getUserID().equals(player.getUserID())) {
                 int sc = player.getLowestSC();
                 scNext = sc;
-                String scNumberIfNaaluInPlay = GenerateMap.getSCNumberIfNaaluInPlay(player, activeGame, Integer.toString(sc));
+                String scNumberIfNaaluInPlay = game.getSCNumberIfNaaluInPlay(player, Integer.toString(sc));
                 if (scNumberIfNaaluInPlay.startsWith("0/")) {
                     scNext = 0;
                 }
@@ -121,12 +121,12 @@ public class Turn extends PlayerSubcommandData {
 
         //CREATE LIST OF UNPASSED PLAYERS
         HashMap<Integer, Boolean> scPassed = new HashMap<>();
-        for (Player player : activeGame.getPlayers().values()) {
+        for (Player player : game.getPlayers().values()) {
             if (player.isPassed()) {
                 continue;
             }
             int sc = player.getLowestSC();
-            String scNumberIfNaaluInPlay = GenerateMap.getSCNumberIfNaaluInPlay(player, activeGame, Integer.toString(sc));
+            String scNumberIfNaaluInPlay = game.getSCNumberIfNaaluInPlay(player, Integer.toString(sc));
             if (scNumberIfNaaluInPlay.startsWith("0/")) {
                 scPassed.put(0, player.isPassed());
             } else {
@@ -134,18 +134,17 @@ public class Turn extends PlayerSubcommandData {
             }
         }
 
-        MessageChannel gameChannel = activeGame.getMainGameChannel() == null ? event.getMessageChannel() : activeGame.getMainGameChannel();
-        if (scPassed.isEmpty() || scPassed.values().stream().allMatch(value -> value) || activeGame.getPlayers().values().stream().allMatch(Player::isPassed)) {
-            
-            showPublicObjectivesWhenAllPassed(event, activeGame, gameChannel);
-            activeGame.updateActivePlayer(null);
+        MessageChannel gameChannel = game.getMainGameChannel() == null ? event.getMessageChannel() : game.getMainGameChannel();
+        if (scPassed.isEmpty() || scPassed.values().stream().allMatch(value -> value) || game.getPlayers().values().stream().allMatch(Player::isPassed)) {
+            showPublicObjectivesWhenAllPassed(event, game, gameChannel);
+            game.updateActivePlayer(null);
             return "";
         }
 
         int tempProtection = 0;
         int nextSCFound = -1;
         //Tries to see if the previously determined next up SC is held by an unpassed player. If it is not, it searches the next highest or, if it was at the max, it starts the search over from 0
-        while (tempProtection < (activeGame.getPlayers().size() +8)) {
+        while (tempProtection < (game.getPlayers().size() +8)) {
             Boolean isPassed = scPassed.get(scNext);
             if (isPassed != null && !isPassed) {
                 nextSCFound = scNext;
@@ -156,53 +155,51 @@ public class Turn extends PlayerSubcommandData {
             tempProtection++;
         }
 
-        for (Player player : activeGame.getPlayers().values()) {
+        for (Player player : game.getPlayers().values()) {
             int sc = player.getLowestSC();
             if ((sc != 0 && sc == nextSCFound) || (nextSCFound == 0 && naaluSC == sc)) {
-                if(!activeGame.isFoWMode())
-                {
+                if(!game.isFoWMode()) {
                     try {
-                        if (activeGame.getLatestTransactionMsg() != null && !"".equals(activeGame.getLatestTransactionMsg())) {
-                            activeGame.getMainGameChannel().deleteMessageById(activeGame.getLatestTransactionMsg()).queue();
-                            activeGame.setLatestTransactionMsg("");
+                        if (game.getLatestTransactionMsg() != null && !"".equals(game.getLatestTransactionMsg())) {
+                            game.getMainGameChannel().deleteMessageById(game.getLatestTransactionMsg()).queue();
+                            game.setLatestTransactionMsg("");
                         }
                     }
                     catch(Exception e) {
                         //  Block of code to handle errors
                     }
                 }
-                String text = "# " + Helper.getPlayerRepresentation(player, activeGame, event.getGuild(), true) + " UP NEXT";
+                String text = "# " + Helper.getPlayerRepresentation(player, game, event.getGuild(), true) + " UP NEXT";
                 String buttonText = "Use buttons to do your turn. ";
-                List<Button> buttons = ButtonHelper.getStartOfTurnButtons(player, activeGame, false, event);
+                List<Button> buttons = ButtonHelper.getStartOfTurnButtons(player, game, false, event);
                 
-                activeGame.updateActivePlayer(player);
-                activeGame.setCurrentPhase("action");
-                ButtonHelperFactionSpecific.resolveMilitarySupportCheck(player, activeGame);
+                game.updateActivePlayer(player);
+                game.setCurrentPhase("action");
+                ButtonHelperFactionSpecific.resolveMilitarySupportCheck(player, game);
                 if (isFowPrivateGame) {
-                    
-                    FoWHelper.pingAllPlayersWithFullStats(activeGame, event, mainPlayer, "ended turn");
-                    FoWHelper.pingAllPlayersWithFullStats(activeGame, event, player, "started turn");
+                    FoWHelper.pingAllPlayersWithFullStats(game, event, mainPlayer, "ended turn");
+                    FoWHelper.pingAllPlayersWithFullStats(game, event, player, "started turn");
                     
                     String fail = "User for next faction not found. Report to ADMIN";
                     String success = "The next player has been notified";
-                    MessageHelper.sendPrivateMessageToPlayer(player, activeGame, event, text, fail, success);
+                    MessageHelper.sendPrivateMessageToPlayer(player, game, event, text, fail, success);
                     MessageHelper.sendMessageToChannelWithButtons(player.getPrivateChannel(), buttonText, buttons);
                     if(player.getStasisInfantry() > 0){
-                        MessageHelper.sendMessageToChannelWithButtons(ButtonHelper.getCorrectChannel(player, activeGame), "Use buttons to revive infantry. You have "+player.getStasisInfantry() + " infantry left to revive.", ButtonHelper.getPlaceStatusInfButtons(activeGame, player));
+                        MessageHelper.sendMessageToChannelWithButtons(ButtonHelper.getCorrectChannel(player, game), "Use buttons to revive infantry. You have "+player.getStasisInfantry() + " infantry left to revive.", ButtonHelper.getPlaceStatusInfButtons(game, player));
                     }
-                    if (getMissedSCFollowsText(activeGame, player) != null && !"".equalsIgnoreCase(getMissedSCFollowsText(activeGame, player))) {
-                        MessageHelper.sendMessageToChannel(player.getPrivateChannel(), getMissedSCFollowsText(activeGame, player));
+                    if (getMissedSCFollowsText(game, player) != null && !"".equalsIgnoreCase(getMissedSCFollowsText(game, player))) {
+                        MessageHelper.sendMessageToChannel(player.getPrivateChannel(), getMissedSCFollowsText(game, player));
                     }
 
-                    activeGame.setPingSystemCounter(0);
+                    game.setPingSystemCounter(0);
                     for (int x = 0; x < 10; x++) {
-                        activeGame.setTileAsPinged(x, null);
+                        game.setTileAsPinged(x, null);
                     }
                 } else {
                    MessageHelper.sendMessageToChannel(gameChannel, text);
                     MessageHelper.sendMessageToChannelWithButtons(gameChannel,buttonText, buttons);
-                    if (getMissedSCFollowsText(activeGame, player) != null && !"".equalsIgnoreCase(getMissedSCFollowsText(activeGame, player))) {
-                        MessageHelper.sendMessageToChannel(gameChannel, getMissedSCFollowsText(activeGame, player));
+                    if (getMissedSCFollowsText(game, player) != null && !"".equalsIgnoreCase(getMissedSCFollowsText(game, player))) {
+                        MessageHelper.sendMessageToChannel(gameChannel, getMissedSCFollowsText(game, player));
                     }
                 }
                 return "";
@@ -232,8 +229,8 @@ public class Turn extends PlayerSubcommandData {
         return sendReminder ? sb.toString() : null;
     }
 
-     public List<Button> getScoreObjectiveButtons(GenericInteractionCreateEvent event, Game activeGame) {
-        LinkedHashMap<String, Integer> revealedPublicObjectives = activeGame.getRevealedPublicObjectives();
+     public static List<Button> getScoreObjectiveButtons(Game activeGame) {
+        Map<String, Integer> revealedPublicObjectives = activeGame.getRevealedPublicObjectives();
         HashMap<String, String> publicObjectivesState1 = Mapper.getPublicObjectivesStage1();
         HashMap<String, String> publicObjectivesState2 = Mapper.getPublicObjectivesStage2();
         LinkedHashMap<String, Integer> customPublicVP = activeGame.getCustomPublicVP();
@@ -284,7 +281,7 @@ public class Turn extends PlayerSubcommandData {
     public void showPublicObjectivesWhenAllPassed(GenericInteractionCreateEvent event, Game activeGame, MessageChannel gameChannel) {
         String message = "All players passed. Please score objectives. " + Helper.getGamePing(event, activeGame);
         activeGame.setCurrentPhase("status");
-        List<Button> poButtons = getScoreObjectiveButtons(event, activeGame);
+        List<Button> poButtons = getScoreObjectiveButtons(activeGame);
         Button noPOScoring = Button.danger(Constants.PO_NO_SCORING, "No PO Scored");
         Button noSOScoring = Button.danger(Constants.SO_NO_SCORING, "No SO Scored");
         poButtons.add(noPOScoring);
