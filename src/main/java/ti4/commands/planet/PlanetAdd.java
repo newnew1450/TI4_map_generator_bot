@@ -113,6 +113,7 @@ public class PlanetAdd extends PlanetAddRemove {
             MessageHelper.sendMessageToChannel(event.getMessageChannel(), fac+" gained 1tg from Scavenge ("+player.getTg()+"->"+(player.getTg()+1)+"). Reminder that this is optional, but was done automatically for convenience. You do not legally have this tg prior to exploring." );
             player.setTg(player.getTg()+1);
             ButtonHelperFactionSpecific.pillageCheck(player, activeGame);
+            ButtonHelperFactionSpecific.resolveArtunoCheck(player, activeGame, 1);
         }
         for(String law : activeGame.getLaws().keySet()){
             if("minister_exploration".equalsIgnoreCase(law)){
@@ -121,6 +122,7 @@ public class PlanetAdd extends PlanetAddRemove {
                     MessageHelper.sendMessageToChannel(event.getMessageChannel(), fac+" gained 1tg from Minister of Exploration ("+player.getTg()+"->"+(player.getTg()+1)+"). You do have this tg prior to exploring." );
                     player.setTg(player.getTg()+1);
                     ButtonHelperFactionSpecific.pillageCheck(player, activeGame);
+                    ButtonHelperFactionSpecific.resolveArtunoCheck(player, activeGame, 1);
                 }
             }
         }
@@ -148,7 +150,7 @@ public class PlanetAdd extends PlanetAddRemove {
         }
         if (!alreadyOwned && !doubleCheck && (!"mirage".equals(planet))&& !activeGame.isBaseGameMode()) {
             Planet planetReal = (Planet) unitHolder;
-            List<Button> buttons = ButtonHelper.getPlanetExplorationButtons(activeGame, planetReal);
+            List<Button> buttons = ButtonHelper.getPlanetExplorationButtons(activeGame, planetReal, player);
             if (event != null && buttons != null && !buttons.isEmpty()) {
                 String message = "Click button to explore " + Helper.getPlanetRepresentation(planet, activeGame);
                 MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), message, buttons);
