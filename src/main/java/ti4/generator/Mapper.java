@@ -34,14 +34,12 @@ public class Mapper {
     private static final Properties factions = new Properties();
     private static final Properties general = new Properties();
     private static final Properties explore = new Properties();
-    private static final Properties relics = new Properties();
     private static final Properties planets = new Properties();
     private static final Properties faction_representation = new Properties();
     private static final Properties leader_representation = new Properties();
     private static final Properties unit_representation = new Properties();
     private static final Properties attachmentInfo = new Properties();
     private static final Properties miltyDraft = new Properties();
-    private static final Properties agendaRepresentation = new Properties();
     private static final Properties hyperlaneAdjacencies = new Properties();
     private static final Properties ds_handcards = new Properties();
 
@@ -53,6 +51,7 @@ public class Mapper {
     private static final HashMap<String, PublicObjectiveModel> publicObjectives = new HashMap<>();
     private static final HashMap<String, SecretObjectiveModel> secretObjectives = new HashMap<>();
     private static final HashMap<String, PromissoryNoteModel> promissoryNotes = new HashMap<>();
+    private static final HashMap<String, RelicModel> relics = new HashMap<>();
     private static final HashMap<String, TechnologyModel> technologies = new HashMap<>();
     private static final HashMap<String, UnitModel> units = new HashMap<>();
     @Getter
@@ -75,7 +74,7 @@ public class Mapper {
         importJsonObjects("public_objectives.json", publicObjectives, PublicObjectiveModel.class, "Could not read public objective file");
         importJsonObjects("promissory_notes.json", promissoryNotes, PromissoryNoteModel.class, "Could not read promissory notes file");
         readData("exploration.properties", explore, "Could not read explore file");
-        readData("relics.properties", relics, "Could not read relic file");
+        importJsonObjects("relics.json", relics, RelicModel.class, "Could not read relic file");
         importJsonObjects("technology.json", technologies, TechnologyModel.class, "Could not read technology file");
         readData("planets.properties", planets, "Could not read planets file");
         readData("attachments_info.properties", attachmentInfo, "Could not read attachment info file");
@@ -84,7 +83,6 @@ public class Mapper {
         readData("unit_representation.properties", unit_representation, "Could not read unit representation file");
         importJsonObjects("faction_setup.json", factionSetup, FactionModel.class, "Could not read faction setup file");
         readData("milty_draft.properties", miltyDraft, "Could not read milty draft file");
-        readData("agenda_representation.properties", agendaRepresentation, "Could not read agenda representaion file");
         readData("hyperlanes.properties", hyperlaneAdjacencies, "Could not read hyperlanes file");
         readData("DS_handcards.properties", ds_handcards, "Could not read ds_handcards file");
         importJsonObjects("decks.json", decks, DeckModel.class, "could not read decks file");
@@ -420,20 +418,10 @@ public class Mapper {
         return (String) explore.get(id);
     }
 
-    public static String getRelic(String id) {
+    public static RelicModel getRelic(String id) {
         id = id.replace("extra1", "");
         id = id.replace("extra2", "");
-        return (String) relics.get(id);
-    }
-
-    public static RelicModel getRelicObject(String id) {
-        String relicString = getRelic(id);
-
-        StringTokenizer tokenizer = new StringTokenizer(relicString, ";");
-        String name = tokenizer.nextToken();
-        String effect = tokenizer.nextToken();
-        String shortName = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : null;
-        return new RelicModel(id, name, effect, shortName);
+        return relics.get(id);
     }
 
     public static PlanetModel getPlanet(String id) {
@@ -471,31 +459,35 @@ public class Mapper {
 
     @Nullable
     public static String getAgendaTitle(String id) {
-        String agendaInfo = (String) agendaRepresentation.get(id);
-        if (agendaInfo == null) {
+        AgendaModel agendaModel = agendas.get(id);
+        if (agendaModel == null) {
             return null;
         }
-        String[] split = agendaInfo.split(";");
-        return split[1];
+        return agendaModel.getName().toUpperCase();
+    }
+    public static String getAgendaTitleNoCap(String id) {
+        AgendaModel agendaModel = agendas.get(id);
+        if (agendaModel == null) {
+            return null;
+        }
+        return agendaModel.getName();
     }
 
     public static String getAgendaType(String id) {
-        String agendaInfo = (String) agendaRepresentation.get(id);
-        if (agendaInfo == null) {
+        AgendaModel agendaModel = agendas.get(id);
+        if (agendaModel == null) {
             return "1";
         }
-        String[] split = agendaInfo.split(";");
-        return split[0];
+        return agendaModel.displayElectedFaction() ? "0" : "1";
     }
 
     @Nullable
     public static String getAgendaText(String id) {
-        String agendaInfo = (String) agendaRepresentation.get(id);
-        if (agendaInfo == null) {
+        AgendaModel agendaModel = agendas.get(id);
+        if (agendaModel == null) {
             return null;
         }
-        String[] split = agendaInfo.split(";");
-        return split[2];
+        return agendaModel.getMapText();
     }
 
     public static Map<String, SecretObjectiveModel> getSecretObjectives() {
@@ -663,22 +655,9 @@ public class Mapper {
         }
         return expList;
     }
-    public static HashMap<String, String> getRelics(String extra) {
-        HashMap<String, String> relicList = new HashMap<>();
-        for (Map.Entry<Object, Object> entry : relics.entrySet()) {
-            StringTokenizer tokenizer = new StringTokenizer((String) entry.getValue(), ";");
-            relicList.put(entry.getKey() +extra, tokenizer.nextToken());
-        }
-        return relicList;
-    }
 
-    public static HashMap<String, String> getRelics() {
-        HashMap<String, String> relicList = new HashMap<>();
-        for (Map.Entry<Object, Object> entry : relics.entrySet()) {
-            StringTokenizer tokenizer = new StringTokenizer((String) entry.getValue(), ";");
-            relicList.put((String) entry.getKey(), tokenizer.nextToken());
-        }
-        return relicList;
+    public static Map<String, RelicModel> getRelics() {
+        return new HashMap<>(relics);
     }
 
     public static HashMap<String, AgendaModel> getAgendas() {

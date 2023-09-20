@@ -1,7 +1,7 @@
 package ti4.helpers;
 
 import java.util.*;
-import ti4.AsyncTI4DiscordBot;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class DiceHelper {
 

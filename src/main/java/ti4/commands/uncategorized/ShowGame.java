@@ -82,17 +82,21 @@ public class ShowGame implements Command {
         simpleShowGame(activeGame, event, displayType);
     }
 
-    public void simpleShowGame(Game activeGame, GenericInteractionCreateEvent event, DisplayType displayType){
-        File file = new MapGenerator().saveImage(activeGame, displayType, event);
+    public static void simpleShowGame(Game activeGame, GenericInteractionCreateEvent event) {
+        simpleShowGame(activeGame, event, DisplayType.all);
+    }
 
-        List<Button> buttonsWeb = new ArrayList<>();
+    private static void simpleShowGame(Game activeGame, GenericInteractionCreateEvent event, DisplayType displayType) {
+        File file = GenerateMap.getInstance().saveImage(activeGame, displayType, event);
+
+        List<Button> buttons = new ArrayList<>();
         if (!activeGame.isFoWMode()) {
-            Button linkToWebsite = Button.link("https://ti4.westaddisonheavyindustries.com/game/"+ activeGame.getName(),"Website View");
-            buttonsWeb.add(linkToWebsite);
+            Button linkToWebsite = Button.link("https://ti4.westaddisonheavyindustries.com/game/" + activeGame.getName(), "Website View");
+            buttons.add(linkToWebsite);
         }
-        buttonsWeb.add(Button.success("cardsInfo","Cards Info"));
-        buttonsWeb.add(Button.secondary("showGameAgain","Show Game"));
-        MessageHelper.sendFileToChannelWithButtonsAfter(event.getMessageChannel(), file, "", buttonsWeb);
+        buttons.add(Button.success("cardsInfo", "Cards Info"));
+        buttons.add(Button.secondary("showGameAgain", "Show Game"));
+        MessageHelper.sendFileToChannelWithButtonsAfter(event.getMessageChannel(), file, "", buttons);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

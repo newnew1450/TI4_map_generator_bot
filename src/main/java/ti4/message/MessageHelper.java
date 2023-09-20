@@ -474,13 +474,11 @@ public class MessageHelper {
 	}
 
     public static void sendMessageToBotLogWebhook(String message) {
-        if (!"943410040369479690".equals(AsyncTI4DiscordBot.guildPrimary.getId())) return; //Only run in Prod
-        DiscordWebhook webhook = new DiscordWebhook("https://discord.com/api/webhooks/1106562763708432444/AK5E_Nx3Jg_JaTvy7ZSY7MRAJBoIyJG8UKZ5SpQKizYsXr57h_VIF3YJlmeNAtuKFe5v");
-		webhook.setContent(message);
-		try {
-			webhook.execute();
-		} catch (Exception e) {
-			// Do nothing
+			if (!"943410040369479690".equals(AsyncTI4DiscordBot.guildPrimary.getId())) return; //Only run in Prod
+			DiscordWebhook webhook = new DiscordWebhook("https://discord.com/api/webhooks/1106562763708432444/AK5E_Nx3Jg_JaTvy7ZSY7MRAJBoIyJG8UKZ5SpQKizYsXr57h_VIF3YJlmeNAtuKFe5v");
+			webhook.setContent(message);
+			try {
+				webhook.execute();
+			} catch (Exception ignored) {}
 		}
-    }
 }

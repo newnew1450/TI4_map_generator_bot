@@ -24,7 +24,6 @@ public class ShowRemainingRelics extends GenericRelicAction {
     @Override
     public void doAction(Player player, SlashCommandInteractionEvent event) {
         List<String> allRelics = new ArrayList<>(getActiveGame().getAllRelics());
-        allRelics.remove(Constants.ENIGMATIC_DEVICE);
         Game activeGame = getActiveGame();
         Integer deckCount = allRelics.size();
         Double deckDrawChance = deckCount == 0 ? 0.0 : 1.0 / deckCount;
@@ -42,8 +41,8 @@ public class ShowRemainingRelics extends GenericRelicAction {
             text = new StringBuilder(Emojis.Relic).append(" **RELICS REMAINING IN DECK** (").append(deckCount).append(") _").append(formatPercent.format(deckDrawChance)).append("_\n");
             Collections.sort(allRelics);
             for (String relicId : allRelics) {
-                String[] relicData = Mapper.getRelic(relicId).split(";");
-                text.append("- ").append(relicData[0]).append("\n");
+                String relicName = Mapper.getRelic(relicId).getName();
+                text.append("- ").append(relicName).append("\n");
             }
         }
 

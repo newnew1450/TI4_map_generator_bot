@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
 import ti4.commands.player.AbilityInfo;
+import ti4.commands.special.CombatRoll;
 import ti4.generator.Mapper;
 import ti4.map.Game;
 import ti4.map.Leader;
@@ -19,6 +21,7 @@ import ti4.map.UnitHolder;
 import ti4.model.AgendaModel;
 import ti4.model.CombatModifierModel;
 import ti4.model.NamedCombatModifierModel;
+import ti4.model.RelicModel;
 import ti4.model.TechnologyModel;
 import ti4.model.TileModel;
 import ti4.model.UnitModel;
@@ -61,9 +64,11 @@ public class CombatModHelper {
         }
         return result;
     }
-    public static Boolean IsModInScopeForUnits(List<UnitModel> units, CombatModifierModel modifier) {
+
+    public static Boolean IsModInScopeForUnits(List<UnitModel> units, CombatModifierModel modifier,
+            CombatRollType rollType) {
         for (UnitModel unit : units) {
-            if (modifier.isInScopeForUnit(unit)) {
+            if (modifier.isInScopeForUnit(unit, units, rollType)) {
                 return true;
             }
         }
@@ -75,9 +80,15 @@ public class CombatModHelper {
     public static List<NamedCombatModifierModel> CalculateAutomaticMods(Player player, Player opponent,
             Map<UnitModel, Integer> unitsByQuantity,
             TileModel tile,
-            Game activeGame) {
+            Game activeGame,
+            CombatRollType rollType,
+            String modifierType) {
         List<NamedCombatModifierModel> alwaysOnMods = new ArrayList<>();
-        HashMap<String, CombatModifierModel> combatModifiers = Mapper.getCombatModifiers();
+        HashMap<String, CombatModifierModel> combatModifiers = new HashMap<>(Mapper.getCombatModifiers());
+        combatModifiers = new HashMap<>(combatModifiers.entrySet().stream()
+                .filter(entry -> entry.getValue().getForCombatAbility().equals(rollType.toString()))
+                .filter(entry -> entry.getValue().getType().equals(modifierType))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
 
         for (String ability : player.getAbilities()) {
             Optional<CombatModifierModel> relevantMod = combatModifiers.values().stream()
@@ -85,7 +96,7 @@ public class CombatModHelper {
                     .findFirst();
             
             if (relevantMod.isPresent() 
-                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, activeGame, unitsByQuantity)) {
+                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, unitsByQuantity)) {
                 alwaysOnMods.add(new NamedCombatModifierModel(relevantMod.get(), AbilityInfo.getAbilityRepresentation(ability)));
             }
         }
@@ -96,7 +107,7 @@ public class CombatModHelper {
                     .findFirst();
             
             if (relevantMod.isPresent() 
-                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, activeGame, unitsByQuantity)) {
+                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, unitsByQuantity)) {
                 alwaysOnMods.add(new NamedCombatModifierModel(relevantMod.get(), Helper.getTechRepresentationLong(tech)));
             }
         }
@@ -106,9 +117,9 @@ public class CombatModHelper {
                     .filter(modifier -> modifier.isRelevantTo(Constants.RELIC, relic))
                     .findFirst();
             
-            if (relevantMod.isPresent() 
-                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, activeGame, unitsByQuantity)) {
-                alwaysOnMods.add(new NamedCombatModifierModel(relevantMod.get(), Helper.getRelicRepresentation(relic)));
+            if (relevantMod.isPresent() && checkModPassesCondition(relevantMod.get(), tile, player, opponent, unitsByQuantity)) {
+                RelicModel relicModel = Mapper.getRelic(relic);
+                alwaysOnMods.add(new NamedCombatModifierModel(relevantMod.get(), relicModel.getSimpleRepresentation()));
             }
         }
 
@@ -122,7 +133,7 @@ public class CombatModHelper {
                     .findFirst();
             
             if (relevantMod.isPresent() 
-                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, activeGame, unitsByQuantity)) {
+                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, unitsByQuantity)) {
                 alwaysOnMods.add(new NamedCombatModifierModel(relevantMod.get(), Emojis.Agenda + " " + agenda.getName()));
             }
         }
@@ -134,7 +145,7 @@ public class CombatModHelper {
                     .findFirst();
             
             if (relevantMod.isPresent() 
-                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, activeGame, unitsByQuantity)) {
+                && checkModPassesCondition(relevantMod.get(), tile, player, opponent, unitsByQuantity)) {
                 alwaysOnMods.add(
                                 new NamedCombatModifierModel(relevantMod.get(),
                                         Helper.getEmojiFromDiscord(unit.getBaseType()) + " "
@@ -151,7 +162,7 @@ public class CombatModHelper {
                     .findFirst();
             
             if (relevantMod.isPresent() 
-            && checkModPassesCondition(relevantMod.get(), tile, player, opponent, activeGame, unitsByQuantity)) {
+            && checkModPassesCondition(relevantMod.get(), tile, player, opponent, unitsByQuantity)) {
                 alwaysOnMods.add(new NamedCombatModifierModel(relevantMod.get(), Helper.getLeaderFullRepresentation(leader)));
             }
         }
@@ -160,11 +171,11 @@ public class CombatModHelper {
     }
 
     public static Integer GetCombinedModifierForUnit(UnitModel unit, List<NamedCombatModifierModel> modifiers, Player player,
-            Player opponent, Game activeGame) {
+            Player opponent, Game activeGame, List<UnitModel> allUnits, CombatRollType rollType) {
         int modValue = 0;
         for (NamedCombatModifierModel namedModifier : modifiers) {
             CombatModifierModel modifier = namedModifier.getModifier();
-            if (modifier.isInScopeForUnit(unit)) {
+            if (modifier.isInScopeForUnit(unit, allUnits, rollType)) {
                 modValue += GetVariableModValue(modifier, player, opponent, activeGame);
             }
         }
@@ -172,7 +183,7 @@ public class CombatModHelper {
     }
 
     public static Boolean checkModPassesCondition(CombatModifierModel modifier, TileModel onTile, Player player,
-            Player opponent, Game activeGame, Map<UnitModel, Integer> unitsByQuantity) {
+            Player opponent, Map<UnitModel, Integer> unitsByQuantity) {
         boolean meetsCondition = false;
         String condition = "";
         if(modifier != null && modifier.getCondition() != null){
@@ -224,14 +235,27 @@ public class CombatModHelper {
     ///
     public static Integer GetVariableModValue(CombatModifierModel mod, Player player, Player opponent, Game activeGame) {
         double value = mod.getValue().doubleValue();
-        double multipler = 1.0;
+        double multiplier = 1.0;
         Long scalingCount = (long) 0;
-        if (mod.getValueScalingMultipler() != null) {
-            multipler = mod.getValueScalingMultipler();
+        if (mod.getValueScalingMultiplier() != null) {
+            multiplier = mod.getValueScalingMultiplier();
         }
         if (StringUtils.isNotBlank(mod.getValueScalingType())) {
             switch (mod.getValueScalingType()) {
-                case Constants.FRAGMENT -> scalingCount = (long) player.getFragments().size();
+                case Constants.FRAGMENT -> {
+                    if(player.hasFoundCulFrag()){
+                        scalingCount += 1;
+                    }
+                    if(player.hasFoundHazFrag()){
+                        scalingCount += 1;
+                    }
+                    if(player.hasFoundIndFrag()){
+                        scalingCount += 1;
+                    }
+                    if(player.hasFoundUnkFrag()){
+                        scalingCount += 1;
+                    }
+                }
                 case Constants.LAW -> scalingCount = (long) activeGame.getLaws().size();
                 case Constants.MOD_OPPONENT_PO_EXCLUSIVE_SCORED -> {
                     if (opponent != null) {
@@ -288,14 +312,16 @@ public class CombatModHelper {
                 default -> {
                 }
             }
-            value = value * multipler * scalingCount.doubleValue();
+            value = value * multiplier * scalingCount.doubleValue();
         }
         value = Math.floor(value); // to make sure eg +1 per 2 destroyer doesnt return 2.5 etc
         return (int) value;
     }
-    public static List<NamedCombatModifierModel> FilterRelevantMods(List<NamedCombatModifierModel> mods, List<UnitModel> units){
+
+    public static List<NamedCombatModifierModel> FilterRelevantMods(List<NamedCombatModifierModel> mods,
+            List<UnitModel> units, CombatRollType rollType) {
         return mods.stream()
-                .filter(model -> IsModInScopeForUnits(units, model.getModifier()))
+                .filter(model -> IsModInScopeForUnits(units, model.getModifier(), rollType))
                 .toList();
     }
 }

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import ti4.AsyncTI4DiscordBot;
+import java.util.concurrent.ThreadLocalRandom;
 import ti4.commands.milty.MiltyDraftTile;
 import ti4.generator.Mapper;
 import ti4.map.Game;

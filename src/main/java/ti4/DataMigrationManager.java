@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -14,9 +15,11 @@ import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 
 import ti4.generator.Mapper;
+import ti4.helpers.Constants;
 import ti4.helpers.Helper;
 import ti4.map.Game;
 import ti4.map.GameManager;
+import ti4.map.GameSaveLoadManager;
 import ti4.map.Player;
 import ti4.map.Tile;
 import ti4.message.BotLogger;
@@ -44,12 +47,16 @@ public class DataMigrationManager {
     ///
     public static void runMigrations() {
         try {
+            runMigration("migrateGheminaAddCarrier_190923", DataMigrationManager::migrateGheminaAddCarrier_190923);
+            runMigration("migrateNaaluMechsToOmega_180923", DataMigrationManager::migrateNaaluMechsToOmega_180923);
             runMigration("migrateFixkeleresUnits_010823", DataMigrationManager::migrateFixkeleresUnits_010823);
             runMigration("migrateOwnedUnits_010823", DataMigrationManager::migrateOwnedUnits_010823);
             runMigration("migrateOwnedUnitsV2_210823", DataMigrationManager::migrateOwnedUnitsV2_210823);
             runMigration("migrateNullSCDeckToPoK_210823", DataMigrationManager::migrateNullSCDeckToPoK_210823);
             runMigration("migrateAbsolDeckIDs_210823", DataMigrationManager::migrateAbsolDeckIDs_210823);
             runMigration("migratePlayerStatsBlockPositions_300823", DataMigrationManager::migratePlayerStatsBlockPositions_300823);
+            runMigration("migrateRelicDecksForEnigmaticStarCharts_110923", DataMigrationManager::migrateRelicDecksForEnigmaticStarChartsAndUnderscoresFromExploreDecks_110923);
+            runMigration("migrateForceShuffleAllRelicsDecks_241223", DataMigrationManager::migrateForceShuffleAllRelicsDecks_241223);
             // runMigration("migrateExampleMigration_241223", (map) ->
             // migrateExampleMigration_241223(map));
         } catch (Exception e) {
@@ -61,10 +68,51 @@ public class DataMigrationManager {
     /// <Description of how data is changing, and optionally what code fix it
     /// relates to>
     public static Boolean migrateExampleMigration_241223(Game game) {
+        boolean mapNeededMigrating = false;
         // Do your migration here for each non-finshed map
         // This will run once, and the map will log that it has had your migration run
         // so it doesnt re-run next time.
-        return false;
+        return mapNeededMigrating;
+    }
+
+    /// MIGRATION: Shuffle the damn relic decks
+    public static Boolean migrateForceShuffleAllRelicsDecks_241223(Game game) {
+        boolean mapNeededMigrating = false;
+        Collections.shuffle(game.getAllRelics());
+        return mapNeededMigrating;
+    }
+
+    /// MIGRATION: Example Migration method
+    /// Remove Enigmatic and DS Star Charts from Relic Decks - no longer required since Decks were implemented
+    public static Boolean migrateRelicDecksForEnigmaticStarChartsAndUnderscoresFromExploreDecks_110923(Game game) {
+        boolean mapNeededMigrating = false;
+
+        // Legacy fake relics that no longer need to be included in the deck of cards to be added
+        List<String> relicDeck = new ArrayList<>(game.getAllRelics());
+        if (relicDeck.remove(Constants.ENIGMATIC_DEVICE)) mapNeededMigrating = true;
+        if (relicDeck.remove("starcharthazardous")) mapNeededMigrating = true;
+        if (relicDeck.remove("starchartcultural")) mapNeededMigrating = true;
+        if (relicDeck.remove("starchartindustrial")) mapNeededMigrating = true;
+        if (relicDeck.remove("starchartfrontier")) mapNeededMigrating = true;
+        game.setRelics(relicDeck);
+
+        // Underscores in explore ID
+        List<String> exploreDeck = new ArrayList<>(game.getAllExplores());
+        List<String> badCards = new ArrayList<>();
+        List<String> fixedCards = new ArrayList<>();
+        for (String exploreCard : exploreDeck) {
+            if (exploreCard.contains("_")) {
+                badCards.add(exploreCard);
+                fixedCards.add(exploreCard.replaceAll("_", ""));
+                mapNeededMigrating = true;
+            }
+        }
+        exploreDeck.removeAll(badCards);
+        exploreDeck.addAll(fixedCards);
+        Collections.shuffle(exploreDeck);
+        game.setExploreDeck(exploreDeck);
+
+        return mapNeededMigrating;
     }
 
     /// MIGRATION: Player stats anchors implemented, but blown away all existing games.
@@ -81,7 +129,7 @@ public class DataMigrationManager {
                 add("316");
             }
         };
-        ArrayList<String> setup8p = new ArrayList<>(){
+        ArrayList<String> setup8p = new ArrayList<>() {
             {
                 add("401");
                 add("404");
@@ -93,21 +141,19 @@ public class DataMigrationManager {
                 add("422");
             }
         };
-        
+
         List<Player> players = new ArrayList<>(activeGame.getPlayers().values());
         int playerCount = activeGame.getRealPlayers().size();
 
         ArrayList<String> setup;
         if (playerCount == 6 && activeGame.getRingCount() == 3) {
             setup = setup6p;
-        }
-        else if (playerCount == 8 && activeGame.getRingCount() == 4) {
+        } else if (playerCount == 8 && activeGame.getRingCount() == 4) {
             setup = setup8p;
-        }
-        else {
+        } else {
             return mapNeededMigrating;
         }
-       
+
         int playerIndex = 0;
         for (Player player : players) {
             if (!player.isRealPlayer()) continue;
@@ -164,9 +210,9 @@ public class DataMigrationManager {
                 // Trying to assign an accurate Faction Model for old keleres players.
                 if (factionSetupInfo == null && "keleres".equals(player.getFaction())) {
                     List<FactionModel> keleresSubfactions = Mapper.getFactions().stream()
-                            .filter(factionID -> factionID.startsWith("keleres") && !"keleres".equals(factionID))
-                            .map(Mapper::getFactionSetup)
-                            .toList();
+                        .filter(factionID -> factionID.startsWith("keleres") && !"keleres".equals(factionID))
+                        .map(Mapper::getFactionSetup)
+                        .toList();
 
                     // guess subfaction based on homeplanet
                     for (FactionModel factionModel : keleresSubfactions) {
@@ -186,12 +232,12 @@ public class DataMigrationManager {
                         // systems
                         // and checks if the associated faction isnt in the game.
                         List<String> subfactionHomePlanetsWithoutKeleresSuffix = factionModel.getHomePlanets()
-                                .stream()
-                                .map(alias -> alias.substring(0, alias.length() - 1))
-                                .toList();
+                            .stream()
+                            .map(alias -> alias.substring(0, alias.length() - 1))
+                            .toList();
 
                         Optional<String> firstHomePlanet = subfactionHomePlanetsWithoutKeleresSuffix.stream()
-                                .findFirst();
+                            .findFirst();
                         if (firstHomePlanet.isPresent()) {
                             Tile homeSystem = Helper.getTileFromPlanet(firstHomePlanet.get().toLowerCase(), game);
                             if (homeSystem != null) {
@@ -199,7 +245,7 @@ public class DataMigrationManager {
                                 for (String factionId : game.getFactions()) {
                                     FactionModel otherFactionSetup = Mapper.getFactionSetup(factionId);
                                     if (otherFactionSetup != null
-                                            && otherFactionSetup.getHomeSystem().equals(homeSystem.getTileID())) {
+                                        && otherFactionSetup.getHomeSystem().equals(homeSystem.getTileID())) {
                                         isHomeSystemUsedBySomeoneElse = true;
                                         break;
                                     }
@@ -215,14 +261,14 @@ public class DataMigrationManager {
 
                 if (factionSetupInfo == null) {
                     throw new Exception(
-                            String.format("Failed to find correct faction to sync units with faction: %s, map: %s",
-                                    player.getFaction(), game.getName()));
+                        String.format("Failed to find correct faction to sync units with faction: %s, map: %s",
+                            player.getFaction(), game.getName()));
                 }
                 List<String> ownedUnitIDs = factionSetupInfo.getUnits();
 
                 List<TechnologyModel> playerTechs = player.getTechs().stream().map(Mapper::getTech)
-                        .filter(tech -> tech.getType() == TechnologyType.UNITUPGRADE)
-                        .toList();
+                    .filter(tech -> tech.getType() == TechnologyType.UNITUPGRADE)
+                    .toList();
 
                 for (TechnologyModel technologyModel : playerTechs) {
                     UnitModel upgradedUnit = Mapper.getUnitModelByTechUpgrade(technologyModel.getAlias());
@@ -231,8 +277,7 @@ public class DataMigrationManager {
                             int upgradesFromUnitIndex = ownedUnitIDs.indexOf(upgradedUnit.getBaseType());
                             if (upgradesFromUnitIndex >= 0) {
                                 ownedUnitIDs.set(upgradesFromUnitIndex, upgradedUnit.getId());
-                            }
-                            else {
+                            } else {
                                 ownedUnitIDs.add(upgradedUnit.getId());
                             }
                         } else {
@@ -272,9 +317,9 @@ public class DataMigrationManager {
                 // Trying to assign an accurate Faction Model for old keleres players.
                 if (factionSetupInfo == null && "keleres".equals(player.getFaction())) {
                     List<FactionModel> keleresSubfactions = Mapper.getFactions().stream()
-                            .filter(factionID -> factionID.startsWith("keleres") && !"keleres".equals(factionID))
-                            .map(Mapper::getFactionSetup)
-                            .toList();
+                        .filter(factionID -> factionID.startsWith("keleres") && !"keleres".equals(factionID))
+                        .map(Mapper::getFactionSetup)
+                        .toList();
 
                     // guess subfaction based on homeplanet
                     for (FactionModel factionModel : keleresSubfactions) {
@@ -294,12 +339,12 @@ public class DataMigrationManager {
                         // systems
                         // and checks if the associated faction isnt in the game.
                         List<String> subfactionHomePlanetsWithoutKeleresSuffix = factionModel.getHomePlanets()
-                                .stream()
-                                .map(alias -> alias.substring(0, alias.length() - 1))
-                                .toList();
+                            .stream()
+                            .map(alias -> alias.substring(0, alias.length() - 1))
+                            .toList();
 
                         Optional<String> firstHomePlanet = subfactionHomePlanetsWithoutKeleresSuffix.stream()
-                                .findFirst();
+                            .findFirst();
                         if (firstHomePlanet.isPresent()) {
                             Tile homeSystem = Helper.getTileFromPlanet(firstHomePlanet.get().toLowerCase(), game);
                             if (homeSystem != null) {
@@ -307,7 +352,7 @@ public class DataMigrationManager {
                                 for (String factionId : game.getFactions()) {
                                     FactionModel otherFactionSetup = Mapper.getFactionSetup(factionId);
                                     if (otherFactionSetup != null
-                                            && otherFactionSetup.getHomeSystem().equals(homeSystem.getTileID())) {
+                                        && otherFactionSetup.getHomeSystem().equals(homeSystem.getTileID())) {
                                         isHomeSystemUsedBySomeoneElse = true;
                                         break;
                                     }
@@ -323,14 +368,14 @@ public class DataMigrationManager {
 
                 if (factionSetupInfo == null) {
                     throw new Exception(
-                            String.format("Failed to find correct faction to sync units with faction: %s, map: %s",
-                                    player.getFaction(), game.getName()));
+                        String.format("Failed to find correct faction to sync units with faction: %s, map: %s",
+                            player.getFaction(), game.getName()));
                 }
                 List<String> ownedUnitIDs = factionSetupInfo.getUnits();
 
                 List<TechnologyModel> playerTechs = player.getTechs().stream().map(Mapper::getTech)
-                        .filter(tech -> tech.getType() == TechnologyType.UNITUPGRADE)
-                        .toList();
+                    .filter(tech -> tech.getType() == TechnologyType.UNITUPGRADE)
+                    .toList();
 
                 for (TechnologyModel technologyModel : playerTechs) {
                     UnitModel upgradedUnit = Mapper.getUnitModelByTechUpgrade(technologyModel.getAlias());
@@ -371,20 +416,49 @@ public class DataMigrationManager {
             for (String unitID : ownedUnitIDs) {
                 int unitIndex = ownedUnitIDs.indexOf(unitID);
                 if (!"keleres_flagship".equals(unitID)
-                        && unitID.startsWith("keleres")
-                        && unitID.endsWith("_flagship")) {
+                    && unitID.startsWith("keleres")
+                    && unitID.endsWith("_flagship")) {
                     ownedUnitIDs.set(unitIndex, "keleres_flagship");
                     mapNeededMigrating = true;
                 }
                 if (!"keleres_mech".equals(unitID)
-                        && unitID.startsWith("keleres")
-                        && unitID.endsWith("_mech")) {
+                    && unitID.startsWith("keleres")
+                    && unitID.endsWith("_mech")) {
                     ownedUnitIDs.set(unitIndex, "keleres_mech");
                     mapNeededMigrating = true;
                 }
             }
 
             player.setUnitsOwned(new HashSet<>(ownedUnitIDs));
+        }
+        return mapNeededMigrating;
+    }
+
+    private static Boolean migrateNaaluMechsToOmega_180923(Game game) {
+        boolean mapNeededMigrating = false;
+        for (Player player : game.getPlayers().values()) {
+            if (player.hasUnit("naalu_mech")) {
+                player.removeOwnedUnitByID("naalu_mech");
+                player.addOwnedUnitByID("naalu_mech_omega");
+                mapNeededMigrating = true;
+            }
+        }
+        return mapNeededMigrating;
+    }
+
+    private static Boolean migrateGheminaAddCarrier_190923(Game game) {
+        boolean mapNeededMigrating = false;
+        for (Player player : game.getPlayers().values()) {
+            if (player.getFaction().equalsIgnoreCase("ghemina") && player.hasUnit("carrier")) {
+                player.removeOwnedUnitByID("carrier");
+                player.addOwnedUnitByID("ghemina_carrier");
+                mapNeededMigrating = true;
+            }
+            if (player.getFaction().equalsIgnoreCase("ghemina") && player.hasUnit("carrier2")) {
+                player.removeOwnedUnitByID("carrier2");
+                player.addOwnedUnitByID("ghemina_carrier2");
+                mapNeededMigrating = true;
+            }
         }
         return mapNeededMigrating;
     }
@@ -398,8 +472,8 @@ public class DataMigrationManager {
             migrationForGamesBeforeDate = format.parse(migrationDateString);
         } catch (ParseException e) {
             BotLogger.log(String.format(
-                    "Migration needs a name ending in _DDMMYY (eg 251223 for 25th dec, 2023) (migration name: %s)",
-                    migrationDateString), e);
+                "Migration needs a name ending in _DDMMYY (eg 251223 for 25th dec, 2023) (migration name: %s)",
+                migrationDateString), e);
         }
         List<String> migrationsAppliedThisTime = new ArrayList<>();
         Map<String, Game> loadedMaps = GameManager.getInstance().getGameNameToGame();
@@ -413,8 +487,7 @@ public class DataMigrationManager {
             if (mapCreatedOn == null || mapCreatedOn.after(migrationForGamesBeforeDate)) {
                 continue;
             }
-            boolean endVPReachedButNotEnded = game.getPlayers().values().stream()
-                    .anyMatch(player -> player.getTotalVictoryPoints(game) >= game.getVp());
+            boolean endVPReachedButNotEnded = game.getPlayers().values().stream().anyMatch(player -> player.getTotalVictoryPoints(game) >= game.getVp());
             if (game.isHasEnded() || endVPReachedButNotEnded) {
                 continue;
             }
@@ -425,13 +498,13 @@ public class DataMigrationManager {
 
                 if (changesMade) {
                     migrationsAppliedThisTime.add(game.getName());
+                    GameSaveLoadManager.saveMap(game);
                 }
             }
         }
         if (migrationsAppliedThisTime.size() > 0) {
             String mapNames = String.join(", ", migrationsAppliedThisTime);
-            BotLogger.log(
-                    String.format("Migration %s run on following maps successfully: \n%s", migrationName, mapNames));
+            BotLogger.log(String.format("Migration %s run on following maps successfully: \n%s", migrationName, mapNames));
         }
     }
 }
