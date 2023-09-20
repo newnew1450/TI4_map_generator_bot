@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
-import ti4.AsyncBot;
+import ti4.AsyncTI4DiscordBot;
 import ti4.commands.milty.MiltyDraftTile;
 import ti4.generator.Mapper;
 import ti4.map.Game;
@@ -25,7 +24,7 @@ public class FrankenDraftHelper {
         for(int x = 0; x < count; x++){
             boolean foundOne = false;
             while(!foundOne){
-                int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
+                int randNum = ThreadLocalRandom.current().nextInt(0,keys.size());
                 String ability = keys.get(randNum);
                 if(!factionAbilities.contains(ability)){
                     factionAbilities.add(ability);
@@ -43,7 +42,7 @@ public class FrankenDraftHelper {
         keys.removeAll(alreadyHeld);
         keys.removeIf(key -> !key.contains(leaderType));
         for(int x = 0; x < count; x++){
-            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
+            int randNum = ThreadLocalRandom.current().nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);
@@ -57,7 +56,7 @@ public class FrankenDraftHelper {
         keys.removeAll(alreadyHeld);
         keys.removeIf(key -> !key.contains(unitType));
         for(int x = 0; x < count; x++){
-            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
+            int randNum = ThreadLocalRandom.current().nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);
@@ -73,7 +72,7 @@ public class FrankenDraftHelper {
         }
         keys.removeAll(alreadyHeld);
         for(int x = 0; x < count; x++){
-            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
+            int randNum = ThreadLocalRandom.current().nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);
@@ -109,7 +108,7 @@ public class FrankenDraftHelper {
         List<String> keys = new ArrayList<>(allDesiredThings.keySet());
         keys.removeAll(alreadyHeld);
         for(int x = 0; x < count; x++){
-            int randNum = AsyncBot.RANDOM.nextInt(0,keys.size());
+            int randNum = ThreadLocalRandom.current().nextInt(0,keys.size());
             String ability = keys.get(randNum);
             desiredThing.add(ability);
             keys.remove(randNum);

@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import ti4.AsyncBot;
+import ti4.AsyncTI4DiscordBot;
 import ti4.MessageListener;
 import ti4.commands.agenda.DrawAgenda;
 import ti4.commands.agenda.PutAgendaBottom;
@@ -83,7 +83,7 @@ public class ButtonListener extends ListenerAdapter {
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        if (!AsyncBot.readyToReceiveCommands) {
+        if (!AsyncTI4DiscordBot.readyToReceiveCommands) {
             event.reply("Failed to press button. Please try again in a moment. The bot is rebooting.").setEphemeral(true).queue();
             return;
         }
@@ -132,7 +132,7 @@ public class ButtonListener extends ListenerAdapter {
         }
 
         MessageChannel actionsChannel = null;
-        for (TextChannel textChannel_ : AsyncBot.jda.getTextChannels()) {
+        for (TextChannel textChannel_ : AsyncTI4DiscordBot.jda.getTextChannels()) {
             if (textChannel_.getName().equals(gameName + Constants.ACTIONS_CHANNEL_SUFFIX)) {
                 actionsChannel = textChannel_;
                 break;

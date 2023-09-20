@@ -1,7 +1,5 @@
 package ti4;
 
-import java.security.SecureRandom;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import net.dv8tion.jda.api.JDA;
@@ -60,11 +58,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class AsyncBot {
+public class AsyncTI4DiscordBot {
 
     public static final ExecutorService THREAD_POOL = Executors.newFixedThreadPool(
         Math.max(2, Runtime.getRuntime().availableProcessors()));
-    public static final Random RANDOM = new Random();
     public static final List<Role> adminRoles = new ArrayList<>();
     public static final List<Role> developerRoles = new ArrayList<>();
     public static final List<Role> bothelperRoles = new ArrayList<>();

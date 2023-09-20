@@ -1,7 +1,7 @@
 package ti4.helpers;
 
 import java.util.*;
-import ti4.AsyncBot;
+import ti4.AsyncTI4DiscordBot;
 
 public class DiceHelper {
 
@@ -11,7 +11,7 @@ public class DiceHelper {
 
         Die(int threshold) {
             this.threshold = threshold;
-            result = AsyncBot.RANDOM.nextInt(1,11);
+            result = ThreadLocalRandom.current().nextInt(1,11);
         }
         
         public int getResult() { return result; }

@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
-import ti4.AsyncBot;
+import ti4.AsyncTI4DiscordBot;
 import ti4.helpers.Helper;
 
 import java.util.concurrent.TimeUnit;
@@ -126,8 +126,8 @@ public class BotLogger {
                 }
             }
         }
-        if (botLogChannel == null && AsyncBot.guildPrimary != null) { //USE PRIMARY SERVER'S BOTLOG CHANNEL
-            for (TextChannel textChannel : AsyncBot.guildPrimary.getTextChannels()) {
+        if (botLogChannel == null && AsyncTI4DiscordBot.guildPrimary != null) { //USE PRIMARY SERVER'S BOTLOG CHANNEL
+            for (TextChannel textChannel : AsyncTI4DiscordBot.guildPrimary.getTextChannels()) {
                 if ("bot-log".equals(textChannel.getName())) {
                     botLogChannel = textChannel;
                 }

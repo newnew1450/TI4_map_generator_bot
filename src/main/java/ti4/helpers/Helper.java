@@ -5,6 +5,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +32,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.managers.channel.concrete.TextChannelManager;
-import ti4.AsyncBot;
+import ti4.AsyncTI4DiscordBot;
 import ti4.ResourceHelper;
 import ti4.commands.bothelper.ArchiveOldThreads;
 import ti4.commands.bothelper.ListOldThreads;
@@ -400,7 +401,7 @@ public class Helper {
     public static String getRandomizedEmoji(int value, String messageID) {
         List<String> symbols = new ArrayList<>(Emojis.symbols);
         //symbols = new ArrayList<>(testingEmoji);
-        Random seed = messageID == null ? AsyncBot.RANDOM : new Random(messageID.hashCode());
+        Random seed = messageID == null ? ThreadLocalRandom.current() : new Random(messageID.hashCode());
         Collections.shuffle(symbols, seed);
         value = value % symbols.size();
         return symbols.get(value);
@@ -408,14 +409,14 @@ public class Helper {
 
     public static String getRandomSemLore() {
         List<String> semLores = new ArrayList<>(Emojis.SemLores);
-        Random seed = AsyncBot.RANDOM;
+        Random seed = ThreadLocalRandom.current();
         Collections.shuffle(semLores, seed);
         return semLores.get(0);
     }
 
     public static String getRandomGoodDog() {
         List<String> goodDogs = new ArrayList<>(Emojis.GoodDogs);
-        Random seed = AsyncBot.RANDOM;
+        Random seed = ThreadLocalRandom.current();
         Collections.shuffle(goodDogs, seed);
         return goodDogs.get(0);
     }
@@ -1035,7 +1036,7 @@ public class Helper {
     }
 
     public static String getPlayerPing(Player player) {
-        User userById = AsyncBot.jda.getUserById(player.getUserID());
+        User userById = AsyncTI4DiscordBot.jda.getUserById(player.getUserID());
         if (userById == null) {
             return "";
         }

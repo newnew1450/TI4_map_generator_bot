@@ -2,6 +2,7 @@ package ti4.helpers;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -10,7 +11,7 @@ import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
 import net.dv8tion.jda.internal.utils.tuple.Pair;
 
-import ti4.AsyncBot;
+import ti4.AsyncTI4DiscordBot;
 import ti4.generator.Mapper;
 import ti4.map.Game;
 import ti4.map.Player;
@@ -20,8 +21,6 @@ import ti4.model.NamedCombatModifierModel;
 import ti4.model.UnitModel;
 
 public class CombatHelper {
-
-    
 
     public static HashMap<UnitModel, Integer> GetAllUnits(UnitHolder unitHolder, Player player, GenericInteractionCreateEvent event) {
         String colorID = Mapper.getColorID(player.getColor());
@@ -50,11 +49,7 @@ public class CombatHelper {
             }
 
         }
-
         
-        
-
-
         return output;
     }
 
@@ -171,7 +166,7 @@ public class CombatHelper {
             for (int index = 0; index < numRolls; index++) {
                 int min = 1;
                 int max = 10;
-                resultRolls[index] = AsyncBot.RANDOM.nextInt(max - min + 1) + min;
+                resultRolls[index] = ThreadLocalRandom.current().nextInt(max - min + 1) + min;
             }
 
             int[] hitRolls = Arrays.stream(resultRolls)

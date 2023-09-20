@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
-import ti4.AsyncBot;
+import ti4.AsyncTI4DiscordBot;
 import ti4.generator.Mapper;
 import ti4.map.Game;
 import ti4.map.Player;
@@ -26,7 +26,7 @@ public class JazzCommand extends BothelperSubcommandData {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (!"228999251328368640".equals(event.getUser().getId())) {
-            String jazz = AsyncBot.jda.getUserById("228999251328368640").getAsMention();
+            String jazz = AsyncTI4DiscordBot.jda.getUserById("228999251328368640").getAsMention();
             if ("150809002974904321".equals(event.getUser().getId())) {
                 MessageHelper.sendMessageToChannel(event.getMessageChannel(), "You are not " + jazz + ", but you are an honorary jazz so you may proceed");
             } else {
