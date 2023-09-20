@@ -187,7 +187,7 @@ public class Turn extends PlayerSubcommandData {
     }
 
     public List<Button> getScoreObjectiveButtons(GenericInteractionCreateEvent event, Game activeGame) {
-        LinkedHashMap<String, Integer> revealedPublicObjectives = activeGame.getRevealedPublicObjectives();
+        Map<String, Integer> revealedPublicObjectives = activeGame.getRevealedPublicObjectives();
         HashMap<String, String> publicObjectivesState1 = Mapper.getPublicObjectivesStage1();
         HashMap<String, String> publicObjectivesState2 = Mapper.getPublicObjectivesStage2();
         LinkedHashMap<String, Integer> customPublicVP = activeGame.getCustomPublicVP();

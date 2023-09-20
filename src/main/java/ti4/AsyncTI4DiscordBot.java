@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import ti4.autocomplete.AutoCompleteListener;
+import ti4.buttons.ButtonListener;
 import ti4.commands.CommandManager;
 import ti4.commands.admin.AdminCommand;
 import ti4.commands.bothelper.BothelperCommand;
@@ -88,7 +89,7 @@ public class AsyncTI4DiscordBot {
 
         jda.addEventListener(
             new MessageListener(), 
-            new ButtonListener(), 
+            new ButtonListener(),
             new UserJoinServerListener(),
             new AutoCompleteListener());
             

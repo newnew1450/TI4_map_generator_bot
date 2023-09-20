@@ -49,6 +49,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GenerateMap {
+
     public static final int DELTA_X = 8;
     public static final int DELTA_Y = 24;
     public static final int RING_MAX_COUNT = 8;

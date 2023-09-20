@@ -211,10 +211,10 @@ public class GenerateTile {
                 throw new Exception("Could not map tile to a position on the map: " + activeGame.getName());
             }
 
-            int tileX = positionPoint.x + offsetX - MapGenerator.TILE_PADDING;
-            int tileY = positionPoint.y + offsetY - MapGenerator.TILE_PADDING;
+            int tileX = positionPoint.x + offsetX - GenerateMap.TILE_PADDING;
+            int tileY = positionPoint.y + offsetY - GenerateMap.TILE_PADDING;
 
-            BufferedImage tileImage = MapGenerator.partialTileImage(tile, activeGame, step, fowPlayer, isFoWPrivate);
+            BufferedImage tileImage = GenerateMap.partialTileImage(tile, activeGame, step, fowPlayer, isFoWPrivate);
             graphics.drawImage(tileImage, tileX, tileY, null);
         } catch (IOException e) {
             BotLogger.log("Error drawing tile: " + tile.getTileID(), e);
