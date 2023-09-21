@@ -23,9 +23,9 @@ import ti4.commands.agenda.RevealAgenda;
 import ti4.commands.cardsac.ACInfo;
 import ti4.commands.cardsac.ACInfo_Legacy;
 import ti4.commands.cardsac.DiscardACRandom;
+import ti4.commands.cardsac.ShowAllAC;
 import ti4.map.UnitHolder;
 import ti4.commands.cardsac.PlayAC;
-import ti4.commands.cardsac.ShowAllAC;
 import ti4.commands.cardspn.PNInfo;
 import ti4.commands.cardsso.DealSOToAll;
 import ti4.commands.cardsso.DiscardSO;
@@ -100,7 +100,7 @@ public class ButtonListener extends ListenerAdapter {
 
     public void resolveButtonInteractionEvent(ButtonInteractionEvent event) {
         String id = event.getUser().getId();
-        MessageListener.setActiveGame(event.getMessageChannel(), id, "button", "no sub command");
+        MessageListener.setMessageContext(event.getMessageChannel(), id, "button", "no sub command");
         String buttonID = event.getButton().getId();
         String buttonLabel = event.getButton().getLabel();
 

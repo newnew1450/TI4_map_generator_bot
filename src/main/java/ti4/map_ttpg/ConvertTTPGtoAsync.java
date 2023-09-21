@@ -132,7 +132,7 @@ public class ConvertTTPGtoAsync {
     //     // Map newMap = MapSaveLoadManager.loadMap
     // }
 
-    public static Boolean ImportTTPG(String filename, String gamename) {
+    public static boolean importTTPG(String filename, String gamename) {
         try {
             File file = Storage.getTTPGExportStorage(filename);
             TTPGMap ttpgMap = getTTPGMapFromJsonFile(file);
@@ -140,9 +140,8 @@ public class ConvertTTPGtoAsync {
                 BotLogger.log("TTPG Import Failed:\n> filename: " + filename + " is not valid TTPG export JSON format");
                 return false;
             }
-            Game activeGame = ConvertTTPGMaptoAsyncMap(ttpgMap, gamename);
+            Game activeGame = convertTTPGMapToAsyncMap(ttpgMap, gamename);
             GameSaveLoadManager.saveMap(activeGame);
-            GameSaveLoadManager.loadMaps();
         } catch (Exception e) {
             BotLogger.log("TTPG Import Failed: " + gamename + "    filename: " + filename, e);
             return false;
@@ -150,7 +149,7 @@ public class ConvertTTPGtoAsync {
         return true;
     }
 
-    public static Game ConvertTTPGMaptoAsyncMap(TTPGMap ttpgMap, String gameName) {
+    public static Game convertTTPGMapToAsyncMap(TTPGMap ttpgMap, String gameName) {
         Mapper.init();
         Game asyncGame = new Game() {
             {

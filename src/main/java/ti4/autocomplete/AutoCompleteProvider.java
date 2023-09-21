@@ -43,7 +43,7 @@ public class AutoCompleteProvider {
         if (factionOrColourOption != null) showAllChoicesInGame = true;
 
         String userID = event.getUser().getId();
-        MessageListener.setActiveGame(event.getMessageChannel(), userID, event.getName(), event.getSubcommandName());
+        MessageListener.setMessageContext(event.getMessageChannel(), userID, event.getName(), event.getSubcommandName());
         Game activeGame = GameManager.getInstance().getUserActiveGame(userID);
         Player player = null;
         if (activeGame != null) {
@@ -280,7 +280,7 @@ public class AutoCompleteProvider {
                 event.replyChoices(options).queue();
             }
             case Constants.PLANET, Constants.PLANET2, Constants.PLANET3, Constants.PLANET4, Constants.PLANET5, Constants.PLANET6 -> {
-                MessageListener.setActiveGame(event.getMessageChannel(), event.getUser().getId(), event.getName(), event.getSubcommandName());
+                MessageListener.setMessageContext(event.getMessageChannel(), event.getUser().getId(), event.getName(), event.getSubcommandName());
                 String enteredValue = event.getFocusedOption().getValue().toLowerCase();
                 Set<String> planetIDs;
                 Map<String, String> planets = Mapper.getPlanetRepresentations();

@@ -254,7 +254,6 @@ public class AsyncTI4DiscordBot {
         }
 
         BotLogger.log("`" + new Timestamp(System.currentTimeMillis()) + "`  BOT STARTED UP: " + guildPrimary.getName());
-        GameSaveLoadManager.loadMaps();
 
         BotLogger.log("`" + new Timestamp(System.currentTimeMillis()) + "`  BOT CHECKING FOR DATA MIGRATIONS");
         DataMigrationManager.runMigrations(); 

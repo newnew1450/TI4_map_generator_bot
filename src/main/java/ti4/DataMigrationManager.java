@@ -464,7 +464,6 @@ public class DataMigrationManager {
     }
 
     private static void runMigration(String migrationName, Function<Game, Boolean> migrationMethod) {
-
         String migrationDateString = migrationName.substring(migrationName.indexOf("_") + 1);
         DateFormat format = new SimpleDateFormat("ddMMyy");
         Date migrationForGamesBeforeDate = null;
