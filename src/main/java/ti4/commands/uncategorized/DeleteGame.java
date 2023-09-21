@@ -18,7 +18,6 @@ import ti4.message.MessageHelper;
 
 public class DeleteGame implements Command {
 
-
     @Override
     public String getActionID() {
         return Constants.DELETE_GAME;
