@@ -2,7 +2,7 @@ package ti4.map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -33,6 +33,7 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
 import net.dv8tion.jda.internal.utils.tuple.Pair;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.Nullable;
 import ti4.generator.PositionMapper;
 import ti4.helpers.Constants;
@@ -67,11 +68,9 @@ public class GameSaveLoadManager {
     public static final String PLAYER = "-player-";
     public static final String ENDPLAYER = "-endplayer-";
 
-    public static final boolean loadFromJSON = false; //TEMPORARY FLAG THAT CAN BE REMOVED ONCE JSON SAVES ARE 100% WORKING
-
     public static void saveMaps() {
-        Map<String, Game> games = GameManager.getInstance().getGameNameToGame();
-        games.values().stream().parallel().forEach(game -> saveMap(game, true, null));
+        GameManager.getInstance().getGameNameToGame().values()
+            .forEach(game -> saveMap(game, true, null));
     }
 
     public static void saveMap(Game game) {
@@ -106,20 +105,18 @@ public class GameSaveLoadManager {
         ObjectMapper mapper = new ObjectMapper();
         try {
             mapper.writerWithDefaultPrettyPrinter().writeValue(Storage.getMapsJSONStorage(game.getName() + JSON), game);
-        } catch (IOException e) {
-            // BotLogger.log(map.getName() + ": IOException with JSON SAVER - likely a Role/Channel object - JSON SAVED INCORRECTLY");
         } catch (Exception e) {
-            BotLogger.log("JSON SAVER", e);
+            System.out.println("JSON game save failed (" + game.getName() + "): " + ExceptionUtils.getStackTrace(e));
         }
 
-        if (loadFromJSON) return; //DON'T SAVE OVER OLD TXT SAVES IF LOADING AND SAVING FROM JSON
+        // TODO: eventually remove TXT saving once JSON saving works.
 
         File mapFile = Storage.getMapImageStorage(game.getName() + TXT);
         if (mapFile.exists()) {
             saveUndo(game, mapFile);
         }
-        try (FileWriter writer = new FileWriter(mapFile.getAbsoluteFile())) {
-            HashMap<String, Tile> tileMap = game.getTileMap();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(mapFile.getAbsoluteFile()))) {
             writer.write(game.getOwnerID());
             writer.write(System.lineSeparator());
             writer.write(game.getOwnerName());
@@ -128,12 +125,12 @@ public class GameSaveLoadManager {
             writer.write(System.lineSeparator());
             saveMapInfo(writer, game, keepModifiedDate);
 
-            for (Map.Entry<String, Tile> tileEntry : tileMap.entrySet()) {
+            for (Map.Entry<String, Tile> tileEntry : game.getTileMap().entrySet()) {
                 Tile tile = tileEntry.getValue();
                 saveTile(writer, tile);
             }
         } catch (IOException e) {
-            BotLogger.log("Could not save map: " + game.getName(), e);
+            System.out.println("Txt game save failed (" + game.getName() + "): " + ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -208,7 +205,7 @@ public class GameSaveLoadManager {
         }
     }
 
-    private static void saveMapInfo(FileWriter writer, Game game, boolean keepModifiedDate) throws IOException {
+    private static void saveMapInfo(Writer writer, Game game, boolean keepModifiedDate) throws IOException {
         writer.write(MAPINFO);
         writer.write(System.lineSeparator());
 
@@ -697,7 +694,7 @@ public class GameSaveLoadManager {
         writer.write(System.lineSeparator());
     }
 
-    private static void writeCards(Map<String, Integer> cardList, FileWriter writer, String saveID) throws IOException {
+    private static void writeCards(Map<String, Integer> cardList, Writer writer, String saveID) throws IOException {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, Integer> entry : cardList.entrySet()) {
             sb.append(entry.getKey()).append(",").append(entry.getValue()).append(";");
@@ -706,7 +703,7 @@ public class GameSaveLoadManager {
         writer.write(System.lineSeparator());
     }
 
-    private static void writeCardsStrings(Map<String, String> cardList, FileWriter writer, String saveID) throws IOException {
+    private static void writeCardsStrings(Map<String, String> cardList, Writer writer, String saveID) throws IOException {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : cardList.entrySet()) {
             sb.append(entry.getKey()).append(",").append(entry.getValue()).append(";");
@@ -830,8 +827,15 @@ public class GameSaveLoadManager {
     }
 
     public static void loadGames() {
-        Map<String, Game> games = loadFromJSON ? loadGamesJson() : loadGamesTxt();
-        GameManager.getInstance().setGameNameToGame(games);
+        Map<String, Game> jsonGames = loadGamesJson();
+        Map<String, Game> txtGames = loadGamesTxt();
+        for (Map.Entry<String, Game> txtGameEntry : txtGames.entrySet()) {
+            Game jsonGame = jsonGames.get(txtGameEntry.getKey());
+            if (txtGameEntry.getValue().equals(jsonGame)) {
+                BotLogger.log("JSON game does not equal TXT version: " + txtGameEntry.getKey());
+            }
+        }
+        GameManager.getInstance().setGameNameToGame(txtGames);
     }
 
     private static Map<String, Game> loadGamesJson() {
@@ -849,11 +853,10 @@ public class GameSaveLoadManager {
             return null;
         }
         ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new SimpleModule().addKeyDeserializer(Pair.class, new MapPairKeyDeserializer()));
         try {
             return mapper.readValue(file, Game.class);
         } catch (Exception e) {
-            BotLogger.log(file.getName() + "JSON FAILED TO LOAD", e);
+            BotLogger.log(file.getName() + " FAILED TO LOAD", e);
         }
         return null;
     }
@@ -1077,7 +1080,7 @@ public class GameSaveLoadManager {
                 }
                 case Constants.ADJACENCY_OVERRIDES -> {
                     try {
-                        game.setAdjacentTileOverride(getParsedAdjacencyOverrides(info));
+                        game.setAdjacentTileOverrides(getParsedAdjacencyOverrides(info));
                     } catch (Exception e) {
                         BotLogger.log("Failed to load adjacency overrides", e);
                     }

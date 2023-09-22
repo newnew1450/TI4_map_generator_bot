@@ -1,6 +1,8 @@
 package ti4.map;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -8,11 +10,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import net.dv8tion.jda.api.entities.Guild;
@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 
 import java.util.*;
 
+@EqualsAndHashCode
 public class Game {
 
     private String ownerID;
@@ -59,6 +60,7 @@ public class Game {
     private String latestTransactionMsg = "";
     private String latestUpNextMsg = "";
     private int mapImageGenerationCount;
+    @JsonIgnore
     private final MiltyDraftManager miltyDraftManager;
     private boolean ccNPlasticLimit = true;
     private boolean botFactionReacts;
@@ -197,9 +199,7 @@ public class Game {
     private LinkedHashMap<String, Integer> customPublicVP = new LinkedHashMap<>();
     private LinkedHashMap<String, List<String>> scoredPublicObjectives = new LinkedHashMap<>();
     private LinkedHashMap<String, List<String>> customAdjacentTiles = new LinkedHashMap<>();
-    @JsonProperty("adjacentTileOverrides")
-    @JsonDeserialize(keyUsing = MapPairKeyDeserializer.class)
-    private LinkedHashMap<Pair<String, Integer>, String> adjacencyOverrides = new LinkedHashMap<>();
+    private LinkedHashMap<Pair<String, Integer>, String> adjacentTileOverrides = new LinkedHashMap<>();
     private List<String> publicObjectives1;
     private List<String> publicObjectives2;
     private List<String> publicObjectives1Peakable = new ArrayList<>();
@@ -1035,6 +1035,7 @@ public class Game {
     public List<Integer> getSCList() {
         return (new ArrayList<>(getScTradeGoods().keySet()));
     }
+
     public LinkedHashMap<String, Integer> getRevealedPublicObjectives() {
         return revealedPublicObjectives;
     }
@@ -1372,10 +1373,6 @@ public class Game {
         soToPoList.add(id);
     }
 
-    public void removeFromSoToPoList(String id) {
-        soToPoList.remove(id);
-    }
-
     public LinkedHashMap<String, List<String>> getScoredPublicObjectives() {
         return scoredPublicObjectives;
     }
@@ -1384,26 +1381,26 @@ public class Game {
         return customAdjacentTiles;
     }
 
-    @JsonGetter
     @JsonSerialize(keyUsing = MapPairKeySerializer.class)
     public LinkedHashMap<Pair<String, Integer>, String> getAdjacentTileOverrides() {
-        return adjacencyOverrides;
+        return adjacentTileOverrides;
     }
 
     public void addAdjacentTileOverride(String primaryTile, int direction, String secondaryTile) {
         Pair<String, Integer> primary = new ImmutablePair<>(primaryTile, direction);
         Pair<String, Integer> secondary = new ImmutablePair<>(secondaryTile, (direction + 3) % 6);
 
-        adjacencyOverrides.put(primary, secondaryTile);
-        adjacencyOverrides.put(secondary, primaryTile);
+        adjacentTileOverrides.put(primary, secondaryTile);
+        adjacentTileOverrides.put(secondary, primaryTile);
     }
 
-    public void setAdjacentTileOverride(LinkedHashMap<Pair<String, Integer>, String> overrides) {
-        adjacencyOverrides = overrides;
+    @JsonDeserialize(keyUsing = MapPairKeyDeserializer.class)
+    public void setAdjacentTileOverrides(LinkedHashMap<Pair<String, Integer>, String> adjacentTileOverrides) {
+        this.adjacentTileOverrides = adjacentTileOverrides;
     }
 
     public void clearAdjacentTileOverrides() {
-        adjacencyOverrides.clear();
+        adjacentTileOverrides.clear();
     }
 
     public void removeAdjacentTileOverrides(String primary) {
@@ -1412,8 +1409,8 @@ public class Game {
             int j = (i + 3) % 6;
 
             if (secondary != null) {
-                adjacencyOverrides.remove(new ImmutablePair<>(primary, i));
-                adjacencyOverrides.remove(new ImmutablePair<>(secondary, j));
+                adjacentTileOverrides.remove(new ImmutablePair<>(primary, i));
+                adjacentTileOverrides.remove(new ImmutablePair<>(secondary, j));
             }
         }
     }
@@ -1429,8 +1426,8 @@ public class Game {
 
     public String getAdjacentTileOverride(String position, int direction) {
         Pair<String, Integer> primary = new ImmutablePair<>(position, direction);
-        if (adjacencyOverrides.containsKey(primary)) {
-            return adjacencyOverrides.get(primary);
+        if (adjacentTileOverrides.containsKey(primary)) {
+            return adjacentTileOverrides.get(primary);
         }
         return null;
     }
@@ -1528,7 +1525,6 @@ public class Game {
     }
 
     public boolean reviseLaw(Integer idNumber, String optionalText) {
-
         String id = "";
         for (Map.Entry<String, Integer> ac : laws.entrySet()) {
             if (ac.getValue().equals(idNumber)) {
@@ -1702,17 +1698,10 @@ public class Game {
     }
 
     public boolean discardSpecificAgenda(String agendaID) {
-
         boolean succeeded = agendas.remove(agendaID);
         if (succeeded) {
             addDiscardAgenda(agendaID);
         }
-        return succeeded;
-    }
-
-    public boolean putSpecificAgendaOnTop(String agendaID) {
-        boolean succeeded = agendas.remove(agendaID);
-        addDiscardAgenda(agendaID);
         return succeeded;
     }
 
@@ -1721,7 +1710,6 @@ public class Game {
         return agendas.get(index);
     }
 
-    @Nullable
     public LinkedHashMap<String, Integer> drawActionCard(String userID) {
         if (!actionCards.isEmpty()) {
             String id = actionCards.get(0);
@@ -1763,6 +1751,7 @@ public class Game {
         return getExplores(reqType, discardExplore);
     }
 
+    @JsonIgnore
     public List<String> getTechnologyDeck() {
         return Mapper.getDecks().get(getTechnologyDeckID()).getNewDeck();
     }
@@ -2089,13 +2078,6 @@ public class Game {
         return null;
     }
 
-    public void addSecretObjective(String id) {
-        if (!secretObjectives.contains(id)) {
-            secretObjectives.add(id);
-            Collections.shuffle(secretObjectives);
-        }
-    }
-
     public List<String> getSecretObjectives() {
         return secretObjectives;
     }
@@ -2323,6 +2305,7 @@ public class Game {
     public void setCCNPlasticLimit(boolean limit) {
         ccNPlasticLimit = limit;
     }
+
     public void setBotFactionReactions(boolean limit) {
         botFactionReacts = limit;
     }
@@ -2330,12 +2313,9 @@ public class Game {
     public boolean getCCNPlasticLimit() {
         return ccNPlasticLimit;
     }
+
     public boolean getBotFactionReacts() {
         return botFactionReacts;
-    }
-
-    public void setPlayer(String playerID, Player player) {
-        players.put(playerID, player);
     }
 
     public Player getPlayer(String userID) {
@@ -2599,70 +2579,84 @@ public class Game {
         return Mapper.getStrategyCardSets().get(getScSetID());
     }
 
+    @JsonIgnore
     public int getActionCardDeckSize() {
         return getActionCards().size();
     }
 
+    @JsonIgnore
     public int getActionCardFullDeckSize() {
         DeckModel acDeckModel = Mapper.getDeck(getAcDeckID());
         if (acDeckModel != null) return acDeckModel.getCardCount();
         return -1;
     }
 
+    @JsonIgnore
     public int getAgendaDeckSize() {
         return getAgendas().size();
     }
 
+    @JsonIgnore
     public int getAgendaFullDeckSize() {
         DeckModel agendaDeckModel = Mapper.getDeck(getAgendaDeckID());
         if (agendaDeckModel != null) return agendaDeckModel.getCardCount();
         return -1;
     }
 
+    @JsonIgnore
     public int getPublicObjectives1DeckSize() {
         return getPublicObjectives1().size();
     }
 
+    @JsonIgnore
     public int getPublicObjectives1FullDeckSize() {
         DeckModel po1DeckModel = Mapper.getDeck(getStage1PublicDeckID());
         if (po1DeckModel != null) return po1DeckModel.getCardCount();
         return -1;
     }
 
+    @JsonIgnore
     public int getPublicObjectives2DeckSize() {
         return getPublicObjectives2().size();
     }
 
+    @JsonIgnore
     public int getPublicObjectives2FullDeckSize() {
         DeckModel po2DeckModel = Mapper.getDeck(getStage2PublicDeckID());
         if (po2DeckModel != null) return po2DeckModel.getCardCount();
         return -1;
     }
 
+    @JsonIgnore
     public int getRelicDeckSize() {
         return getAllRelics().size();
     }
 
+    @JsonIgnore
     public int getRelicFullDeckSize() {
         DeckModel relicDeckModel = Mapper.getDeck(getRelicDeckID());
         if (relicDeckModel != null) return relicDeckModel.getCardCount();
         return -1;
     }
 
+    @JsonIgnore
     public int getSecretObjectiveDeckSize() {
         return getSecretObjectives().size();
     }
 
+    @JsonIgnore
     public int getSecretObjectiveFullDeckSize() {
         DeckModel soDeckModel = Mapper.getDeck(getSoDeckID());
         if (soDeckModel != null) return soDeckModel.getCardCount();
         return -1;
     }
 
+    @JsonIgnore
     private int getExploreDeckSize(String exploreDeckID) {
         return getExploreDeck(exploreDeckID).size();
     }
 
+    @JsonIgnore
     private int getExploreDeckFullSize(String exploreDeckID) {
         DeckModel exploreDeckModel = Mapper.getDeck(getExplorationDeckID());
         if (exploreDeckModel == null) return -1;
@@ -2676,34 +2670,42 @@ public class Game {
         return exploreDeck.size();
     }
 
+    @JsonIgnore
     public int getHazardousExploreDeckSize() {
         return getExploreDeckSize(Constants.HAZARDOUS);
     }
 
+    @JsonIgnore
     public int getHazardousExploreFullDeckSize() {
         return getExploreDeckFullSize(Constants.HAZARDOUS);
     }
 
+    @JsonIgnore
     public int getCulturalExploreDeckSize() {
         return getExploreDeckSize(Constants.CULTURAL);
     }
 
+    @JsonIgnore
     public int getCulturalExploreFullDeckSize() {
         return getExploreDeckFullSize(Constants.CULTURAL);
     }
 
+    @JsonIgnore
     public int getIndustrialExploreDeckSize() {
         return getExploreDeckSize(Constants.INDUSTRIAL);
     }
 
+    @JsonIgnore
     public int getIndustrialExploreFullDeckSize() {
         return getExploreDeckFullSize(Constants.INDUSTRIAL);
     }
 
+    @JsonIgnore
     public int getFrontierExploreDeckSize() {
         return getExploreDeckSize(Constants.FRONTIER);
     }
 
+    @JsonIgnore
     public int getFrontierExploreFullDeckSize() {
         return getExploreDeckFullSize(Constants.FRONTIER);
     }
@@ -2727,6 +2729,7 @@ public class Game {
         return false;
     }
 
+    @JsonIgnore
     public List<String> getAllPlanetsWithSleeperTokens() {
         List<String> planetsWithSleepers = new ArrayList<>();
         for(Tile tile : getTileMap().values()){
@@ -2735,6 +2738,7 @@ public class Game {
         return planetsWithSleepers;
     }
 
+    @JsonIgnore
     public int getSleeperTokensPlacedCount() {
         return getAllPlanetsWithSleeperTokens().size();
     }

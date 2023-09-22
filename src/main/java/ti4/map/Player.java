@@ -833,8 +833,7 @@ public class Player {
     private void initAbilities() {
         HashSet<String> abilities = new HashSet<>();
         for (String ability : getFactionStartingAbilities()) {
-            if (ability.isEmpty() || ability.isBlank()) {
-            } else {
+            if (!ability.isEmpty() && !ability.isBlank()) {
                 abilities.add(ability);
             }
         }
@@ -978,12 +977,6 @@ public class Player {
     public void addLeader(String leaderID) {
         if (!getLeaderIDs().contains(leaderID)) {
             Leader leader = new Leader(leaderID);
-            leaders.add(leader);
-        }
-    }
-
-    public void addLeader(Leader leader) {
-        if (!getLeaderIDs().contains(leader.getId())) {
             leaders.add(leader);
         }
     }

@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.List;
 
 public class Tile {
+
     private final String tileID;
     private String position;
     private final HashMap<String, UnitHolder> unitHolders = new HashMap<>();
@@ -343,26 +344,32 @@ public class Tile {
         return planetsWithSleepers;
     }
 
+    @JsonIgnore
     public TileModel getTileModel() {
         return TileHelper.getTile(getTileID());
     }
 
+    @JsonIgnore
     public boolean isAsteroidField() {
         return getTileModel().isAsteroidField();
     }
 
+    @JsonIgnore
     public boolean isSupernova() {
         return getTileModel().isSupernova();
     }
 
+    @JsonIgnore
     public boolean isNebula() {
         return getTileModel().isNebula();
     }
 
+    @JsonIgnore
     public boolean isGravityRift() {
         return getTileModel().isGravityRift() || hasCabalSpaceDockOrGravRiftToken();
     }
 
+    @JsonIgnore
     public boolean hasCabalSpaceDockOrGravRiftToken() {
         for (UnitHolder unitHolder : getUnitHolders().values()) {
             Set<String> tokenList = unitHolder.getTokenList();
@@ -378,6 +385,7 @@ public class Tile {
         return false;
     }
 
+    @JsonIgnore
     public boolean isAnomaly() {
         if (isAsteroidField() || isSupernova() || isNebula() || isGravityRift()) {
             return true;
