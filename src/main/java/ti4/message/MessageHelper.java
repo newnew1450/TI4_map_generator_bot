@@ -11,6 +11,8 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -56,6 +58,10 @@ public class MessageHelper {
 		splitAndSent(messageText, channel, buttons);
 	}
 
+	public static void sendMessageToChannelWithMenu(MessageChannel channel, String messageText, SelectMenu menu) {
+		splitAndSentWithActionMenu(messageText, channel, null, menu);
+	}
+
 	private static void addFactionReactToMessage(Game activeGame, Player player, Message message) {
 		Emoji reactionEmoji = Helper.getPlayerEmoji(activeGame, player, message);
 		if (reactionEmoji != null) {
@@ -94,6 +100,11 @@ public class MessageHelper {
 		};
 
 		splitAndSentWithAction(messageText, channel, addFactionReact, buttons);
+	}
+
+
+	public static void sendMessageToChannelWithSelectMenu(MessageChannel channel, String messageText, SelectMenu menu) {
+		splitAndSentWithActionMenu(messageText, channel, null, menu);
 	}
 
 
@@ -242,6 +253,57 @@ public class MessageHelper {
 
 					}
 					
+					if (restAction != null) restAction.run(complete);
+				}, (error) -> BotLogger.log(getRestActionFailureMessage(channel, messageText, error)));
+			}
+		}
+	}
+	private static void splitAndSentWithActionMenu(String messageText, MessageChannel channel, MessageFunction restAction, SelectMenu menu) {
+		if (channel == null) {
+			return;
+		}
+
+		Iterator<MessageCreateData> iterator = getMessageCreateDataObjects(messageText, menu).iterator();
+		while (iterator.hasNext()) {
+			MessageCreateData messageCreateData = iterator.next();
+			if (iterator.hasNext()) { //not  message
+				channel.sendMessage(messageCreateData).queue(null, (error) -> BotLogger.log(getRestActionFailureMessage(channel, messageText, error)));
+			} else { //last message, do action
+				channel.sendMessage(messageCreateData).queue(complete -> {
+
+					if(messageText.contains("Use buttons to do your turn") || messageText.contains("Use buttons to end turn"))
+					{
+						String gameName = channel.getName();
+						gameName = gameName.replace(ACInfo_Legacy.CARDS_INFO, "");
+						gameName = gameName.substring(0, gameName.indexOf("-"));
+						Game activeGame = GameManager.getInstance().getGame(gameName);
+						if(!activeGame.isFoWMode()){
+							activeGame.setLatestTransactionMsg(complete.getId());
+						}
+
+					}
+					if(messageText.toLowerCase().contains("up next") && messageText.contains("#"))
+					{
+						String gameName = channel.getName();
+						gameName = gameName.replace(ACInfo_Legacy.CARDS_INFO, "");
+						gameName = gameName.substring(0, gameName.indexOf("-"));
+						Game activeGame = GameManager.getInstance().getGame(gameName);
+						if(!activeGame.isFoWMode()){
+							if(activeGame.getLatestUpNextMsg()!= null && !"".equalsIgnoreCase(activeGame.getLatestUpNextMsg())){
+								String id = activeGame.getLatestUpNextMsg().split("_")[0];
+								String message = activeGame.getLatestUpNextMsg().substring(activeGame.getLatestUpNextMsg().indexOf("_")+1).replace("#", "");
+								message = message.replace("UP NEXT", "started their turn");
+
+								activeGame.getActionsChannel().editMessageById(id, message).queue(null, (error) -> BotLogger.log(getRestActionFailureMessage(channel, messageText, error)));
+							}
+
+							activeGame.setLatestUpNextMsg(complete.getId()+"_"+messageText);
+
+						}
+
+
+					}
+
 					if (restAction != null) restAction.run(complete);
 				}, (error) -> BotLogger.log(getRestActionFailureMessage(channel, messageText, error)));
 			}
@@ -435,6 +497,44 @@ public class MessageHelper {
 		}
         return messageCreateDataList;
     }
+
+	/**
+	 * @message Message to send - can be large or null/empty
+	 * @buttons List of Button - can be large or null/empty
+	 * <p></p>
+	 * Example of use:
+	 * <pre>
+	 * {@code
+	for (MessageCreateData messageData : getMessageObject(message, buttons)) {
+	channel.sendMessage(messageData).queue();
+	}
+	 * </pre>
+	 */
+	public static List<MessageCreateData> getMessageCreateDataObjects(String message, SelectMenu menu) {
+		List<MessageCreateData> messageCreateDataList = new ArrayList<>();
+
+		List<String> messageList = splitLargeText(message, 2000);
+		Iterator<String> messageIterator = messageList.iterator();
+
+		while (messageIterator.hasNext()) {
+			String smallMessage = messageIterator.next();
+
+			//More messages exists, so just frontload the plain messages
+			if (messageIterator.hasNext() && smallMessage != null && !smallMessage.isEmpty()) {
+				messageCreateDataList.add(new MessageCreateBuilder().addContent(smallMessage).build());
+
+				//We are at the last message, so try and add the first row of buttons
+			} else if (!messageIterator.hasNext() && smallMessage != null && !smallMessage.isEmpty()) {
+				MessageCreateBuilder messageCreateBuilder = new MessageCreateBuilder();
+				messageCreateBuilder.addContent(smallMessage);
+
+				messageCreateBuilder.addActionRow(menu);
+				messageCreateDataList.add(messageCreateBuilder.build());
+			}
+		}
+
+		return messageCreateDataList;
+	}
 
 	private static List<List<ActionRow>> getPartitionedButtonLists(List<Button> buttons) {
 		List<List<ActionRow>> partitionedButtonRows = new ArrayList<>();

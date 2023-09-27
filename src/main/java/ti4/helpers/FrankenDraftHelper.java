@@ -4,6 +4,9 @@ import java.util.*;
 
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import ti4.commands.milty.MiltyDraftManager;
 import ti4.commands.milty.MiltyDraftTile;
 import ti4.commands.milty.StartMilty;
@@ -14,12 +17,10 @@ import ti4.message.MessageHelper;
 import ti4.model.FactionModel;
 import ti4.model.Franken.FrankenBag;
 import ti4.model.Franken.FrankenItem;
-import ti4.model.TechnologyModel;
-
 
 
 public class FrankenDraftHelper {
-    public static List<Button> getFrankenBagButtons(Game activeGame, Player player){
+    public static List<Button> getFrankenBagButton(Game activeGame, Player player){
         List<Button> buttons = new ArrayList<>();
         FrankenBag bagToPass = player.getCurrentFrankenBag();
         int categoryCounter = 0;
@@ -48,6 +49,15 @@ public class FrankenDraftHelper {
         return buttons;
     }
 
+    public static SelectMenu getFrankenBagMenu(List<FrankenItem> items) {
+        StringSelectMenu.Builder menuBuilder = StringSelectMenu.create("frankenDraftAction_");
+        items.sort(Comparator.comparing((FrankenItem a) -> a.ItemCategory));
+        for(var item : items) {
+            menuBuilder.addOptions(SelectOption.of(item.toHumanReadable(), item.getAlias()));
+        }
+        return menuBuilder.build();
+    }
+
     public static void resolveFrankenDraftAction(Game activeGame, Player player, ButtonInteractionEvent event, String buttonID){
         String selectedAlias = buttonID.split("_")[1];
         FrankenBag currentBag = player.getCurrentFrankenBag();
@@ -72,7 +82,7 @@ public class FrankenDraftHelper {
                 MessageHelper.sendMessageToChannel(activeGame.getMainGameChannel(), ButtonHelper.getIdent(player) + " is ready to pass their bag");
             }else{
                 msg = msg + ". Please pick another item from this bag.";
-                MessageHelper.sendMessageToChannelWithButtons(player.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(player, activeGame)+"Use buttons to select something", getFrankenBagButtons(activeGame, player));
+                MessageHelper.sendMessageToChannelWithMenu(player.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(player, activeGame)+"Use buttons to select something", getFrankenBagMenu(player.getCurrentFrankenBag().Contents));
             }
            
            MessageHelper.sendMessageToChannel(player.getCardsInfoThread(activeGame), msg);
@@ -106,7 +116,7 @@ public class FrankenDraftHelper {
         players.get(players.size()-1).setCurrentFrankenBag(firstPlayerBag);
 
         for(Player p2 : activeGame.getRealPlayers()){
-            MessageHelper.sendMessageToChannelWithButtons(p2.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(p2, activeGame)+"You have been passed a bag, use buttons to select something", getFrankenBagButtons(activeGame, p2));
+            MessageHelper.sendMessageToChannelWithMenu(p2.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(p2, activeGame)+"You have been passed a bag, use buttons to select something", getFrankenBagMenu(p2.getCurrentFrankenBag().Contents));
             MessageHelper.sendMessageToChannel(p2.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(p2, activeGame)+"Here is a text version of the bag you were passed so you will not forget what was in it later on when you pass it: \n"+getCurrentBagToPassRepresentation(activeGame, p2));
         }
     }
@@ -304,7 +314,7 @@ public class FrankenDraftHelper {
             player.setCurrentFrankenBag(bag);
             player.resetFrankenItemDraftQueue();
             player.setReadyToPassBag(false);
-            MessageHelper.sendMessageToChannelWithButtons(player.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(player, activeGame)+"Franken Draft has begun, use buttons to select something", getFrankenBagButtons(activeGame, player));
+            MessageHelper.sendMessageToChannelWithMenu(player.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(player, activeGame)+"Franken Draft has begun, use buttons to select something", getFrankenBagMenu(player.getCurrentFrankenBag().Contents));
             MessageHelper.sendMessageToChannel(player.getCardsInfoThread(activeGame), ButtonHelper.getTrueIdentity(player, activeGame)+"Here is a text version of the bag so you will not forget what was in it later on when you pass it: \n"+getCurrentBagToPassRepresentation(activeGame, player));
 
         }
