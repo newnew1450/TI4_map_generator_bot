@@ -3,6 +3,7 @@ package ti4.model.Franken;
 import ti4.generator.Mapper;
 import ti4.generator.TileHelper;
 import ti4.helpers.Helper;
+import ti4.map.Player;
 import ti4.model.*;
 
 import java.util.ArrayList;
@@ -235,34 +236,7 @@ public class FrankenItem implements ModelInterface {
             case TECH -> {
                 limit = powered ? 3 : 2;
             }
-            case AGENT -> {
-                limit = 2;
-            }
-            case COMMANDER -> {
-                limit = 2;
-            }
-            case HERO -> {
-                limit = 2;
-            }
-            case MECH -> {
-                limit = 2;
-            }
-            case FLAGSHIP -> {
-                limit = 2;
-            }
-            case COMMODITIES -> {
-                limit = 2;
-            }
-            case PN -> {
-                limit = 2;
-            }
-            case HOMESYSTEM -> {
-                limit = 2;
-            }
-            case STARTINGTECH -> {
-                limit = 2;
-            }
-            case STARTINGFLEET -> {
+            case AGENT, COMMANDER, HERO, MECH, FLAGSHIP, COMMODITIES, PN, HOMESYSTEM, STARTINGTECH, STARTINGFLEET -> {
                 limit = 2;
             }
             case BLUETILE -> {
@@ -276,5 +250,29 @@ public class FrankenItem implements ModelInterface {
             }
         }
         return limit;
+    }
+
+    public boolean IsDraftable(Player player) {
+        boolean isAtHandLimit = player.getFrankenHand().getCategoryCount(ItemCategory) >= GetBagLimit(ItemCategory, true, true);
+        if (isAtHandLimit) {
+            return false;
+        }
+        boolean hasDraftedThisBag = player.getFrankenDraftQueue().getCategoryCount(ItemCategory) > 0;
+        boolean hasDraftedOneOfEach = player.getFrankenHand().Contents.size() >= Category.values().length;
+        boolean hasDraftedOneOfCategory = player.getFrankenHand().getCategoryCount(ItemCategory) > 0;
+
+        boolean allOtherCategoriesAtHandLimit = true;
+        for (Category cat : Category.values()) {
+            if (ItemCategory == cat) {
+                continue;
+            }
+            allOtherCategoriesAtHandLimit &= player.getFrankenHand().getCategoryCount(cat) >= GetBagLimit(cat, true, true);
+        }
+        
+        if (hasDraftedThisBag) {
+            return allOtherCategoriesAtHandLimit;
+        } else {
+            return hasDraftedOneOfEach || !hasDraftedOneOfCategory;
+        }
     }
 }
