@@ -52,7 +52,7 @@ public class SendTG extends PlayerSubcommandData {
 
 		String p1 = Helper.getPlayerRepresentation(player, activeGame);
 		String p2 = Helper.getPlayerRepresentation(player_, activeGame);
-		if(player_.getLeaderIDs().contains("hacancommander") && !player_.hasLeaderUnlocked("hacancommander")){
+		if(player_.hasLeader("hacancommander") && !player_.hasLeaderUnlocked("hacancommander")){
 			ButtonHelper.commanderUnlockCheck(player_, activeGame, "hacan", event);
 		}
 		String tgString = sendTG + " " + Emojis.tg + " trade goods";

@@ -156,16 +156,16 @@ public class PlanetAdd extends PlanetAddRemove {
                 MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), message, buttons);
             }
         }
-        if(player.getLeaderIDs().contains("solcommander") && !player.hasLeaderUnlocked("solcommander")){
+        if(player.hasLeader("solcommander") && !player.hasLeaderUnlocked("solcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "sol", event);
         }
-        if(player.getLeaderIDs().contains("xxchacommander") && !player.hasLeaderUnlocked("xxchacommander")){
+        if(player.hasLeader("xxchacommander") && !player.hasLeaderUnlocked("xxchacommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "xxcha", event);
         }
-        if(player.getLeaderIDs().contains("sardakkcommander") && !player.hasLeaderUnlocked("sardakkcommander")){
+        if(player.hasLeader("sardakkcommander") && !player.hasLeaderUnlocked("sardakkcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "sardakk", event);
         }
-        if("mr".equalsIgnoreCase(planet)&&player.getLeaderIDs().contains("winnucommander") && !player.hasLeaderUnlocked("winnucommander") && player.getPlanets().contains("mr")){
+        if("mr".equalsIgnoreCase(planet)&&player.hasLeader("winnucommander") && !player.hasLeaderUnlocked("winnucommander") && player.getPlanets().contains("mr")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "winnu", event);
         }
         if("mr".equalsIgnoreCase(planet)&& player.hasAbility("reclamation")){

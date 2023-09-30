@@ -520,7 +520,7 @@ public class ButtonHelper {
 
         message = "Drew "+amount +" AC." + message;
         ACInfo.sendActionCardInfo(activeGame, player, event);
-        if(player.getLeaderIDs().contains("yssarilcommander") && !player.hasLeaderUnlocked("yssarilcommander")){
+        if(player.hasLeader("yssarilcommander") && !player.hasLeaderUnlocked("yssarilcommander")){
             commanderUnlockCheck(player, activeGame, "yssaril", event);
         }
         addReaction(event, true, false, message, "");
@@ -1531,7 +1531,7 @@ public class ButtonHelper {
             }
         }
         if(numOfCapitalShips > 4 && !fleetSupplyViolated){
-            if(player.getLeaderIDs().contains("letnevcommander") && !player.hasLeaderUnlocked("letnevcommander")){
+            if(player.hasLeader("letnevcommander") && !player.hasLeaderUnlocked("letnevcommander")){
                 commanderUnlockCheck(player, activeGame, "letnev", event);
             }
         }
@@ -2100,13 +2100,13 @@ public class ButtonHelper {
         }
         int cc = player.getTacticalCC();
         
-        if (!activeGame.getNaaluAgent()&&!AddCC.hasCC(event, player.getColor(), tile)) {
+        if (!activeGame.getNaaluAgent() && !AddCC.hasCC(event, player.getColor(), tile)) {
             cc -= 1;
             player.setTacticalCC(cc);
             AddCC.addCC(event, player.getColor(), tile, true);
         }
         String thingToAdd = "box";
-        for(String unit :displacedUnits.keySet()){
+        for(String unit : displacedUnits.keySet()){
             int amount = displacedUnits.get(unit);
             if(unit.contains("damaged")){
                 unit = unit.replace("damaged", "");
@@ -2213,13 +2213,13 @@ public class ButtonHelper {
         }
         Button concludeMove = Button.secondary(finChecker+"doneLanding", "Done landing troops");
         buttons.add(concludeMove);
-        if(player.getLeaderIDs().contains("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
+        if(player.hasLeader("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
                 commanderUnlockCheck(player, activeGame, "naaz", event);
         }
-        if(player.getLeaderIDs().contains("empyreancommander") && !player.hasLeaderUnlocked("empyreancommander")){
+        if(player.hasLeader("empyreancommander") && !player.hasLeaderUnlocked("empyreancommander")){
                 commanderUnlockCheck(player, activeGame, "empyrean", event);
         }
-        if(player.getLeaderIDs().contains("ghostcommander") && !player.hasLeaderUnlocked("ghostcommander")){
+        if(player.hasLeader("ghostcommander") && !player.hasLeaderUnlocked("ghostcommander")){
                 commanderUnlockCheck(player, activeGame, "ghost", event);
         }
         return buttons;
@@ -3375,7 +3375,7 @@ public static List<Button> getButtonsForRemovingAllUnitsInSystem(Player player, 
                 int tgAmount = Integer.parseInt(amountToTrans);
                 p1.setTg(p1.getTg()-tgAmount);
                 p2.setTg(p2.getTg()+tgAmount);
-                if(p2.getLeaderIDs().contains("hacancommander") && !p2.hasLeaderUnlocked("hacancommander")){
+                if(p2.hasLeader("hacancommander") && !p2.hasLeaderUnlocked("hacancommander")){
 					commanderUnlockCheck(p2, activeGame, "hacan", event);
 				}
                 message2 = ident + " sent " + tgAmount+ " TGs to "+ident2;
@@ -3396,7 +3396,7 @@ public static List<Button> getButtonsForRemovingAllUnitsInSystem(Player player, 
                     p2.setCommodities(targetTG);
                 }
                 
-                if(p2.getLeaderIDs().contains("hacancommander") && !p2.hasLeaderUnlocked("hacancommander")){
+                if(p2.hasLeader("hacancommander") && !p2.hasLeaderUnlocked("hacancommander")){
 					commanderUnlockCheck(p2, activeGame, "hacan", event);
 				}
                 ButtonHelperFactionSpecific.pillageCheck(p1, activeGame);

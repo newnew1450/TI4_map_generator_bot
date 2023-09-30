@@ -37,7 +37,7 @@ public class ExpPlanet extends ExploreSubcommandData {
         OptionMapping planetOption = event.getOption(Constants.PLANET);
         String planetName = AliasHandler.resolvePlanet(StringUtils.substringBefore(planetOption.getAsString(), " ("));
         Game activeGame = getActiveGame();
-        if (!activeGame.getPlanets().contains(planetName)) {
+        if (!activeGame.getPlanetsInfoCache().contains(planetName)) {
             sendMessage("Planet not found in map");
             return;
         }

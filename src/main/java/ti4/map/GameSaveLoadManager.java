@@ -1485,7 +1485,7 @@ public class GameSaveLoadManager {
         return cardList;
     }
 
-    private static LinkedHashMap<String, Integer> getParsedCards(String tokenizer) {
+    private static HashMap<String, Integer> getParsedCards(String tokenizer) {
         StringTokenizer actionCardToken = new StringTokenizer(tokenizer, ";");
         LinkedHashMap<String, Integer> cards = new LinkedHashMap<>();
         while (actionCardToken.hasMoreTokens()) {

@@ -38,13 +38,13 @@ public class TrapSwap extends DiscordantStarsSubcommandData {
             return;
         }
         String planetName = planetOption.getAsString();
-        if (!activeGame.getPlanets().contains(planetName)) {
+        if (!activeGame.getPlanetsInfoCache().contains(planetName)) {
             MessageHelper.replyToMessage(event, "Planet not found in map");
             return;
         }
 
         String planetName2 = planetOption2.getAsString();
-        if (!activeGame.getPlanets().contains(planetName2)) {
+        if (!activeGame.getPlanetsInfoCache().contains(planetName2)) {
             MessageHelper.replyToMessage(event, "Planet2 not found in map");
             return;
         }

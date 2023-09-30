@@ -66,7 +66,7 @@ public class MoveCreussWormhole extends SpecialSubcommandData {
             }
         }
         sendMessage(sb.toString());
-        if(player.getLeaderIDs().contains("ghostcommander") && !player.hasLeaderUnlocked("ghostcommander")){
+        if(player.hasLeader("ghostcommander") && !player.hasLeaderUnlocked("ghostcommander")){
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "ghost", event);
         }
     }

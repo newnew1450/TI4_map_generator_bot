@@ -933,6 +933,7 @@ public class Player {
         return leaders;
     }
 
+    @JsonIgnore
     public List<String> getLeaderIDs() {
         return getLeaders().stream().map(Leader::getId).toList();
     }
@@ -942,10 +943,10 @@ public class Player {
     }
 
     public boolean hasLeader(String leaderID, Game activeGame) {
-        if (!getLeaderIDs().contains(leaderID) && ButtonHelperFactionSpecific.doesAnyoneHaveThisLeader(leaderID, activeGame)) {
-            return getLeaderIDs().contains("yssarilagent");
+        if (!hasLeader(leaderID) && ButtonHelperFactionSpecific.doesAnyoneHaveThisLeader(leaderID, activeGame)) {
+            return hasLeader("yssarilagent");
         }
-        return getLeaderIDs().contains(leaderID);
+        return hasLeader(leaderID);
     }
 
     public boolean hasLeaderUnlocked(String leaderID) {
@@ -975,7 +976,7 @@ public class Player {
     }
 
     public void addLeader(String leaderID) {
-        if (!getLeaderIDs().contains(leaderID)) {
+        if (!hasLeader(leaderID)) {
             Leader leader = new Leader(leaderID);
             leaders.add(leader);
         }
@@ -1185,6 +1186,7 @@ public class Player {
         SCs.clear();
     }
 
+    @JsonIgnore
     public int getLowestSC() {
         try {
             return Collections.min(getSCs());
@@ -1225,6 +1227,7 @@ public class Player {
         return planets;
     }
 
+    @JsonIgnore
     public boolean isPlayerMemberOfAlliance(Player player2) {
         return allianceMembers.contains(player2.getFaction());
     }
@@ -1253,6 +1256,7 @@ public class Player {
         frankenBagToPass = planets;
     }
 
+    @JsonIgnore
     public List<String> getReadiedPlanets() {
         List<String> planets = new ArrayList<>(getPlanets());
         planets.removeAll(getExhaustedPlanets());
@@ -1681,6 +1685,7 @@ public class Player {
         debt_tokens.remove(tokenColour);
     }
 
+    @JsonIgnore
     public int getDebtTokenCount(String tokenColour) {
         return debt_tokens.getOrDefault(tokenColour, 0);
     }

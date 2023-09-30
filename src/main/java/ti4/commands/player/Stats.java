@@ -309,7 +309,7 @@ public class Stats extends PlayerSubcommandData {
 			}
 
 			player.setTg(tg);
-			if(player.getLeaderIDs().contains("hacancommander") && !player.hasLeaderUnlocked("hacancommander")){
+			if(player.hasLeader("hacancommander") && !player.hasLeaderUnlocked("hacancommander")){
 				ButtonHelper.commanderUnlockCheck(player, activeGame, "hacan", event);
 			}
 			ButtonHelperFactionSpecific.pillageCheck(player, activeGame);

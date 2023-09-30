@@ -74,7 +74,7 @@ public class ScoreSO extends SOCardsSubcommandData {
         MessageHelper.sendMessageToPlayerCardsInfoThread(player, activeGame, headerText);
         SOInfo.sendSecretObjectiveInfo(activeGame, player);
         Helper.checkIfHeroUnlocked(event, activeGame, player);
-        if(player.getLeaderIDs().contains("nomadcommander") && !player.hasLeaderUnlocked("nomadcommander")){
+        if(player.hasLeader("nomadcommander") && !player.hasLeaderUnlocked("nomadcommander")){
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "nomad", event);
         }
         Helper.checkEndGame(activeGame, player);

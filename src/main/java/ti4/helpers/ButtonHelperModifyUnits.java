@@ -72,10 +72,10 @@ public class ButtonHelperModifyUnits {
         }
         Button concludeMove = Button.secondary(finChecker+"deleteButtons", "Done Retreating troops");
         buttons.add(concludeMove);
-        if(player.getLeaderIDs().contains("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
+        if(player.hasLeader("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "naaz", event);
         }
-        if(player.getLeaderIDs().contains("empyreancommander") && !player.hasLeaderUnlocked("empyreancommander")){
+        if(player.hasLeader("empyreancommander") && !player.hasLeaderUnlocked("empyreancommander")){
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "empyrean", event);
         }
         return buttons;
@@ -191,7 +191,7 @@ public class ButtonHelperModifyUnits {
                         activeGame.getTile(AliasHandler.resolveTile(planetName)), "csd " + planetName, activeGame);
                 successMessage = "Placed a cabal space dock on "
                         + Helper.getPlanetRepresentation(planetName, activeGame) + ".";
-                if(player.getLeaderIDs().contains("cabalcommander") && !player.hasLeaderUnlocked("cabalcommander")){
+                if(player.hasLeader("cabalcommander") && !player.hasLeaderUnlocked("cabalcommander")){
                     ButtonHelper.commanderUnlockCheck(player, activeGame, "cabal", event);
                 }
             } else {
@@ -336,29 +336,29 @@ public class ButtonHelperModifyUnits {
 
         }
 
-        if(player.getLeaderIDs().contains("titanscommander") && !player.hasLeaderUnlocked("titanscommander")){
+        if(player.hasLeader("titanscommander") && !player.hasLeaderUnlocked("titanscommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "titans", event);
         }
-        if(player.getLeaderIDs().contains("saarcommander") && !player.hasLeaderUnlocked("saarcommander")){
+        if(player.hasLeader("saarcommander") && !player.hasLeaderUnlocked("saarcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "saar", event);
         }
-        if(player.getLeaderIDs().contains("mentakcommander") && !player.hasLeaderUnlocked("mentakcommander")){
+        if(player.hasLeader("mentakcommander") && !player.hasLeaderUnlocked("mentakcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "mentak", event);
         }
-        if(player.getLeaderIDs().contains("l1z1xcommander") && !player.hasLeaderUnlocked("l1z1xcommander")){
+        if(player.hasLeader("l1z1xcommander") && !player.hasLeaderUnlocked("l1z1xcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "l1z1x", event);
         }
-        if(player.getLeaderIDs().contains("muaatcommander") && !player.hasLeaderUnlocked("muaatcommander") && "warsun".equalsIgnoreCase(unitLong)){
+        if(player.hasLeader("muaatcommander") && !player.hasLeaderUnlocked("muaatcommander") && "warsun".equalsIgnoreCase(unitLong)){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "muaat", event);
         }
-        if(player.getLeaderIDs().contains("argentcommander") && !player.hasLeaderUnlocked("argentcommander")){
+        if(player.hasLeader("argentcommander") && !player.hasLeaderUnlocked("argentcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "argent", event);
         }
         
-        if(player.getLeaderIDs().contains("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
+        if(player.hasLeader("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "naaz", event);
         }
-        if(player.getLeaderIDs().contains("arboreccommander") && !player.hasLeaderUnlocked("arboreccommander")){
+        if(player.hasLeader("arboreccommander") && !player.hasLeaderUnlocked("arboreccommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "arborec", event);
         }
     }
@@ -447,7 +447,7 @@ public class ButtonHelperModifyUnits {
                 }
 
             }
-            if(player.getLeaderIDs().contains("l1z1xcommander") && !player.hasLeaderUnlocked("l1z1xcommander")){
+            if(player.hasLeader("l1z1xcommander") && !player.hasLeaderUnlocked("l1z1xcommander")){
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "l1z1x", event);
             }
         }
@@ -466,28 +466,28 @@ public class ButtonHelperModifyUnits {
         }
 
 
-        if(player.getLeaderIDs().contains("titanscommander") && !player.hasLeaderUnlocked("titanscommander")){
+        if(player.hasLeader("titanscommander") && !player.hasLeaderUnlocked("titanscommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "titans", event);
         }
-        if(player.getLeaderIDs().contains("saarcommander") && !player.hasLeaderUnlocked("saarcommander")){
+        if(player.hasLeader("saarcommander") && !player.hasLeaderUnlocked("saarcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "saar", event);
         }
-        if(player.getLeaderIDs().contains("mentakcommander") && !player.hasLeaderUnlocked("mentakcommander")){
+        if(player.hasLeader("mentakcommander") && !player.hasLeaderUnlocked("mentakcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "mentak", event);
         }
-        if(player.getLeaderIDs().contains("l1z1xcommander") && !player.hasLeaderUnlocked("l1z1xcommander")){
+        if(player.hasLeader("l1z1xcommander") && !player.hasLeaderUnlocked("l1z1xcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "l1z1x", event);
         }
-        if(player.getLeaderIDs().contains("muaatcommander") && !player.hasLeaderUnlocked("muaatcommander") && "warsun".equalsIgnoreCase(unitLong)){
+        if(player.hasLeader("muaatcommander") && !player.hasLeaderUnlocked("muaatcommander") && "warsun".equalsIgnoreCase(unitLong)){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "muaat", event);
         }
-        if(player.getLeaderIDs().contains("argentcommander") && !player.hasLeaderUnlocked("argentcommander")){
+        if(player.hasLeader("argentcommander") && !player.hasLeaderUnlocked("argentcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "argent", event);
         }
-        if(player.getLeaderIDs().contains("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
+        if(player.hasLeader("naazcommander") && !player.hasLeaderUnlocked("naazcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "naaz", event);
         }
-        if(player.getLeaderIDs().contains("arboreccommander") && !player.hasLeaderUnlocked("arboreccommander")){
+        if(player.hasLeader("arboreccommander") && !player.hasLeaderUnlocked("arboreccommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "arborec", event);
         }
 

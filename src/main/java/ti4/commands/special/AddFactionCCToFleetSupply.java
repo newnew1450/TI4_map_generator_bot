@@ -19,7 +19,7 @@ public class AddFactionCCToFleetSupply extends AddRemoveFactionCCToFromFleet{
         for (String color : colors) {
             player.addMahactCC(color);
         }
-        if(player.getLeaderIDs().contains("mahactcommander") && !player.hasLeaderUnlocked("mahactcommander")){
+        if(player.hasLeader("mahactcommander") && !player.hasLeaderUnlocked("mahactcommander")){
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "mahact", event);
         }
         GameSaveLoadManager.saveMap(activeGame, event);

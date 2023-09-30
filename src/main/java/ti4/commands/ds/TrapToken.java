@@ -42,7 +42,7 @@ public class TrapToken extends DiscordantStarsSubcommandData {
             return;
         }
         String planetName = planetOption.getAsString();
-        if (!activeGame.getPlanets().contains(planetName)) {
+        if (!activeGame.getPlanetsInfoCache().contains(planetName)) {
             MessageHelper.replyToMessage(event, "Planet not found in map");
             return;
         }

@@ -1,25 +1,42 @@
 package ti4.map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.awt.Point;
+import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
 import net.dv8tion.jda.internal.utils.tuple.Pair;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import ti4.AsyncTI4DiscordBot;
 import ti4.commands.milty.MiltyDraftManager;
 import ti4.commands.planet.PlanetRemove;
@@ -33,20 +50,9 @@ import ti4.message.MessageHelper;
 import ti4.model.BorderAnomalyHolder;
 import ti4.model.BorderAnomalyModel;
 import ti4.model.DeckModel;
-import ti4.model.StrategyCardModel;
 
-import java.awt.*;
-import java.lang.reflect.Field;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import java.util.*;
-
+@Getter
+@Setter
 @EqualsAndHashCode
 public class Game {
 
@@ -65,13 +71,11 @@ public class Game {
     private boolean ccNPlasticLimit = true;
     private boolean botFactionReacts;
     @JsonIgnore
-    private final HashMap<String, UnitHolder> planets = new HashMap<>();
+    private final HashMap<String, UnitHolder> planetsInfoCache = new HashMap<>();
     @Nullable
     private DisplayType displayTypeForced;
     @ExportableField
     private int playerCountForMap = 6;
-    @Getter
-    @Setter
     private boolean reverseSpeakerOrder;
     @ExportableField
     private int activationCount;
@@ -103,32 +107,14 @@ public class Game {
     private String largeText = "small";
     @ExportableField
     private boolean absolMode;
-    @Getter
-    @Setter
     private String acDeckID = "action_cards_pok";
-    @Getter
-    @Setter
     private String soDeckID = "secret_objectives_pok";
-    @Getter
-    @Setter
     private String stage1PublicDeckID = "public_stage_1_objectives_pok";
-    @Getter
-    @Setter
     private String stage2PublicDeckID = "public_stage_2_objectives_pok";
-    @Getter
-    @Setter
     private String relicDeckID = "relics_pok";
-    @Getter
-    @Setter
     private String agendaDeckID = "agendas_pok";
-    @Getter
-    @Setter
     private String explorationDeckID = "explores_pok";
-    @Getter
-    @Setter
     private String technologyDeckID = "techs_pok";
-    @Getter
-    @Setter
     @ExportableField
     private String scSetID = "pok";
     @ExportableField
@@ -137,8 +123,6 @@ public class Game {
     private boolean testBetaFeaturesMode;
     private boolean hasEnded;
     private long endedDate;
-    @Getter
-    @Setter
     private List<BorderAnomalyHolder> borderAnomalies = new ArrayList<>();
     @Nullable
     private String tableTalkChannelID;
@@ -199,6 +183,8 @@ public class Game {
     private LinkedHashMap<String, Integer> customPublicVP = new LinkedHashMap<>();
     private LinkedHashMap<String, List<String>> scoredPublicObjectives = new LinkedHashMap<>();
     private LinkedHashMap<String, List<String>> customAdjacentTiles = new LinkedHashMap<>();
+    @JsonDeserialize(keyUsing = MapPairKeyDeserializer.class)
+    @JsonSerialize(keyUsing = MapPairKeySerializer.class)
     private LinkedHashMap<Pair<String, Integer>, String> adjacentTileOverrides = new LinkedHashMap<>();
     private List<String> publicObjectives1;
     private List<String> publicObjectives2;
@@ -318,69 +304,12 @@ public class Game {
         return returnValue;
     }
 
-    public String getLatestCommand() {
-        return latestCommand;
-    }
-
     public String getCurrentPhase() {
         return phaseOfGame;
     }
 
     public void setCurrentPhase(String phase) {
         phaseOfGame = phase;
-    }
-
-    public void setLatestCommand(String latestCommand) {
-        this.latestCommand = latestCommand;
-    }
-
-    public String getLatestOutcomeVotedFor() {
-        return latestOutcomeVotedFor;
-    }
-
-    public String getLatestAfterMsg() {
-        return latestAfterMsg;
-    }
-
-    public String getLatestWhenMsg() {
-        return latestWhenMsg;
-    }
-
-    public String getLatestTransactionMsg() {
-        return latestTransactionMsg;
-    }
-
-    public String getLatestUpNextMsg() {
-        return latestUpNextMsg;
-    }
-
-    public void setLatestOutcomeVotedFor(String outcomeVotedFor) {
-        latestOutcomeVotedFor = outcomeVotedFor;
-    }
-
-    public void setLatestAfterMsg(String latestAfter) {
-        latestAfterMsg = latestAfter;
-    }
-
-    public void setLatestWhenMsg(String latestWhen) {
-        latestWhenMsg = latestWhen;
-    }
-
-    public void setLatestTransactionMsg(String latestTransaction) {
-        latestTransactionMsg = latestTransaction;
-    }
-
-    public void setLatestUpNextMsg(String latestTransaction) {
-        latestUpNextMsg = latestTransaction;
-    }
-
-    @JsonIgnore
-    public MiltyDraftManager getMiltyDraftManager() {
-        return miltyDraftManager;
-    }
-
-    public void setPurgedPN(String purgedPN) {
-        this.purgedPN.add(purgedPN);
     }
 
     public void removePurgedPN(String purgedPN) {
@@ -392,30 +321,10 @@ public class Game {
         Collections.shuffle(actionCards);
     }
 
-    public void addSecretDuplicates(List<String> SOs) {
-        secretObjectives.addAll(SOs);
-        Collections.shuffle(secretObjectives);
-    }
-
     public void setPurgedPNs(ArrayList<String> purgedPN) {
         this.purgedPN = purgedPN;
     }
 
-    public ArrayList<String> getPurgedPN() {
-        return purgedPN;
-    }
-
-    public int getVp() {
-        return vp;
-    }
-
-    public void setVp(int vp) {
-        this.vp = vp;
-    }
-
-    public int getRound() {
-        return round;
-    }
     public int getButtonPressCount() {
         return buttonPress;
     }
@@ -424,14 +333,6 @@ public class Game {
     }
     public void setButtonPressCount(int count) {
        buttonPress = count;
-    }
-
-    public void setRound(int round) {
-        if (round <= 0) {
-            this.round = 1;
-        } else {
-            this.round = round;
-        }
     }
 
     public boolean isACInDiscard(String name) {
@@ -445,26 +346,6 @@ public class Game {
         return isInDiscard;
     }
 
-    public String getCreationDate() {
-        return creationDate;
-    }
-
-    public String getCustomName() {
-        return customName;
-    }
-
-    public void setCustomName(String customName) {
-        this.customName = customName;
-    }
-
-    public int getPingSystemCounter() {
-        return pingSystemCounter;
-    }
-
-    public void setPingSystemCounter(int count) {
-        pingSystemCounter = count;
-    }
-
     public String[] getListOfTilesPinged() {
         return listOfTilePinged;
     }
@@ -473,53 +354,12 @@ public class Game {
         listOfTilePinged[count] = tileName;
     }
 
-    //GAME MODES
-    public boolean isCompetitiveTIGLGame() {
-        return competitiveTIGLGame;
-    }
-
-    public void setCompetitiveTIGLGame(boolean competitiveTIGLGame) {
-        this.competitiveTIGLGame = competitiveTIGLGame;
-    }
-
-    public boolean isCommunityMode() {
-        return communityMode;
-    }
-
-    public void setCommunityMode(boolean communityMode) {
-        this.communityMode = communityMode;
-    }
-
-    public boolean isAllianceMode() {
-        return allianceMode;
-    }
-
-    public void setAllianceMode(boolean allianceMode) {
-        this.allianceMode = allianceMode;
-    }
-
     public boolean isFoWMode() {
         return fowMode;
     }
 
-    public boolean isLightFogMode() {
-        return lightFogMode;
-    }
-
-    public boolean isBaseGameMode() {
-        return baseGameMode;
-    }
-
     public void setFoWMode(boolean fowMode) {
         this.fowMode = fowMode;
-    }
-
-    public void setLightFogMode(boolean lightFogMode) {
-        this.lightFogMode = lightFogMode;
-    }
-
-    public void setBaseGameMode(boolean baseGameMode) {
-        this.baseGameMode = baseGameMode;
     }
 
     public boolean isHomeBrewSCMode() {
@@ -528,56 +368,6 @@ public class Game {
 
     public void setHomeBrewSCMode(boolean homeBrewSCMode) {
         homebrewSCMode = homeBrewSCMode;
-    }
-
-    public boolean isStratPings() {
-        return stratPings;
-    }
-
-    public void setStratPings(boolean stratPings) {
-        this.stratPings = stratPings;
-    }
-
-    public void setLargeText(String largeText) {
-        this.largeText = largeText;
-    }
-
-    public String getLargeText() {
-        return largeText;
-    }
-
-    public boolean isAbsolMode() {
-        return absolMode;
-    }
-
-    public void setAbsolMode(boolean absolMode) {
-        this.absolMode = absolMode;
-    }
-
-    public boolean isDiscordantStarsMode() {
-        return discordantStarsMode;
-    }
-
-    public void setDiscordantStarsMode(boolean discordantStarsMode) {
-        this.discordantStarsMode = discordantStarsMode;
-    }
-
-    public String getOutputVerbosity() {
-        return outputVerbosity;
-    }
-
-    public void setOutputVerbosity(String outputVerbosity) {
-        if (Constants.VERBOSITY_OPTIONS.contains(outputVerbosity)) {
-            this.outputVerbosity = outputVerbosity;
-        }
-    }
-
-    public boolean isTestBetaFeaturesMode() {
-        return testBetaFeaturesMode;
-    }
-
-    public void setTestBetaFeaturesMode(boolean testBetaFeaturesMode) {
-        this.testBetaFeaturesMode = testBetaFeaturesMode;
     }
 
     @JsonIgnore
@@ -621,14 +411,6 @@ public class Game {
         return null;
     }
 
-    public void setTableTalkChannelID(String channelID) {
-        tableTalkChannelID = channelID;
-    }
-
-    public String getTableTalkChannelID() {
-        return tableTalkChannelID;
-    }
-
     @JsonIgnore
     public TextChannel getMainGameChannel() {
         try {
@@ -665,8 +447,7 @@ public class Game {
         } catch (Exception e) {
             ThreadChannel threadChannel; //exists and is not locked
             List<ThreadChannel> botChannels = AsyncTI4DiscordBot.jda.getThreadChannelsByName(getName() + Constants.BOT_CHANNEL_SUFFIX, true);
-            if (botChannels.size() == 1) { //found a matching thread
-            } else { //can't find it, might be archived
+            if (botChannels.size() != 1) { //can't find it, might be archived
                 for (ThreadChannel threadChannel_ : getActionsChannel().retrieveArchivedPublicThreadChannels()) {
                     if (threadChannel_.getName().equals(getName() + Constants.BOT_CHANNEL_SUFFIX)) {
                         threadChannel = threadChannel_;
@@ -679,14 +460,6 @@ public class Game {
         return null;
     }
 
-    public void setBotMapUpdatesThreadID(String threadID) {
-        botMapUpdatesThreadID = threadID;
-    }
-
-    public String getBotMapUpdatesThreadID() {
-        return botMapUpdatesThreadID;
-    }
-
     /**
      * @return Guild that the ActionsChannel or MainGameChannel resides
      */
@@ -696,44 +469,8 @@ public class Game {
         return getActionsChannel() == null ? null : getActionsChannel().getGuild();
     }
 
-    public boolean isHasEnded() {
-        return hasEnded;
-    }
-
-    public void setHasEnded(boolean hasEnded) {
-        this.hasEnded = hasEnded;
-    }
-
-    public void setCreationDate(String creationDate) {
-        this.creationDate = creationDate;
-    }
-
-    public long getLastModifiedDate() {
-        return lastModifiedDate;
-    }
-
-    public void setLastModifiedDate(long lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
-
-    public long getEndedDate() {
-        return endedDate;
-    }
-
-    public void setEndedDate(long dateEnded) {
-        endedDate = dateEnded;
-    }
-
     //Position, Tile
     private HashMap<String, Tile> tileMap = new HashMap<>();
-
-    public HashMap<Integer, Boolean> getScPlayed() {
-        return scPlayed;
-    }
-
-    public HashMap<String, String> getCurrentAgendaVotes() {
-        return currentAgendaVotes;
-    }
 
     public void resetCurrentAgendaVotes() {
         currentAgendaVotes = new HashMap<>();
@@ -744,22 +481,7 @@ public class Game {
         return getScPlayed().entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).collect(Collectors.toSet());
     }
 
-    public DisplayType getDisplayTypeForced() {
-        return displayTypeForced;
-    }
-
-    public void setDisplayTypeForced(DisplayType displayTypeForced) {
-        this.displayTypeForced = displayTypeForced;
-    }
-
-    public int getPlayerCountForMap() {
-        return playerCountForMap;
-    }
-
-    public void setPlayerCountForMap(int playerCountForMap) {
-        this.playerCountForMap = playerCountForMap;
-    }
-
+    @JsonIgnore
     public int getRingCount() {
         if (getTileMap().isEmpty()) return 0;
         Map<String, Tile> tileMap = new HashMap<>(getTileMap());
@@ -767,36 +489,8 @@ public class Game {
         return Integer.parseInt(StringUtils.left(highestPosition, highestPosition.length() - 2));
     }
 
-    public int getActivationCount() {
-        return activationCount;
-    }
-
-    public boolean getNaaluAgent() {
-        return naaluAgent;
-    }
-
     public boolean getDominusOrbStatus() {
         return dominusOrb;
-    }
-
-    public boolean getComponentAction() {
-        return componentAction;
-    }
-
-    public void setNaaluAgent(boolean onStatus) {
-        naaluAgent = onStatus;
-    }
-
-    public void setDominusOrb(boolean onStatus) {
-        dominusOrb = onStatus;
-    }
-
-    public void setComponentAction(boolean onStatus) {
-        componentAction = onStatus;
-    }
-
-    public void setActivationCount(int count) {
-        activationCount = count;
     }
 
     public void setSCPlayed(Integer scNumber, Boolean playedStatus) {
@@ -809,21 +503,6 @@ public class Game {
 
     public void removeOutcomeAgendaVote(String outcome) {
         currentAgendaVotes.remove(outcome);
-    }
-
-    public String getSpeaker() {
-        return speaker;
-    }
-    public void setSpeaker(String speaker) {
-        this.speaker = speaker;
-    }
-
-    public String getPlayersWhoHitPersistentNoAfter() {
-        return playersWhoHitPersistentNoAfter;
-    }
-
-    public String getPlayersWhoHitPersistentNoWhen() {
-        return playersWhoHitPersistentNoWhen;
     }
 
     public boolean getHackElectionStatus() {
@@ -843,23 +522,9 @@ public class Game {
             playersWhoHitPersistentNoWhen = faction;
         }
     }
-    public void setPlayersWhoHitPersistentNoAfter(String persistent) {
-        playersWhoHitPersistentNoAfter = persistent;
-    }
-    public void setPlayersWhoHitPersistentNoWhen(String persistent) {
-        playersWhoHitPersistentNoWhen = persistent;
-    }
+
     public void setHackElectionStatus(boolean hack) {
         hasHackElectionBeenPlayed = hack;
-    }
-    public String getActivePlayer() {
-        return activePlayer;
-    }
-    public String getActiveSystem() {
-        return activeSystem;
-    }
-    public void setActiveSystem(String system) {
-        activeSystem = system;
     }
 
     public HashMap<String, Integer> getCurrentMovedUnitsFrom1System() {
@@ -911,21 +576,6 @@ public class Game {
         setLastActivePlayerPing(newTime);
     }
 
-    /**
-     * @param player - The player's userID: player.getID()
-     */
-    public void setActivePlayer(String player) {
-        activePlayer = player;
-    }
-
-    public Date getLastActivePlayerPing() {
-        return lastActivePlayerPing;
-    }
-
-    public void setCurrentAgendaInfo(String agendaInfo) {
-        currentAgendaInfo = agendaInfo;
-    }
-
     public String getACDrawStatusInfo() {
         return currentACDrawStatusInfo;
     }
@@ -934,44 +584,12 @@ public class Game {
         currentACDrawStatusInfo = agendaInfo;
     }
 
-    public String getCurrentAgendaInfo() {
-        return currentAgendaInfo;
-    }
-
-    public Date getLastTimeGamesChecked() {
-        return lastTimeGamesChecked;
-    }
-
-    public void setLastTimeGamesChecked(Date time) {
-        lastTimeGamesChecked = time;
-    }
-
     public void setAutoPing(boolean status) {
         auto_ping_enabled = status;
     }
 
     public boolean getAutoPingStatus() {
         return auto_ping_enabled;
-    }
-
-    public long getAutoPingSpacer() {
-        return autoPingSpacer;
-    }
-
-    public void setAutoPingSpacer(long spacer) {
-        autoPingSpacer = spacer;
-    }
-
-    public void setLastActivePlayerPing(Date time) {
-        lastActivePlayerPing = time;
-    }
-
-    public Date getLastActivePlayerChange() {
-        return lastActivePlayerChange;
-    }
-
-    public void setLastActivePlayerChange(Date time) {
-        lastActivePlayerChange = time;
     }
 
     public void setSentAgenda(String id) {
@@ -1002,14 +620,6 @@ public class Game {
         revealedPublicObjectives.put(id, identifier);
     }
 
-    public LinkedHashMap<Integer, Integer> getScTradeGoods() {
-        return scTradeGoods;
-    }
-
-    public void setScTradeGoods(LinkedHashMap<Integer, Integer> scTradeGoods) {
-        this.scTradeGoods = scTradeGoods;
-    }
-
     public void setScTradeGood(Integer sc, Integer tradeGoodCount) {
         if (Objects.isNull(tradeGoodCount)) tradeGoodCount = 0;
         scTradeGoods.put(sc, tradeGoodCount);
@@ -1034,26 +644,6 @@ public class Game {
     @JsonIgnore
     public List<Integer> getSCList() {
         return (new ArrayList<>(getScTradeGoods().keySet()));
-    }
-
-    public LinkedHashMap<String, Integer> getRevealedPublicObjectives() {
-        return revealedPublicObjectives;
-    }
-
-    public List<String> getPublicObjectives1() {
-        return publicObjectives1;
-    }
-
-    public List<String> getPublicObjectives1Peakable() {
-        return publicObjectives1Peakable;
-    }
-
-    public List<String> getPublicObjectives2() {
-        return publicObjectives2;
-    }
-
-    public List<String> getPublicObjectives2Peakable() {
-        return publicObjectives2Peakable;
     }
 
     public Map.Entry<String, Integer> revealState1() {
@@ -1204,6 +794,7 @@ public class Game {
         return false;
     }
 
+    @JsonIgnore
     public boolean isCustodiansScored() {
         boolean custodiansTaken = false;
         String idC = "";
@@ -1305,26 +896,6 @@ public class Game {
         return agendas.remove(id);
     }
 
-    public LinkedHashMap<String, Integer> getCustomPublicVP() {
-        return customPublicVP;
-    }
-
-    public void setCustomPublicVP(LinkedHashMap<String, Integer> customPublicVP) {
-        this.customPublicVP = customPublicVP;
-    }
-
-    public void setRevealedPublicObjectives(LinkedHashMap<String, Integer> revealedPublicObjectives) {
-        this.revealedPublicObjectives = revealedPublicObjectives;
-    }
-
-    public void setScoredPublicObjectives(LinkedHashMap<String, List<String>> scoredPublicObjectives) {
-        this.scoredPublicObjectives = scoredPublicObjectives;
-    }
-
-    public void setCustomAdjacentTiles(LinkedHashMap<String, List<String>> customAdjacentTiles) {
-        this.customAdjacentTiles = customAdjacentTiles;
-    }
-
     public void addCustomAdjacentTiles(String primaryTile, List<String> customAdjacentTiles) {
         this.customAdjacentTiles.put(primaryTile, customAdjacentTiles);
     }
@@ -1337,22 +908,6 @@ public class Game {
         customAdjacentTiles.clear();
     }
 
-    public void setPublicObjectives1(List<String> publicObjectives1) {
-        this.publicObjectives1 = publicObjectives1;
-    }
-
-    public void setPublicObjectives2(List<String> publicObjectives2) {
-        this.publicObjectives2 = publicObjectives2;
-    }
-
-    public void setPublicObjectives1Peakable(List<String> publicObjectives1) {
-        publicObjectives1Peakable = publicObjectives1;
-    }
-
-    public void setPublicObjectives2Peakable(List<String> publicObjectives2) {
-        publicObjectives2Peakable = publicObjectives2;
-    }
-
     public void removePublicObjective1(String key) {
         publicObjectives1.remove(key);
     }
@@ -1361,29 +916,8 @@ public class Game {
         publicObjectives2.remove(key);
     }
 
-    public ArrayList<String> getSoToPoList() {
-        return soToPoList;
-    }
-
-    public void setSoToPoList(ArrayList<String> soToPoList) {
-        this.soToPoList = soToPoList;
-    }
-
     public void addToSoToPoList(String id) {
         soToPoList.add(id);
-    }
-
-    public LinkedHashMap<String, List<String>> getScoredPublicObjectives() {
-        return scoredPublicObjectives;
-    }
-
-    public LinkedHashMap<String, List<String>> getCustomAdjacentTiles() {
-        return customAdjacentTiles;
-    }
-
-    @JsonSerialize(keyUsing = MapPairKeySerializer.class)
-    public LinkedHashMap<Pair<String, Integer>, String> getAdjacentTileOverrides() {
-        return adjacentTileOverrides;
     }
 
     public void addAdjacentTileOverride(String primaryTile, int direction, String secondaryTile) {
@@ -1392,11 +926,6 @@ public class Game {
 
         adjacentTileOverrides.put(primary, secondaryTile);
         adjacentTileOverrides.put(secondary, primaryTile);
-    }
-
-    @JsonDeserialize(keyUsing = MapPairKeyDeserializer.class)
-    public void setAdjacentTileOverrides(LinkedHashMap<Pair<String, Integer>, String> adjacentTileOverrides) {
-        this.adjacentTileOverrides = adjacentTileOverrides;
     }
 
     public void clearAdjacentTileOverrides() {
@@ -1432,18 +961,6 @@ public class Game {
         return null;
     }
 
-    public LinkedHashMap<String, Integer> getLaws() {
-        return laws;
-    }
-
-    public LinkedHashMap<String, String> getLawsInfo() {
-        return lawsInfo;
-    }
-
-    public void setAgendas(List<String> agendas) {
-        this.agendas = agendas;
-    }
-
     public void shuffleAgendas() {
         Collections.shuffle(agendas);
     }
@@ -1457,11 +974,6 @@ public class Game {
         sentAgendas.clear();
     }
 
-    @JsonSetter
-    public void setDiscardAgendas(LinkedHashMap<String, Integer> discardAgendas) {
-        this.discardAgendas = discardAgendas;
-    }
-
     public void setDiscardAgendas(List<String> discardAgendasList) {
         LinkedHashMap<String, Integer> discardAgendas = new LinkedHashMap<>();
         for (String card : discardAgendasList) {
@@ -1473,30 +985,6 @@ public class Game {
             discardAgendas.put(card, identifier);
         }
         this.discardAgendas = discardAgendas;
-    }
-
-    public void setSentAgendas(LinkedHashMap<String, Integer> sentAgendas) {
-        this.sentAgendas = sentAgendas;
-    }
-
-    public void setLaws(LinkedHashMap<String, Integer> laws) {
-        this.laws = laws;
-    }
-
-    public void setLawsInfo(LinkedHashMap<String, String> lawsInfo) {
-        this.lawsInfo = lawsInfo;
-    }
-
-    public List<String> getAgendas() {
-        return agendas;
-    }
-
-    public LinkedHashMap<String, Integer> getSentAgendas() {
-        return sentAgendas;
-    }
-
-    public LinkedHashMap<String, Integer> getDiscardAgendas() {
-        return discardAgendas;
     }
 
     public boolean addLaw(Integer idNumber, String optionalText) {
@@ -1959,10 +1447,6 @@ public class Game {
         Collections.shuffle(actionCards);
     }
 
-    public LinkedHashMap<String, Integer> getDiscardActionCards() {
-        return discardActionCards;
-    }
-
     public boolean pickActionCard(String userID, Integer acIDNumber) {
         Player player = getPlayer(userID);
         if (player != null) {
@@ -2078,14 +1562,6 @@ public class Game {
         return null;
     }
 
-    public List<String> getSecretObjectives() {
-        return secretObjectives;
-    }
-
-    public List<String> getActionCards() {
-        return actionCards;
-    }
-
     public List<String> getAllExplores() {
         return explore;
     }
@@ -2116,10 +1592,6 @@ public class Game {
         return relics;
     }
 
-    public void setRelics(List<String> deck) {
-        relics = new ArrayList<>(deck);
-    }
-
     public void resetRelics() {
         relics = Mapper.getDecks().get(getRelicDeckID()).getNewShuffledDeck();
     }
@@ -2143,14 +1615,6 @@ public class Game {
             }
         }
         Collections.shuffle(relics);
-    }
-
-    public void setSecretObjectives(List<String> secretObjectives) {
-        this.secretObjectives = secretObjectives;
-    }
-
-    public void setActionCards(List<String> actionCards) {
-        this.actionCards = actionCards;
     }
 
     public boolean validateAndSetActionCardDeck(SlashCommandInteractionEvent event, DeckModel deck) {
@@ -2203,11 +1667,6 @@ public class Game {
         return true;
     }
 
-    @JsonSetter
-    public void setDiscardActionCards(LinkedHashMap<String, Integer> discardActionCards) {
-        this.discardActionCards = discardActionCards;
-    }
-
     public void setDiscardActionCards(List<String> discardActionCardList) {
         LinkedHashMap<String, Integer> discardActionCards = new LinkedHashMap<>();
         for (String card : discardActionCardList) {
@@ -2219,26 +1678,6 @@ public class Game {
             discardActionCards.put(card, identifier);
         }
         this.discardActionCards = discardActionCards;
-    }
-
-    public String getOwnerID() {
-        return ownerID;
-    }
-
-    public String getOwnerName() {
-        return ownerName == null ? "" : ownerName;
-    }
-
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public HashMap<String, Tile> getTileMap() {
-        return tileMap;
     }
 
     public Tile getTile(String tileID) {
@@ -2279,10 +1718,6 @@ public class Game {
         return player;
     }
 
-    public LinkedHashMap<String, Player> getPlayers() {
-        return players;
-    }
-
     @JsonIgnore
     public List<Player> getRealPlayers() {
         return getPlayers().values().stream().filter(Player::isRealPlayer).collect(Collectors.toList());
@@ -2298,10 +1733,6 @@ public class Game {
         return getRealPlayers().stream().map(Player::getFaction).collect(Collectors.toSet());
     }
 
-    public void setPlayers(LinkedHashMap<String, Player> players) {
-        this.players = players;
-    }
-
     public void setCCNPlasticLimit(boolean limit) {
         ccNPlasticLimit = limit;
     }
@@ -2312,10 +1743,6 @@ public class Game {
 
     public boolean getCCNPlasticLimit() {
         return ccNPlasticLimit;
-    }
-
-    public boolean getBotFactionReacts() {
-        return botFactionReacts;
     }
 
     public Player getPlayer(String userID) {
@@ -2331,30 +1758,14 @@ public class Game {
         players.remove(playerID);
     }
 
-    public void setOwnerID(String ownerID) {
-        if (ownerID.length() > 18) {
-            ownerID = ownerID.substring(0, 18);
-        }
-        this.ownerID = ownerID;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setTileMap(HashMap<String, Tile> tileMap) {
-        this.tileMap = tileMap;
-        planets.clear();
-    }
-
     public void clearTileMap() {
         tileMap.clear();
-        planets.clear();
+        planetsInfoCache.clear();
     }
 
     public void setTile(Tile tile) {
         tileMap.put(tile.getPosition(), tile);
-        planets.clear();
+        planetsInfoCache.clear();
     }
 
     public void removeTile(String position) {
@@ -2368,7 +1779,7 @@ public class Game {
         }
 
         tileMap.remove(position);
-        planets.clear();
+        planetsInfoCache.clear();
     }
 
     public void removePlanet(UnitHolder planet) {
@@ -2381,30 +1792,29 @@ public class Game {
     }
 
     public HashMap<String, UnitHolder> getPlanetsInfo() {
-        if (planets.isEmpty()) {
-            getPlanets();
+        if (planetsInfoCache.isEmpty()) {
+            getPlanetsInfoCache();
         }
-        return planets;
+        return planetsInfoCache;
     }
 
     public void clearPlanetsCache() {
-        planets.clear();
+        planetsInfoCache.clear();
     }
 
-    @JsonIgnore
-    public Set<String> getPlanets() {
-        if (planets.isEmpty()) {
+    public Set<String> getPlanetsInfoCache() {
+        if (planetsInfoCache.isEmpty()) {
             for (Tile tile : tileMap.values()) {
                 for (Map.Entry<String, UnitHolder> unitHolderEntry : tile.getUnitHolders().entrySet()) {
                     if (unitHolderEntry.getValue() instanceof Planet) {
-                        planets.put(unitHolderEntry.getKey(), unitHolderEntry.getValue());
+                        planetsInfoCache.put(unitHolderEntry.getKey(), unitHolderEntry.getValue());
                     }
                 }
             }
-            planets.put("custodiavigilia", new Planet("custodiavigilia", new Point(0, 0)));
-            planets.put("ghoti", new Planet("ghoti", new Point(0, 0)));
+            planetsInfoCache.put("custodiavigilia", new Planet("custodiavigilia", new Point(0, 0)));
+            planetsInfoCache.put("ghoti", new Planet("ghoti", new Point(0, 0)));
         }
-        return planets.keySet();
+        return planetsInfoCache.keySet();
     }
 
     public void endGameIfOld() {
@@ -2429,17 +1839,12 @@ public class Game {
             .toList());
     }
 
-    @JsonIgnore
     public List<SimpleEntry<String, String>> getTileNameAutocompleteOptionsCache() {
         if (tileNameAutocompleteOptionsCache != null) {
             return tileNameAutocompleteOptionsCache;
         }
         rebuildTilePositionAutoCompleteList();
         return tileNameAutocompleteOptionsCache;
-    }
-
-    public void setTileNameAutocompleteOptionsCache(List<SimpleEntry<String, String>> tileNameAutocompleteOptionsCache) {
-        this.tileNameAutocompleteOptionsCache = tileNameAutocompleteOptionsCache;
     }
 
     public Player getPNOwner(String pnID) {
@@ -2551,14 +1956,6 @@ public class Game {
         return leaders;
     }
 
-    public int getMapImageGenerationCount() {
-        return mapImageGenerationCount;
-    }
-
-    public int setMapImageGenerationCount(int mapImageGenerationCount) {
-        return this.mapImageGenerationCount = mapImageGenerationCount;
-    }
-
     public void incrementMapImageGenerationCount() {
         mapImageGenerationCount++;
     }
@@ -2573,10 +1970,6 @@ public class Game {
 
     public ArrayList<String> getRunMigrations() {
         return runDataMigrations;
-    }
-
-    public StrategyCardModel getStrategyCardSet() {
-        return Mapper.getStrategyCardSets().get(getScSetID());
     }
 
     @JsonIgnore

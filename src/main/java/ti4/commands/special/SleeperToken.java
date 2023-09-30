@@ -55,7 +55,7 @@ public class SleeperToken extends SpecialSubcommandData {
         addOrRemoveSleeper(event, activeGame, planetName, player);
     }
     public void addOrRemoveSleeper(GenericInteractionCreateEvent event, Game activeGame, String planetName, Player player) {
-        if (!activeGame.getPlanets().contains(planetName)) {
+        if (!activeGame.getPlanetsInfoCache().contains(planetName)) {
             MessageHelper.replyToMessage(event, "Planet not found in map");
             return;
         }

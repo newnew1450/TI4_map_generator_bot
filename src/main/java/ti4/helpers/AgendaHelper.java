@@ -162,7 +162,7 @@ public class AgendaHelper {
             }
             if (activeGame.getLaws().size() > 0) {
                 for (Player player : activeGame.getRealPlayers()) {
-                    if (player.getLeaderIDs().contains("edyncommander") && !player.hasLeaderUnlocked("edyncommander")) {
+                    if (player.hasLeader("edyncommander") && !player.hasLeaderUnlocked("edyncommander")) {
                         ButtonHelper.commanderUnlockCheck(player, activeGame, "edyn", event);
                     }
                 }
@@ -277,7 +277,7 @@ public class AgendaHelper {
                             activeGame.drawActionCard(playerWL.getUserID());
                         }
                         ACInfo.sendActionCardInfo(activeGame, playerWL, event);
-                        if (playerWL.getLeaderIDs().contains("yssarilcommander") && !playerWL.hasLeaderUnlocked("yssarilcommander")) {
+                        if (playerWL.hasLeader("yssarilcommander") && !playerWL.hasLeaderUnlocked("yssarilcommander")) {
                             ButtonHelper.commanderUnlockCheck(playerWL, activeGame, "yssaril", event);
                         }
                         ButtonHelper.checkACLimit(activeGame, event, playerWL);
@@ -311,7 +311,7 @@ public class AgendaHelper {
         List<Player> voters = getWinningVoters(winner, activeGame);
         voters.addAll(riders);
         for (Player player : voters) {
-            if (player.getLeaderIDs().contains("dihmohncommander") && !player.hasLeaderUnlocked("dihmohncommander")) {
+            if (player.hasLeader("dihmohncommander") && !player.hasLeaderUnlocked("dihmohncommander")) {
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "dihmohn", event);
             }
         }

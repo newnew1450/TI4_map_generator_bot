@@ -285,7 +285,7 @@ public class AutoCompleteProvider {
                 Set<String> planetIDs;
                 Map<String, String> planets = Mapper.getPlanetRepresentations();
                 if (activeGame != null && !activeGame.isFoWMode()) {
-                    planetIDs = activeGame.getPlanets();
+                    planetIDs = activeGame.getPlanetsInfoCache();
                     List<Command.Choice> options = planets.entrySet().stream()
                             .filter(value -> value.getValue().toLowerCase().contains(enteredValue))
                             .filter(value ->  planetIDs.isEmpty() || planetIDs.contains(value.getKey()))

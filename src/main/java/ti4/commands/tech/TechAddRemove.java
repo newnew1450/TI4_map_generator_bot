@@ -51,10 +51,10 @@ public abstract class TechAddRemove extends TechSubcommandData {
         parseParameter(event, player, event.getOption(Constants.TECH3));
         parseParameter(event, player, event.getOption(Constants.TECH4));
         
-        if(player.getLeaderIDs().contains("nekrocommander") && !player.hasLeaderUnlocked("nekrocommander")){
+        if(player.hasLeader("nekrocommander") && !player.hasLeaderUnlocked("nekrocommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "nekro", event);
         }
-        if(player.getLeaderIDs().contains("jolnarcommander") && !player.hasLeaderUnlocked("jolnarcommander")){
+        if(player.hasLeader("jolnarcommander") && !player.hasLeaderUnlocked("jolnarcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "jolnar", event);
             }
     }

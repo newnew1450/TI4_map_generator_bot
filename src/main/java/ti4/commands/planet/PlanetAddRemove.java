@@ -70,7 +70,7 @@ public abstract class PlanetAddRemove extends PlanetSubcommandData {
                 doAction(player, planetID, activeGame);
                 sendMessage("> " + resolvePlanetMessage(planetID));
             } else {
-                Set<String> planets = activeGame.getPlanets();
+                Set<String> planets = activeGame.getPlanetsInfoCache();
                 List<String> possiblePlanets = planets.stream().filter(value -> value.toLowerCase().contains(planetID)).toList();
                 if (possiblePlanets.isEmpty()){
                     sendMessage("> No matching Planet '" + planetID + "'' found - please try again.");

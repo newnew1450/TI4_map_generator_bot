@@ -189,10 +189,10 @@ public abstract class ExploreSubcommandData extends SubcommandData {
                 tile.addToken(tokenFilename, planetName);
                 activeGame.purgeExplore(cardID);
                 message = "Token added to planet";
-                if (player.getLeaderIDs().contains("solcommander") && !player.hasLeaderUnlocked("solcommander")) {
+                if (player.hasLeader("solcommander") && !player.hasLeaderUnlocked("solcommander")) {
                     ButtonHelper.commanderUnlockCheck(player, activeGame, "sol", event);
                 }
-                if (player.getLeaderIDs().contains("xxchacommander") && !player.hasLeaderUnlocked("xxchacommander")) {
+                if (player.hasLeader("xxchacommander") && !player.hasLeaderUnlocked("xxchacommander")) {
                     ButtonHelper.commanderUnlockCheck(player, activeGame, "xxcha", event);
                 }
             } else {
@@ -366,7 +366,7 @@ public abstract class ExploreSubcommandData extends SubcommandData {
                     }
                     default -> message = "";
                 }
-                if (player.getLeaderIDs().contains("hacancommander") && !player.hasLeaderUnlocked("hacancommander")) {
+                if (player.hasLeader("hacancommander") && !player.hasLeaderUnlocked("hacancommander")) {
                     ButtonHelper.commanderUnlockCheck(player, activeGame, "hacan", event);
                 }
                 Button getTactic = Button.success("increase_tactic_cc", "Gain 1 Tactic CC");

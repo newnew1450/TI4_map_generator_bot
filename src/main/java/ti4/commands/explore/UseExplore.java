@@ -33,7 +33,7 @@ public class UseExplore extends ExploreSubcommandData {
                 planetName = planetOption.getAsString();
             }
             Tile tile = null;
-            if (activeGame.getPlanets().contains(planetName)) {
+            if (activeGame.getPlanetsInfoCache().contains(planetName)) {
                 for (Tile tile_ : activeGame.getTileMap().values()) {
                     if (tile != null) {
                         break;

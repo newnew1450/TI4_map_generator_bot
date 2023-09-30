@@ -532,7 +532,7 @@ public class ButtonHelperFactionSpecific {
             }
         }
         List<Button> options =ButtonHelper.getExhaustButtonsWithTG(activeGame, player, event);
-        if(player.getLeaderIDs().contains("yincommander") && !player.hasLeaderUnlocked("yincommander")){
+        if(player.hasLeader("yincommander") && !player.hasLeaderUnlocked("yincommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "yin", event);
         }
         MessageHelper.sendMessageToChannel(event.getMessageChannel(), ButtonHelper.getIdent(player) + " replaced 1 of their opponent's infantry with 1 "+unit+" on "+Helper.getPlanetRepresentation(planet, activeGame) + " using indoctrination");
@@ -1008,7 +1008,7 @@ public class ButtonHelperFactionSpecific {
         MessageHelper.sendMessageToChannel(player2.getCardsInfoThread(activeGame), "# "+ Helper.getPlayerRepresentation(player2, activeGame, activeGame.getGuild(), true)+" Lost " + acID +" to mageon (or perhaps Yssaril hero)");
         ACInfo.sendActionCardInfo(activeGame, player2);
         ACInfo.sendActionCardInfo(activeGame, player);
-        if(player.getLeaderIDs().contains("yssarilcommander") && !player.hasLeaderUnlocked("yssarilcommander")){
+        if(player.hasLeader("yssarilcommander") && !player.hasLeaderUnlocked("yssarilcommander")){
             ButtonHelper.commanderUnlockCheck(player, activeGame, "yssaril", event);
         }
         event.getMessage().delete().queue();
@@ -1859,7 +1859,7 @@ public class ButtonHelperFactionSpecific {
         }else{
             new AddUnits().unitParsing(event, player.getColor(), activeGame.getTile(AliasHandler.resolveTile(planetName)), "pds " + planetName, activeGame);
             message = ident + " replaced a sleeper on " + Helper.getPlanetRepresentation(planetName, activeGame) + " with a "+ Helper.getEmojiFromDiscord("pds");
-            if(player.getLeaderIDs().contains("titanscommander") && !player.hasLeaderUnlocked("titanscommander")){
+            if(player.hasLeader("titanscommander") && !player.hasLeaderUnlocked("titanscommander")){
                 ButtonHelper.commanderUnlockCheck(player, activeGame, "titans", event);
             }
         }
