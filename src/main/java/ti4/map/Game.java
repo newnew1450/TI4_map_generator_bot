@@ -73,6 +73,7 @@ public class Game {
     private final MiltyDraftManager miltyDraftManager;
     private boolean ccNPlasticLimit = true;
     private boolean botFactionReacts = false;
+    private boolean hasHadAStatusPhase = false;
     private boolean botShushing = true;
     @JsonIgnore
     private final HashMap<String, UnitHolder> planets = new HashMap<>();
@@ -173,6 +174,7 @@ public class Game {
     private LinkedHashMap<String, Player> players = new LinkedHashMap<>();
     private final HashMap<Integer, Boolean> scPlayed = new HashMap<>();
     private HashMap<String, String> currentAgendaVotes = new HashMap<>();
+    private HashMap<String, String> checkingForAllReacts = new HashMap<>();
     @ExportableField
     private String speaker = "";
     @ExportableField
@@ -825,6 +827,14 @@ public class Game {
         return currentAgendaVotes;
     }
 
+    public HashMap<String, String> getMessagesThatICheckedForAllReacts() {
+        return checkingForAllReacts;
+    }
+
+    public String getFactionsThatReactedToThis(String messageID) {
+        return checkingForAllReacts.get(messageID);
+    }
+
     public void resetCurrentAgendaVotes() {
         currentAgendaVotes = new HashMap<>();
     }
@@ -911,6 +921,12 @@ public class Game {
         currentAgendaVotes.put(outcome, voteInfo);
     }
 
+    public void setCurrentReacts(String messageID, String factionsWhoReacted) {
+        checkingForAllReacts.put(messageID, factionsWhoReacted);
+    }
+    public void removeMessageIDFromCurrentReacts(String messageID) {
+        checkingForAllReacts.remove(messageID);
+    }
     public void removeOutcomeAgendaVote(String outcome) {
         currentAgendaVotes.remove(outcome);
     }
@@ -2809,6 +2825,9 @@ public class Game {
     public void setBotFactionReactions(boolean limit) {
         botFactionReacts = limit;
     }
+    public void setHasHadAStatusPhase(boolean limit) {
+        hasHadAStatusPhase = limit;
+    }
 
     public void setShushing(boolean limit) {
         botShushing = limit;
@@ -2820,6 +2839,10 @@ public class Game {
 
     public boolean getBotFactionReacts() {
         return botFactionReacts;
+    }
+
+    public boolean getHasHadAStatusPhase() {
+        return hasHadAStatusPhase;
     }
 
     public boolean getBotShushing() {

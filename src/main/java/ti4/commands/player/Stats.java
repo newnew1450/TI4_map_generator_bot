@@ -6,6 +6,7 @@ import java.util.StringTokenizer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -226,9 +227,9 @@ public class Stats extends PlayerSubcommandData {
 
 		sb.append("> VP: ").append(player.getTotalVictoryPoints());
 		sb.append("      CC: ").append(player.getTacticalCC()).append("/").append(player.getFleetCC()).append("/").append(player.getStrategicCC());
-		if(activeGame.getNomadCoin()){
+		if (activeGame.getNomadCoin()) {
 			sb.append("      ").append(Emojis.nomadcoin).append(player.getTg());
-		}else{
+		} else {
 			sb.append("      ").append(Emojis.tg).append(player.getTg());
 		}
 		sb.append("      ").append(Emojis.comm).append(player.getCommodities()).append("/").append(player.getCommoditiesTotal());
@@ -265,8 +266,14 @@ public class Stats extends PlayerSubcommandData {
 		sb.append("> Owned PNs: `").append(player.getPromissoryNotesOwned()).append("`\n");
 		sb.append("> Owned Units: `").append(player.getUnitsOwned()).append("`\n");
 		sb.append("> Alliance Members: `").append(player.getAllianceMembers()).append("`\n");
-		sb.append("> Followed SCs: `").append(player.getFollowedSCs()).append("`\n");
+		sb.append("> Followed SCs: `").append(player.getFollowedSCs().toString()).append("`\n");
+		sb.append("> Expected Number of Hits: `").append((player.getExpectedHitsTimes10()/10.0)).append("`\n");
+		sb.append("> Actual Hits: `").append(player.getActualHits()).append("`\n");
 		sb.append("> Decal Set: `").append(player.getDecalName()).append("`\n");
+		Guild guild = activeGame.getGuild();
+		if (guild != null && activeGame.isFrankenGame()) {
+			sb.append("> Bag Draft Thread: ").append(guild.getThreadChannelById(player.getBagInfoThreadID()).getAsMention()).append("\n");
+		}
 		sb.append("\n");
 
 		return sb.toString();
@@ -303,6 +310,10 @@ public class Stats extends PlayerSubcommandData {
 		if (activeGame.isFoWMode()) {
 			String messageToSend = Emojis.getColourEmojis(player.getColor()) + " picked SC #" + scNumber;
 			FoWHelper.pingAllPlayersWithFullStats(activeGame, event, player, messageToSend);
+		}
+
+		if(scNumber == 5 && !activeGame.isHomeBrewSCMode() && !player.getPromissoryNotes().containsKey(player.getColor() + "_ta")){
+			MessageHelper.sendMessageToChannel(player.getCardsInfoThread(), ButtonHelper.getTrueIdentity(player, activeGame) + " heads up, you just picked trade but dont currently hold your Trade Agreement");
 		}
 
 		Integer tgCount = scTradeGoods.get(scNumber);

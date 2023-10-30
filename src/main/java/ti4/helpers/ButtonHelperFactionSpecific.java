@@ -66,7 +66,7 @@ public class ButtonHelperFactionSpecific {
             return buttons;
         }
         for (String planet : hacan.getPlanetsAllianceMode()) {
-            if (planet.contains("custodia")) {
+            if (planet.contains("custodia") || planet.contains("ghoti")) {
                 continue;
             }
             if (ButtonHelper.getUnitHolderFromPlanetName(planet, activeGame).getUnitCount(UnitType.Mech, hacan.getColor()) > 0) {
@@ -304,6 +304,7 @@ public class ButtonHelperFactionSpecific {
     public static List<Button> getReleaseButtons(Player cabal, Game activeGame) {
         List<Button> buttons = new ArrayList<Button>();
         for (UnitHolder unitHolder : cabal.getNomboxTile().getUnitHolders().values()) {
+
             for (UnitKey unitKey : unitHolder.getUnits().keySet()) {
                 for (Player player : activeGame.getRealPlayers()) {
                     if (player.unitBelongsToPlayer(unitKey)) {
@@ -357,7 +358,7 @@ public class ButtonHelperFactionSpecific {
 
         String types = "";
         for (String planetName : player.getPlanetsAllianceMode()) {
-            if (planetName.contains("custodia")) {
+            if (planetName.contains("custodia") || planetName.contains("ghoti")) {
                 continue;
             }
             Planet planet = (Planet) ButtonHelper.getUnitHolderFromPlanetName(planetName, activeGame);
@@ -805,7 +806,7 @@ public class ButtonHelperFactionSpecific {
 
     public static boolean isTileCreussIFFSuitable(Game activeGame, Player player, Tile tile) {
         for (String planet : player.getPlanetsAllianceMode()) {
-            if (planet.toLowerCase().contains("custodia")) {
+            if (planet.toLowerCase().contains("custodia") || planet.contains("ghoti")) {
                 continue;
             }
             if (activeGame.getTileFromPlanet(planet) == null) {

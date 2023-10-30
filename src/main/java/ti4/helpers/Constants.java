@@ -329,6 +329,7 @@ public class Constants {
     public static final String CURRENT_AGENDA_INFO = "current_agenda_info";
     public static final String CURRENT_ACDRAWSTATUS_INFO = "current_acdrawstatus_info";
     public static final String AGENDA_VOTE_INFO = "agenda_vote_info";
+    public static final String CHECK_REACTS_INFO= "check_reacts_info";
     public static final String DISPLACED_UNITS_SYSTEM = "displaced_units_system";
     public static final String DISPLACED_UNITS_ACTIVATION = "displaced_units_activation";
     public static final String AC_ID = "ac_id";
@@ -467,6 +468,8 @@ public class Constants {
     public static final String FLEET = "fleet_cc";
     public static final String STRATEGY = "strategy_cc";
     public static final String TG = "trade_goods";
+    public static final String ACTUAL_HITS = "actual_hits";
+    public static final String EXPECTED_HITS_TIMES_10 = "expected_hits_times_10";
     public static final String COMMODITIES = "commodities";
     public static final String COMMODITIES_TOTAL = "commodities_total";
     public static final String STASIS_INFANTRY = "stasis_infantry";
@@ -790,6 +793,7 @@ public class Constants {
     public static final String CC_N_PLASTIC_LIMIT = "cc_n_plastic_limit";
     public static final String POWERED = "powered";
     public static final String BOT_FACTION_REACTS = "bot_faction_reacts";
+    public static final String HAS_HAD_A_STATUS_PHASE = "has_had_a_status_phase";
     public static final String BOT_SHUSHING = "bot_shushing";
     public static final String RELIC_SEND = "relic_send";
     public static final String FOLLOWED_SC = "followed_sc";

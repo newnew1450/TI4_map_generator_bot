@@ -48,6 +48,7 @@ import ti4.commands.leaders.RefreshLeader;
 import ti4.commands.leaders.UnlockLeader;
 import ti4.commands.planet.PlanetAdd;
 import ti4.commands.planet.PlanetRefresh;
+import ti4.commands.player.SendDebt;
 import ti4.commands.special.CombatRoll;
 import ti4.commands.special.KeleresHeroMentak;
 import ti4.commands.special.StellarConverter;
@@ -436,7 +437,7 @@ public class ButtonHelper {
     public static String playerHasDMZPlanet(Player player, Game activeGame){
         String dmzPlanet = "no";
         for(String planet : player.getPlanets()){
-            if(planet.contains("custodia")){
+            if(planet.contains("custodia") || planet.contains("ghoti")){
                 continue;
             }
             UnitHolder unitHolder = ButtonHelper.getUnitHolderFromPlanetName(planet, activeGame);
@@ -455,7 +456,7 @@ public class ButtonHelper {
             return buttons;
         }
         for (String planet : p1.getPlanets()) {
-            if (planet.contains("custodia")) {
+            if (planet.contains("custodia")|| planet.contains("ghoti")) {
                 continue;
             }
             if (ButtonHelper.getUnitHolderFromPlanetName(planet, activeGame).getUnitColorsOnHolder().contains(receiver.getColorID())) {
@@ -1731,7 +1732,7 @@ public class ButtonHelper {
             String finChecker = "FFCC_" + p1.getFaction() + "_";
             buttons.add(Button.secondary(finChecker + "mahactStealCC_" + p2.getColor(), "Add Opponent CC to Fleet").withEmoji(Emoji.fromFormatted(Emojis.Mahact)));
         }
-        if ("space".equalsIgnoreCase(groundOrSpace)) {
+        if ("space".equalsIgnoreCase(groundOrSpace) && !activeGame.isFoWMode()) {
             buttons.add(Button.secondary("announceARetreat", "Announce A Retreat"));
         }
         if ("space".equalsIgnoreCase(groundOrSpace)) {
@@ -1792,12 +1793,14 @@ public class ButtonHelper {
                         .withEmoji(Emoji.fromFormatted(Emojis.Yin)));
                 }
             }
-            if (nameOfHolder.equalsIgnoreCase("space")) {
+            if (nameOfHolder.equalsIgnoreCase("space") && "space".equalsIgnoreCase(groundOrSpace)) {
                 buttons.add(Button.secondary("combatRoll_" + pos + "_" + unitH.getName(), "Roll Space Combat"));
             } else {
-                buttons.add(Button.secondary("combatRoll_" + pos + "_" + unitH.getName(),
+                if(!"space".equalsIgnoreCase(groundOrSpace) && !nameOfHolder.equalsIgnoreCase("space")){
+                    buttons.add(Button.secondary("combatRoll_" + pos + "_" + unitH.getName(),
                     "Roll Ground Combat for " + nameOfHolder + ""));
-                buttons.add(Button.secondary("combatRoll_" + tile.getPosition() + "_" + unitH.getName() + "_spacecannondefence", "Roll Space Cannon Defence for " + nameOfHolder));
+                    buttons.add(Button.secondary("combatRoll_" + tile.getPosition() + "_" + unitH.getName() + "_spacecannondefence", "Roll Space Cannon Defence for " + nameOfHolder));
+                }
             }
 
         }
@@ -2155,9 +2158,11 @@ public class ButtonHelper {
         return shipOrders;
     }
 
+
     public static List<Button> getStartOfTurnButtons(Player player, Game activeGame, boolean doneActionThisTurn, GenericInteractionCreateEvent event) {
         String finChecker = "FFCC_" + player.getFaction() + "_";
         activeGame.setDominusOrb(false);
+       
         List<Button> startButtons = new ArrayList<>();
         Button tacticalAction = Button.success(finChecker + "tacticalAction", "Tactical Action (" + player.getTacticalCC() + ")");
         int numOfComponentActions = getAllPossibleCompButtons(activeGame, player, event).size() - 2;
@@ -2186,6 +2191,20 @@ public class ButtonHelper {
             }
 
             startButtons.add(pass);
+            if(!activeGame.isHomeBrewSCMode() && !activeGame.isFoWMode()){
+                for(Player p2 : activeGame.getRealPlayers()){
+                    for (int sc : player.getSCs()) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(ButtonHelper.getTrueIdentity(p2, activeGame));
+                        sb.append(" You are getting this ping because SC #"+sc+" has been played and now it is their turn again and you still havent reacted. Please do so, or ping Fin if this is an error. ");
+                        sb.append("You currently have ").append(p2.getStrategicCC()).append(" CC in your strategy pool.");
+                        if (!p2.hasFollowedSC(sc)) {
+                            MessageHelper.sendMessageToChannel(p2.getCardsInfoThread(), sb.toString());
+                        }
+                    }
+                }
+            }
+            
 
         }
         if (doneActionThisTurn) {
@@ -2388,11 +2407,47 @@ public class ButtonHelper {
                     MessageHelper.sendMessageToChannel(event.getMessageChannel(), "Found a " + name1 + " and a " + name2 + " in " + tile.getRepresentation());
                 }
                 MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), message, buttons);
+
+                String msg2 = "As a reminder of their text, the card abilities read as: \n";
+                msg2 = msg2 + name1 +": "+cardInfo1[4]+"\n";
+                msg2 = msg2 + name2 +": "+cardInfo2[4]+"\n";
+                MessageHelper.sendMessageToChannel(event.getMessageChannel(), msg2);
             } else {
                 new ExpFrontier().expFront(event, tile, activeGame, player);
             }
 
         }
+    }
+
+    public static void sendTradeHolderSomething(Player player, Game activeGame, String buttonID, ButtonInteractionEvent event){
+        String tgOrDebt = buttonID.split("_")[1];
+        Player tradeHolder = null;
+        for(Player p2 : activeGame.getRealPlayers()){
+            if(p2.getSCs().contains(5)){
+                tradeHolder = p2;
+                break;
+            }
+        }
+        String msg  = player.getRepresentation()+ " sent 1 "+tgOrDebt+" to "+ tradeHolder.getRepresentation();;
+        if(tradeHolder != null){
+            if(tgOrDebt.equalsIgnoreCase("tg")){
+                checkTransactionLegality(activeGame, player, tradeHolder);
+                if(player.getTg() > 0){
+                    tradeHolder.setTg(tradeHolder.getTg() +1);
+                    player.setTg(player.getTg() -1);
+                }else{
+                    MessageHelper.sendMessageToChannel(event.getMessageChannel(), ButtonHelper.getTrueIdentity(player, activeGame) + " you had no tg to send, no tg sent.");
+                    return;
+                }
+                
+            }else{
+                SendDebt.sendDebt(player, tradeHolder, 1);
+            }
+        }else{
+            MessageHelper.sendMessageToChannel(event.getMessageChannel(), ButtonHelper.getTrueIdentity(player, activeGame) + " game could not find trade holder. Ping Fin to fix this.");
+        }
+        MessageHelper.sendMessageToChannel(event.getMessageChannel(), msg);
+
     }
 
     public static boolean doesPlanetHaveAttachmentTechSkip(Tile tile, String planet) {
@@ -3700,12 +3755,19 @@ public class ButtonHelper {
     }
 
     public static void startStrategyPhase(GenericInteractionCreateEvent event, Game activeGame) {
+        if(activeGame.getHasHadAStatusPhase()){
+            int round = activeGame.getRound();
+            round++;
+            activeGame.setRound(round);
+        }
+        MessageHelper.sendMessageToChannel(event.getMessageChannel(), "Started Round "+activeGame.getRound());
+        
         if (activeGame.getNaaluAgent()) {
             activeGame.setNaaluAgent(false);
             for (Player p2 : activeGame.getRealPlayers()) {
                 for (String planet : p2.getPlanets()) {
                     if (ButtonHelper.isPlanetLegendaryOrHome(planet, activeGame, true, p2)) {
-                        if (planet.contains("custodia")) {
+                        if (planet.contains("custodia")|| planet.contains("ghoti")) {
                             continue;
                         }
                         p2.exhaustPlanet(planet);
@@ -3809,6 +3871,7 @@ public class ButtonHelper {
         Integer poIndex = activeGame.addCustomPO("Crown of Emphidia", 1);
         activeGame.scorePublicObjective(player.getUserID(), poIndex);
         MessageHelper.sendMessageToChannel(getCorrectChannel(player, activeGame), player.getRepresentation() + " scored Crown of Emphidia");
+        Helper.checkEndGame(activeGame, player);
         event.getMessage().delete().queue();
     }
 
@@ -4426,6 +4489,12 @@ public class ButtonHelper {
             }
 
             event.getChannel().addReactionById(messageId, emojiToUse).queue();
+            if(activeGame.getFactionsThatReactedToThis(messageId) != null){
+                activeGame.setCurrentReacts(messageId, activeGame.getFactionsThatReactedToThis(messageId)+"_"+player.getFaction());
+            }else{
+                activeGame.setCurrentReacts(messageId, player.getFaction());
+            }
+            
             new ButtonListener().checkForAllReactions(event, activeGame);
             if (message == null || message.isEmpty()) {
                 return;
@@ -4468,19 +4537,19 @@ public class ButtonHelper {
                 emojiMap.put(emoji.getName().toLowerCase(), emoji);
             }
         }
-        Message mainMessage;
+        
         try {
-            mainMessage = activeGame.getMainGameChannel().retrieveMessageById(messageID).complete();
-        } catch (Error e) {
-            activeGame.removeMessageIDForSabo(messageID);
-            return;
-        }
-
-        Emoji emojiToUse = Helper.getPlayerEmoji(activeGame, player, mainMessage);
-        String messageId = mainMessage.getId();
+            activeGame.getMainGameChannel().retrieveMessageById(messageID).queue(mainMessage -> {
+                Emoji emojiToUse = Helper.getPlayerEmoji(activeGame, player, mainMessage);
+                String messageId = mainMessage.getId();
 
         if (!skipReaction) {
             activeGame.getMainGameChannel().addReactionById(messageId, emojiToUse).queue();
+            if(activeGame.getFactionsThatReactedToThis(messageId) != null){
+                activeGame.setCurrentReacts(messageId, activeGame.getFactionsThatReactedToThis(messageId)+"_"+player.getFaction());
+            }else{
+                activeGame.setCurrentReacts(messageId, player.getFaction());
+            }
             new ButtonListener().checkForAllReactions(messageId, activeGame);
             if (message == null || message.isEmpty()) {
                 return;
@@ -4494,14 +4563,20 @@ public class ButtonHelper {
             text = "(You) " + emojiToUse.getFormatted() + " " + message;
         }
 
-        if (additionalMessage != null && !additionalMessage.isEmpty()) {
-            text += Helper.getGamePing(guild, activeGame) + " " + additionalMessage;
-        }
+                if (additionalMessage != null && !additionalMessage.isEmpty()) {
+                    text += Helper.getGamePing(guild, activeGame) + " " + additionalMessage;
+                }
 
-        if (activeGame.isFoWMode() && !sendPublic) {
-            MessageHelper.sendPrivateMessageToPlayer(player, activeGame, text);
+                if (activeGame.isFoWMode() && !sendPublic) {
+                    MessageHelper.sendPrivateMessageToPlayer(player, activeGame, text);
+                    return;
+                }
+            });
+        } catch (Error e) {
+            activeGame.removeMessageIDForSabo(messageID);
             return;
         }
+
     }
 
     public static Tile getTileOfPlanetWithNoTrait(Player player, Game activeGame) {

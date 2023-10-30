@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -429,6 +430,7 @@ public class GenerateMap {
         return getPlayerFactionIconImageScaled(player, scaledWidth, scaledHeight);
     }
 
+    @Nullable
     private static BufferedImage getPlayerFactionIconImageScaled(Player player, int width, int height) {
         if (player == null) return null;
         Emoji factionEmoji = Emoji.fromFormatted(player.getFactionEmoji());
@@ -441,6 +443,7 @@ public class GenerateMap {
         return getFactionIconImageScaled(player.getFaction(), width, height);
     }
 
+    @Nullable
     private static BufferedImage getFactionIconImageScaled(String factionID, int width, int height) {
         String factionPath = getFactionIconPath(factionID);
         if (factionPath == null) return null;
@@ -645,9 +648,9 @@ public class GenerateMap {
                 drawPAImage(x + 280, y + yDelta, pnImage);
                 graphics.drawString(Integer.toString(player.getPnCount()), x + 300, y + deltaY + 50);
 
-                if(activeGame.getNomadCoin()){
+                if (activeGame.getNomadCoin()) {
                     drawPAImage(x + 345, y + yDelta, nomadCoinImage);
-                }else{
+                } else {
                     drawPAImage(x + 345, y + yDelta, tradeGoodImage);
                 }
                 graphics.drawString(Integer.toString(player.getTg()), x + 360, y + deltaY + 50);
@@ -710,19 +713,18 @@ public class GenerateMap {
                     xDelta = debtInfo(player, xDelta, yPlayArea, activeGame);
                 }
 
-                
                 if (!player.getRelics().isEmpty()) {
                     xDelta = relicInfo(player, xDelta, yPlayArea);
                 }
-                
+
                 if (!player.getPromissoryNotesInPlayArea().isEmpty()) {
                     xDelta = pnInfo(player, xDelta, yPlayArea, activeGame);
                 }
-                
+
                 if (!player.getTechs().isEmpty()) {
                     xDelta = techInfo(player, xDelta, yPlayArea, activeGame);
                 }
-                
+
                 if (!player.getNotResearchedFactionTechs().isEmpty()) {
                     xDelta = factionTechInfo(player, xDelta, yPlayArea, activeGame);
                 }
@@ -1101,7 +1103,7 @@ public class GenerateMap {
             } else {
                 graphics.setColor(Color.WHITE);
             }
-            
+
             String status = isExhaustedLocked ? "_exh" : "_rdy";
             abilityFileName = abilityFileName + status + ".png";
             String resourcePath = ResourceHelper.getInstance().getPAResource(abilityFileName);
@@ -1386,12 +1388,21 @@ public class GenerateMap {
                     String colour = AliasHandler.resolveColor(unitKey.getColorID());
                     Player decalPlayer = player.getGame().getPlayerFromColorOrFaction(colour);
                     if (decalPlayer != null && !"null".equals(decalPlayer.getDecalSet()) && Mapper.isValidDecalSet(player.getDecalSet())) {
-                        String decalFileName = String.format("%s_%s%s", decalPlayer.getDecalSet(), unitKey.asyncID(), getBlackWhiteFileSuffix(Mapper.getColorID(decalPlayer.getColor())));
+                        String decalFileName = String.format("%s_%s%s", decalPlayer.getDecalSet(), unitKey.asyncID(), getBlackWhiteFileSuffix(
+                                Mapper.getColorID(decalPlayer.getColor())));
                         String decalPath = ResourceHelper.getInstance().getDecalFile(decalFileName);
                         decal = ImageHelper.read(decalPath);
                     }
                 } catch (Exception e) {
                     // BotLogger.log("Could not parse decal file for: " + player.getDecalSet(), e);
+                }
+
+                BufferedImage spoopy = null;
+                if ((unitKey.getUnitType() == UnitType.Warsun) && (ThreadLocalRandom.current().nextInt(10) == 0)) {
+
+                    String spoopypath = ResourceHelper.getInstance().getSpoopyFile();
+                    spoopy = ImageHelper.read(spoopypath);
+                    BotLogger.log("SPOOPY TIME: " + spoopypath);
                 }
 
                 if (justNumber) {
@@ -1404,6 +1415,10 @@ public class GenerateMap {
                 for (int i = 0; i < unitCount; i++) {
                     graphics.drawImage(image, position.x, position.y + deltaY, null);
                     graphics.drawImage(decal, position.x, position.y + deltaY, null);
+                    if (spoopy != null) {
+                        graphics.drawImage(spoopy, position.x, position.y + deltaY, null);
+                    }
+                                                                                      
                     deltaY += 14;
                 }
             }
@@ -1661,12 +1676,11 @@ public class GenerateMap {
         List<String> techs = player.getNotResearchedFactionTechs();
         if (techs.isEmpty()) {
             return y;
-        }       
+        }
 
-        
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setStroke(new BasicStroke(2));
-        
+
         int deltaX = 20;
         deltaX = factionTechField(x, y, techs, deltaX);
         return x + deltaX + 20;
@@ -1726,7 +1740,7 @@ public class GenerateMap {
 
     private int factionTechField(int x, int y, List<String> techs, int deltaX) {
         Map<String, TechnologyModel> techInfo = Mapper.getTechs();
-        
+
         if (techs == null) {
             return deltaX;
         }
@@ -1891,7 +1905,8 @@ public class GenerateMap {
                 System.out.println("error:" + u);
             } else if (unit.getFaction().isPresent()) {
                 // ONLY PAINT FACTION IF IS FRANKEN GAME, OR IS NOT A UNIT THAT UPGRADES OR WAS UPGRADED TO (indicating faction tech)
-                if (activeGame.isFrankenGame() || ((unit.getUpgradesFromUnitId() != null && !unit.getUpgradesFromUnitId().isEmpty()) || (unit.getUpgradesToUnitId() != null && !unit.getUpgradesToUnitId().isEmpty()))) {
+                if (activeGame.isFrankenGame()
+                    || ((unit.getUpgradesFromUnitId() != null && !unit.getUpgradesFromUnitId().isEmpty()) || (unit.getUpgradesToUnitId() != null && !unit.getUpgradesToUnitId().isEmpty()))) {
                     Coord unitFactionOffset = getUnitTechOffsets(unit.getAsyncId(), true);
                     drawFactionIconImage(graphics, unit.getFaction().get().toLowerCase(), deltaX + x + unitFactionOffset.x, y + unitFactionOffset.y, 32, 32);
                 }
@@ -1934,10 +1949,11 @@ public class GenerateMap {
         try {
             BufferedImage resourceBufferedImage = getFactionIconImageScaled(faction, width, height);
             Graphics2D g2 = (Graphics2D) graphics;
+            float opacityToSet = opacity == null ? 1.0f : opacity;
             boolean setOpacity = opacity != null && !opacity.equals(1.0f);
-            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacityToSet));
             g2.drawImage(resourceBufferedImage, x, y, null);
-            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         } catch (Exception e) {
             BotLogger.log("Could not display faction icon image: " + faction, e);
         }
@@ -1952,10 +1968,11 @@ public class GenerateMap {
         try {
             BufferedImage resourceBufferedImage = getPlayerFactionIconImageScaled(player, width, height);
             Graphics2D g2 = (Graphics2D) graphics;
+            float opacityToSet = opacity == null ? 1.0f : opacity;
             boolean setOpacity = opacity != null && !opacity.equals(1.0f);
-            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacityToSet));
             g2.drawImage(resourceBufferedImage, x, y, null);
-            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+            if (setOpacity) g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         } catch (Exception e) {
             BotLogger.log("Could not display player's faction icon image", e);
         }
@@ -3553,6 +3570,13 @@ public class GenerateMap {
                 unitCount = 1;
             }
 
+            BufferedImage spoopy = null;
+            if ((unitKey.getUnitType().equals(UnitType.Warsun)) && (ThreadLocalRandom.current().nextInt(10) == 0)) {
+
+                String spoopypath = ResourceHelper.getInstance().getSpoopyFile();
+                spoopy = ImageHelper.read(spoopypath);
+                BotLogger.log("SPOOPY TIME: " + spoopypath);
+            }
             Point centerPosition = unitHolder.getHolderCenterPosition();
             // DRAW UNITS
             for (int i = 0; i < unitCount; i++) {
@@ -3601,6 +3625,10 @@ public class GenerateMap {
 
                 tileGraphics.drawImage(unitImage, TILE_PADDING + imageX, TILE_PADDING + imageY, null);
                 tileGraphics.drawImage(decal, TILE_PADDING + imageX, TILE_PADDING + imageY, null);
+                if (spoopy != null) {
+                    tileGraphics.drawImage(spoopy, TILE_PADDING + imageX, TILE_PADDING + imageY, null);
+                }
+
                 if (bulkUnitCount != null) {
                     tileGraphics.setFont(Storage.getFont24());
                     tileGraphics.setColor(groupUnitColor);
@@ -3704,15 +3732,15 @@ public class GenerateMap {
         AffineTransform originalTransform = graphics2D.getTransform();
         graphics2D.rotate(Math.toRadians(-90));
         graphics2D.setFont(font);
-        
+
         // DRAW A 1px BLACK BORDER AROUND TEXT
         Color originalColor = graphics2D.getColor();
         graphics2D.setColor(Color.BLACK);
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
-            graphics2D.drawString(text,
-                (y + j) * -1, // See https://www.codejava.net/java-se/graphics/how-to-draw-text-vertically-with-graphics2d
-                x + graphics2D.getFontMetrics().getHeight() / 2 + i);
+                graphics2D.drawString(text,
+                    (y + j) * -1, // See https://www.codejava.net/java-se/graphics/how-to-draw-text-vertically-with-graphics2d
+                    x + graphics2D.getFontMetrics().getHeight() / 2 + i);
             }
         }
         graphics2D.setColor(originalColor);
@@ -3731,6 +3759,5 @@ public class GenerateMap {
             drawTextVertically(graphics, secondRow, x + offset, y, font);
         }
     }
-
 
 }
