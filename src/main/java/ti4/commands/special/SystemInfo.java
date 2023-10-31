@@ -155,16 +155,31 @@ public class SystemInfo extends SpecialSubcommandData {
             if (!activeGame.isFoWMode()) {
                 for (Player player : activeGame.getRealPlayers()) {
 
+                    if(!FoWHelper.playerHasUnitsInSystem(player, tile)){
+                        continue;
+                    }
                     List<Player> players = ButtonHelper.getOtherPlayersWithShipsInTheSystem(player, activeGame, tile);
-                    if (players.size() > 0 && !player.getAllianceMembers().contains(players.get(0).getFaction())) {
+                    if (players.size() > 0 && !player.getAllianceMembers().contains(players.get(0).getFaction()) && FoWHelper.playerHasShipsInSystem(player, tile)) {
                         Player player2 = players.get(0);
                         if (player2 == player) {
                             player2 = players.get(1);
                         }
                         List<Button> buttons = ButtonHelper.getButtonsForPictureCombats(activeGame, tile.getPosition(), player, player2, "space");
                         MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), " ", buttons);
-                        break;
+                        return;
+                    }else{
+                        for(UnitHolder unitHolder : tile.getUnitHolders().values()){
+                            if(unitHolder instanceof Planet){
+                                if(ButtonHelper.getPlayersWithUnitsOnAPlanet(activeGame, tile, unitHolder.getName()).size() > 1){
+                                    List<Player> listP = ButtonHelper.getPlayersWithUnitsOnAPlanet(activeGame, tile, unitHolder.getName());
+                                    List<Button> buttons = ButtonHelper.getButtonsForPictureCombats(activeGame, tile.getPosition(), listP.get(0), listP.get(1), "ground");
+                                    MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), " ", buttons);
+                                    return;
+                                }
+                            }
+                        }
                     }
+                    
                 }
             }
 
