@@ -12,7 +12,17 @@
       "7": "Technology",
       "8": "Imperial"
     },
-    "description": "A template json strategy card set"
+    "description": "A template json strategy card set",
+    "scNumtoButtonConversion": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8"
+    }
   },
   {
     "name": "PoK Strategy Cards",
@@ -27,7 +37,17 @@
       "7": "Technology",
       "8": "Imperial"
     },
-    "description": "The \"default\" set of strategy cards, used in PoK"
+    "description": "The \"default\" set of strategy cards, used in PoK",
+    "scNumtoButtonConversion": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8"
+    }
   },
   {
     "name": "Base Game Strategy Cards",
@@ -42,7 +62,17 @@
       "7": "Technology",
       "8": "Imperial"
     },
-    "description": "The original set of strategy cards, before Diplomacy and Construction were updated"
+    "description": "The original set of strategy cards, before Diplomacy and Construction were updated",
+    "scNumtoButtonConversion": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8"
+    }
   },
   {
     "name": "Tispoon Ten",
@@ -59,7 +89,19 @@
       "9": "Espionage",
       "10": "Imperial"
     },
-    "description": "A set of 10 strategy cards by HolyTispoon used in FoW41"
+    "description": "A set of 10 strategy cards by HolyTispoon used in FoW41",
+    "scNumtoButtonConversion": {
+      "1": "2",
+      "2": "2",
+      "3": "1",
+      "4": "3",
+      "5": "4",
+      "6": "5",
+      "7": "6",
+      "8": "7",
+      "9": "8",
+      "10":"8"
+    }
   },
   {
     "name": "Tispoon's Tribunal",
@@ -76,7 +118,19 @@
       "9": "Espionage",
       "10": "Imperial"
     },
-    "description": "A set of 10 strategy cards by HolyTispoon used in PBD500"
+    "description": "A set of 10 strategy cards by HolyTispoon used in PBD500",
+    "scNumtoButtonConversion": {
+      "1": "2",
+      "2": "2",
+      "3": "1",
+      "4": "3",
+      "5": "4",
+      "6": "5",
+      "7": "6",
+      "8": "7",
+      "9": "8",
+      "10":"8"
+    }
   },
   {
     "name": "Asteroid's Anarchy",
@@ -94,7 +148,20 @@
       "10": "Espionage",
       "11": "Imperial"
     },
-    "description": "Asteroid's set of 11 custom SCs"
+    "description": "Asteroid's set of 11 custom SCs",
+    "scNumtoButtonConversion": {
+      "1": "1",
+      "2": "2",
+      "3": "2",
+      "4": "3",
+      "5": "4",
+      "6": "5",
+      "7": "6",      
+      "8": "6",
+      "9": "7",      
+      "10": "8",
+      "11": "8"
+    }
   },
   {
     "name": "PBD #100 Strategy Cards",
@@ -130,7 +197,9 @@
       "83": "Imperial Group C",
       "84": "Imperial Group D"
     },
-    "description": "Grouped SCs for PBD #100"
+    "description": "Grouped SCs for PBD #100",
+    "scNumtoButtonConversion": {
+    }
   },
   {
     "name": "PBD #1000 Strategy Cards",
@@ -187,7 +256,9 @@
       "86": "Imperial Group 6",
       "87": "Imperial Group 7"
     },
-    "description": "Grouped SCs for PBD #1000"
+    "description": "Grouped SCs for PBD #1000",
+    "scNumtoButtonConversion": {      
+    }
   },
   {
     "name": "Ignis Aurora Strategy Cards",
@@ -203,7 +274,17 @@
       "8": "Antiquities",
       "9": "Imperial"
     },
-    "description": "Strategy Cards for Baldrick's Ignis Aurora expansion"
+    "description": "Strategy Cards for Baldrick's Ignis Aurora expansion",
+    "scNumtoButtonConversion": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "9": "8"
+    }
   },
   {
     "name": "Luminous' Tispoon Ten",
@@ -220,6 +301,18 @@
       "9": "Espionage",
       "10": "Imperial"
     },
-    "description": "A set of 10 strategy cards by Luminous"
+    "description": "A set of 10 strategy cards by Luminous",
+    "scNumtoButtonConversion": {
+      "1": "2",
+      "2": "2",
+      "3": "1",
+      "4": "3",
+      "5": "4",
+      "6": "5",
+      "7": "6",
+      "8": "7",
+      "9": "8",
+      "10":"8"
+    }
   }
 ]

@@ -417,6 +417,15 @@ public class Helper {
         return "**SC" + sc + "**";
     }
 
+    public static Integer getBaseSCNum(int sc, Game activeGame) {
+        if (Optional.ofNullable(activeGame.getScSetID()).isPresent() && !"null".equals(activeGame.getScSetID())) {            
+            Integer baseSC = Mapper.getStrategyCardSets().get(activeGame.getScSetID()).getScNumtoButtonConversion().get(sc);
+            if (baseSC == null) {return -999;}
+            return baseSC;
+        }
+        return Integer.valueOf(sc);
+    }
+
     public static Integer getSCNumber(String sc) {
         return switch (sc.toLowerCase()) {
             case "leadership" -> 1;

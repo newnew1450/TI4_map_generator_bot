@@ -10,7 +10,8 @@ public class StrategyCardModel implements ModelInterface {
     private String name;
     private String alias;
     private Map<Integer, String> cardValues;
-    private String description;
+    private String description;    
+    private Map<Integer, Integer> scNumtoButtonConversion; //first int is CustomSC#, second is BaseSC button equiv. Base SC deck will be <1,1> <2,2> etc.
 
     @Override
     public boolean isValid() {
@@ -30,5 +31,9 @@ public class StrategyCardModel implements ModelInterface {
 
     public Optional<String> getDescription() {
         return Optional.ofNullable(description);
+    }
+
+    public Integer getBaseSCNum(int scNumber) {
+            return scNumtoButtonConversion.get(Integer.valueOf(scNumber));
     }
 }

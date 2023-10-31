@@ -100,6 +100,7 @@ public class SCPlay extends PlayerSubcommandData {
         }
         message += "Indicate your choice by pressing a button below and post additional details in the thread.";
 
+        Integer scButtonSet = Helper.getBaseSCNum(scToPlay, activeGame); 
         String scName = Helper.getSCName(scToDisplay, activeGame).toLowerCase();
         if(winnuHero){
             scName = scName + "WinnuHero";
@@ -123,11 +124,12 @@ public class SCPlay extends PlayerSubcommandData {
         MessageCreateBuilder baseMessageObject = new MessageCreateBuilder().addContent(message);
 
         // GET BUTTONS
-        ActionRow actionRow = null;
-        List<Button> scButtons = new ArrayList<>(getSCButtons(scToDisplay, activeGame));
-        if (!activeGame.isHomeBrewSCMode() && !activeGame.isFoWMode() && scToDisplay == 7 && Helper.getPlayerFromAbility(activeGame, "propagation") != null) {
+        ActionRow actionRow = null;  
+        List<Button> scButtons = new ArrayList<>(getSCButtons(scButtonSet, activeGame, scToPlay));
+        System.out.println("scbtn value is " + scButtonSet + ", scToPlay is" + scToPlay + ".");
+        if (scButtonSet == 7 && Helper.getPlayerFromAbility(activeGame, "propagation") != null) {
             scButtons.add(Button.secondary("nekroFollowTech", "Get CCs").withEmoji(Emoji.fromFormatted(Emojis.Nekro)));
-        }
+           }
         if (!scButtons.isEmpty()) actionRow = ActionRow.of(scButtons);
         if (actionRow != null) baseMessageObject.addComponents(actionRow);
 
@@ -153,7 +155,7 @@ public class SCPlay extends PlayerSubcommandData {
                         // SEARCH FOR EXISTING OPEN THREAD
                         for (ThreadChannel threadChannel_ : threadChannels) {
                             if (threadChannel_.getName().equals(threadName)) {
-                                if (scToPlay == 5) {
+                                if (scButtonSet == 5) {
                                     Button transaction = Button.primary("transaction", "Transaction");
                                     scButtons.add(transaction);
                                     scButtons.add(Button.success("sendTradeHolder_tg", "Send 1tg"));
@@ -169,14 +171,14 @@ public class SCPlay extends PlayerSubcommandData {
         });
 
         // POLITICS - SEND ADDITIONAL ASSIGN SPEAKER BUTTONS
-        if (scToPlay == 3) {
+        if (scButtonSet == 3) {
             String assignSpeakerMessage = player.getRepresentation() + ", please, before you draw your action cards or look at agendas, click a faction below to assign Speaker " + Emojis.SpeakerToken;
 
             List<Button> assignSpeakerActionRow = getPoliticsAssignSpeakerButtons(activeGame);
             MessageHelper.sendMessageToChannelWithButtons(ButtonHelper.getCorrectChannel(player, activeGame), assignSpeakerMessage, assignSpeakerActionRow);
         }
 
-        if (scToPlay == 3 && !activeGame.isHomeBrewSCMode()) {
+        if (scButtonSet == 3) {
              String assignSpeakerMessage2 = player.getRepresentation() + " after assigning speaker, Use this button to draw agendas into your cards info thread.";
             
             List<Button> drawAgendaButton = new ArrayList<>();
@@ -186,7 +188,7 @@ public class SCPlay extends PlayerSubcommandData {
 
         }
 
-        if(scToPlay != 1 ){
+        if(scButtonSet != 1 ){
             //"scepterE_follow_") || buttonID.startsWith("mahactA_follow_")){
             
             Button emelpar = Button.danger("scepterE_follow_"+scToPlay, "Exhaust Scepter of Emelpar");
@@ -220,7 +222,7 @@ public class SCPlay extends PlayerSubcommandData {
         conclusionButtons.add(deleteButton);
         MessageHelper.sendMessageToChannelWithButtons(event.getMessageChannel(), "Use the buttons to end turn or take another action.", conclusionButtons);
 
-        if (player.ownsPromissoryNote("acq") && scToPlay != 1 && !winnuHero) {
+        if (player.ownsPromissoryNote("acq") && scButtonSet != 1 && !winnuHero) {
             for (Player player2 : activeGame.getPlayers().values()) {
                 if (!player2.getPromissoryNotes().isEmpty()) {
                     for (String pn : player2.getPromissoryNotes().keySet()) {
@@ -238,50 +240,50 @@ public class SCPlay extends PlayerSubcommandData {
         }
     }
 
-    private List<Button> getSCButtons(int sc, Game activeGame) {
+    private List<Button> getSCButtons(int sc, Game activeGame, int sc_num) { //sc is the template, sc_num is the true sc number
         boolean isGroupedSCGameWithPoKSCs = "pbd100".equals(activeGame.getName()) || "pbd1000".equals(activeGame.getName());
-        if (activeGame.isHomeBrewSCMode() && !isGroupedSCGameWithPoKSCs) {
+ /*    if (activeGame.isHomeBrewSCMode() && !isGroupedSCGameWithPoKSCs) {
             return getGenericButtons(sc);
-        }
+        }           */
 
         if (isGroupedSCGameWithPoKSCs) {
-            String scId = String.valueOf(sc);
-            sc = Integer.parseInt(StringUtils.left(scId, 1));
+            String scId = String.valueOf(sc_num);
+            sc_num = Integer.parseInt(StringUtils.left(scId, 1));
+            sc = sc_num;
         }
-
         return switch (sc) {
-            case 1 -> getLeadershipButtons();
-            case 2 -> getDiplomacyButtons();
-            case 3 -> getPoliticsButtons();
-            case 4 -> getConstructionButtons();
-            case 5 -> getTradeButtons();
-            case 6 -> getWarfareButtons();
-            case 7 -> getTechnologyButtons();
-            case 8 -> getImperialButtons();
-            default -> getGenericButtons(sc);
+            case 1 -> getLeadershipButtons(sc_num);
+            case 2 -> getDiplomacyButtons(sc_num);
+            case 3 -> getPoliticsButtons(sc_num);
+            case 4 -> getConstructionButtons(sc_num);
+            case 5 -> getTradeButtons(sc_num);
+            case 6 -> getWarfareButtons(sc_num);
+            case 7 -> getTechnologyButtons(sc_num);
+            case 8 -> getImperialButtons(sc_num);
+            default -> getGenericButtons(sc_num);
         };
     }
     
-    private List<Button> getLeadershipButtons() {
+    private List<Button> getLeadershipButtons(int sc_num) {
         Button followButton = Button.success("sc_leadership_follow", "SC Follow");
         Button leadershipGenerateCCButtons = Button.success("leadershipGenerateCCButtons", "Gain CCs");
         Button exhaust = Button.danger("leadershipExhaust", "Spend");
-        Button noFollowButton = Button.primary("sc_no_follow_1", "Not Following");
+        Button noFollowButton = Button.primary("sc_no_follow_"+sc_num, "Not Following");
         return List.of(followButton, exhaust,leadershipGenerateCCButtons,noFollowButton);
     }
 
-    private List<Button> getDiplomacyButtons() {
-        Button followButton = Button.success("sc_follow_2", "Spend A Strategy CC");
+    private List<Button> getDiplomacyButtons(int sc_num) {
+        Button followButton = Button.success("sc_follow_"+sc_num, "Spend A Strategy CC");
         Button diploSystemButton = Button.primary("diploSystem", "Diplo a System");
         Button refreshButton = Button.success("diploRefresh2", "Ready 2 Planets");
 
-        Button noFollowButton = Button.danger("sc_no_follow_2", "Not Following");
+        Button noFollowButton = Button.danger("sc_no_follow"+sc_num, "Not Following");
         return List.of(followButton,diploSystemButton, refreshButton, noFollowButton);
     }
 
-    private List<Button> getPoliticsButtons() {
-        Button followButton = Button.success("sc_follow_3", "Spend A Strategy CC");
-        Button noFollowButton = Button.primary("sc_no_follow_3", "Not Following");
+    private List<Button> getPoliticsButtons(int sc_num) {
+        Button followButton = Button.success("sc_follow_"+sc_num, "Spend A Strategy CC");
+        Button noFollowButton = Button.primary("sc_no_follow_"+sc_num, "Not Following");
         Button draw_2_ac = Button.secondary("sc_ac_draw", "Draw 2 Action Cards").withEmoji(Emoji.fromFormatted(Emojis.ActionCard));
         return List.of(followButton, noFollowButton, draw_2_ac);
     }
@@ -308,44 +310,44 @@ public class SCPlay extends PlayerSubcommandData {
         return assignSpeakerButtons;
     }
 
-    private List<Button> getConstructionButtons() {
-        Button followButton = Button.success("sc_follow_4", "Spend A Strategy CC");
+    private List<Button> getConstructionButtons(int sc_num) {
+        Button followButton = Button.success("sc_follow_"+sc_num, "Spend A Strategy CC");
         Button sdButton = Button.success("construction_sd", "Place A SD");
         sdButton = sdButton.withEmoji(Emoji.fromFormatted(Emojis.spacedock));
         Button pdsButton = Button.success("construction_pds", "Place a PDS");
 
         pdsButton = pdsButton.withEmoji(Emoji.fromFormatted(Emojis.pds));
-        Button noFollowButton = Button.primary("sc_no_follow_4", "Not Following");
+        Button noFollowButton = Button.primary("sc_no_follow_"+sc_num, "Not Following");
         return List.of(followButton, sdButton, pdsButton, noFollowButton);
     }
 
-    private List<Button> getTradeButtons() {
+    private List<Button> getTradeButtons(int sc_num) {
         Button trade_primary = Button.success("trade_primary", "Resolve Primary");
         Button followButton = Button.success("sc_trade_follow", "Spend A Strategy CC");
-        Button noFollowButton = Button.primary("sc_no_follow_5", "Not Following");
+        Button noFollowButton = Button.primary("sc_no_follow_"+sc_num, "Not Following");
         Button refresh_and_wash = Button.secondary("sc_refresh_and_wash", "Replenish and Wash").withEmoji(Emoji.fromFormatted(Emojis.Wash));
         Button refresh = Button.secondary("sc_refresh", "Replenish Commodities").withEmoji(Emoji.fromFormatted(Emojis.comm));
         return List.of(trade_primary, followButton, noFollowButton, refresh, refresh_and_wash);
     }
 
-    private List<Button> getWarfareButtons() {
+    private List<Button> getWarfareButtons(int sc_num) {
         Button warfarePrimary= Button.primary("primaryOfWarfare", "Do Warfare Primary");
-        Button followButton = Button.success("sc_follow_6", "Spend A Strategy CC");
+        Button followButton = Button.success("sc_follow_"+sc_num, "Spend A Strategy CC");
         Button homeBuild = Button.success("warfareBuild", "Build At Home");
-        Button noFollowButton = Button.primary("sc_no_follow_6", "Not Following");
+        Button noFollowButton = Button.primary("sc_no_follow_"+sc_num, "Not Following");
         return List.of(warfarePrimary,followButton,homeBuild, noFollowButton);
     }
 
-    private List<Button> getTechnologyButtons() {
-        Button followButton = Button.success("sc_follow_7", "Spend A Strategy CC");
+    private List<Button> getTechnologyButtons(int sc_num) {
+        Button followButton = Button.success("sc_follow_"+sc_num, "Spend A Strategy CC");
         Button getTech = Button.success("acquireATech", "Get a Tech");
-        Button noFollowButton = Button.primary("sc_no_follow_7", "Not Following");
+        Button noFollowButton = Button.primary("sc_no_follow_"+sc_num, "Not Following");
         return List.of(followButton, getTech ,noFollowButton);
     }
 
-    private List<Button> getImperialButtons() {
-        Button followButton = Button.success("sc_follow_8", "Spend A Strategy CC");
-        Button noFollowButton = Button.primary("sc_no_follow_8", "Not Following");
+    private List<Button> getImperialButtons(int sc_num) {
+        Button followButton = Button.success("sc_follow_"+sc_num, "Spend A Strategy CC");
+        Button noFollowButton = Button.primary("sc_no_follow_"+sc_num, "Not Following");
         Button draw_so = Button.secondary("sc_draw_so", "Draw Secret Objective").withEmoji(Emoji.fromFormatted(Emojis.SecretObjective));
         Button scoreImperial = Button.secondary("score_imperial", "Score Imperial").withEmoji(Emoji.fromFormatted(Emojis.MecatolRex));
         Button scoreAnObjective = Button.secondary("scoreAnObjective", "Score A Public").withEmoji(Emoji.fromFormatted(Emojis.Public1));
