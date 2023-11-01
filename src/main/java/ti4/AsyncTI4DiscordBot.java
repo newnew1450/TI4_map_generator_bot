@@ -302,7 +302,7 @@ public class AsyncTI4DiscordBot {
                 GameSaveLoadManager.saveMaps();
                 BotLogger.log("`" + new Timestamp(System.currentTimeMillis()) + "` MAPS HAVE BEEN SAVED");
                 BotLogger.log("`" + new Timestamp(System.currentTimeMillis()) + "` SHUTDOWN PROCESS COMPLETE");
-                TimeUnit.SECONDS.sleep(1); // wait for BotLogger
+                TimeUnit.SECONDS.sleep(2); // wait for BotLogger
                 jda.shutdown();
                 jda.awaitShutdown();
                 mainThread.join();

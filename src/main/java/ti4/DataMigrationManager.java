@@ -645,6 +645,7 @@ public class DataMigrationManager {
         boolean mapNeededMigrating = false;
         for (String toReplace : replacements.keySet()) {
             String replacement = replacements.get(toReplace);
+
             int index = game.getAgendas().indexOf(toReplace);
             if (index > -1) {
                 game.getAgendas().set(index, replacement);

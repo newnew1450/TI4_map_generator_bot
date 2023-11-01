@@ -30,6 +30,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
+import ti4.aspectj.Timed;
 import ti4.commands.Command;
 import ti4.commands.CommandManager;
 import ti4.commands.fow.Whisper;
@@ -51,6 +52,7 @@ import ti4.message.MessageHelper;
 
 public class MessageListener extends ListenerAdapter {
 
+    @Timed
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (!AsyncTI4DiscordBot.readyToReceiveCommands) {
@@ -66,20 +68,18 @@ public class MessageListener extends ListenerAdapter {
             if (!isChannelOK) {
                 event.reply("Command canceled. Execute command in correctly named channel that starts with the game name.\n> For example, for game `pbd123`, the channel name should start with `pbd123`").setEphemeral(true).queue();
                 return;
-            }else{
-                GameManager gameManager = GameManager.getInstance();
-                Game userActiveGame = gameManager.getUserActiveGame(userID);
-                if(userActiveGame != null){
-                    userActiveGame.increaseSlashCommandsRun();
-                    String command = event.getName()+" "+event.getSubcommandName();
-                    Integer count = userActiveGame.getAllSlashCommandsUsed().get(command);
-                    if(count == null){
-                        userActiveGame.setSpecificSlashCommandCount(command, 1);
-                    }else{
-                        userActiveGame.setSpecificSlashCommandCount(command, 1+count);
-                    }
+            }
+            GameManager gameManager = GameManager.getInstance();
+            Game userActiveGame = gameManager.getUserActiveGame(userID);
+            if (userActiveGame != null) {
+                userActiveGame.increaseSlashCommandsRun();
+                String command = event.getName() + " " + event.getSubcommandName();
+                Integer count = userActiveGame.getAllSlashCommandsUsed().get(command);
+                if (count == null) {
+                    userActiveGame.setSpecificSlashCommandCount(command, 1);
+                } else {
+                    userActiveGame.setSpecificSlashCommandCount(command, 1 + count);
                 }
-                
             }
         }
 
