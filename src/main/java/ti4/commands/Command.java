@@ -30,7 +30,7 @@ public interface Command {
         if (userActiveGame != null){
             activeGame =  "Game: " + userActiveGame.getName();
         }
-        String commandExecuted = "User: " + userName + ". " +activeGame+ " " +
+        String commandExecuted = "User: " + userName + ". " + activeGame + " " +
                 event.getName() + " " + event.getOptions().stream()
                 .map(OptionMapping::getAsString)
                 .collect(Collectors.joining(" "));
@@ -44,5 +44,9 @@ public interface Command {
 
     default void postExecute(SlashCommandInteractionEvent event) {
         event.getHook().deleteOriginal().submit();
+    }
+
+    default boolean canBeExecutedAsync() {
+        return false;
     }
 }

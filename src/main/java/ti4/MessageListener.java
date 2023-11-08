@@ -66,20 +66,18 @@ public class MessageListener extends ListenerAdapter {
             if (!isChannelOK) {
                 event.reply("Command canceled. Execute command in correctly named channel that starts with the game name.\n> For example, for game `pbd123`, the channel name should start with `pbd123`").setEphemeral(true).queue();
                 return;
-            }else{
-                GameManager gameManager = GameManager.getInstance();
-                Game userActiveGame = gameManager.getUserActiveGame(userID);
-                if(userActiveGame != null){
-                    userActiveGame.increaseSlashCommandsRun();
-                    String command = event.getName()+" "+event.getSubcommandName();
-                    Integer count = userActiveGame.getAllSlashCommandsUsed().get(command);
-                    if(count == null){
-                        userActiveGame.setSpecificSlashCommandCount(command, 1);
-                    }else{
-                        userActiveGame.setSpecificSlashCommandCount(command, 1+count);
-                    }
+            }
+            GameManager gameManager = GameManager.getInstance();
+            Game userActiveGame = gameManager.getUserActiveGame(userID);
+            if (userActiveGame != null) {
+                userActiveGame.increaseSlashCommandsRun();
+                String command = event.getName() + " " + event.getSubcommandName();
+                Integer count = userActiveGame.getAllSlashCommandsUsed().get(command);
+                if (count == null) {
+                    userActiveGame.setSpecificSlashCommandCount(command, 1);
+                } else{
+                    userActiveGame.setSpecificSlashCommandCount(command, 1 + count);
                 }
-                
             }
         }
 
@@ -96,16 +94,24 @@ public class MessageListener extends ListenerAdapter {
         CommandManager commandManager = CommandManager.getInstance();
         for (Command command : commandManager.getCommandList()) {
             if (command.accept(event)) {
-                try {
-                    command.execute(event);
-                    command.postExecute(event);
-                } catch (Exception e) {
-                    String messageText = "Error trying to execute command: " + command.getActionID();
-                    String errorMessage = ExceptionUtils.getMessage(e);
-                    event.getHook().editOriginal(errorMessage).queue();
-                    BotLogger.log(event, messageText, e);
+                if (command.canBeExecutedAsync()) {
+                    AsyncTI4DiscordBot.THREAD_POOL.execute(() -> executeCommand(command, event));
+                } else {
+                    executeCommand(command, event);
                 }
             }
+        }
+    }
+
+    private static void executeCommand(Command command, SlashCommandInteractionEvent event) {
+        try {
+            command.execute(event);
+            command.postExecute(event);
+        } catch (Exception e) {
+            String messageText = "Error trying to execute command: " + command.getActionID();
+            String errorMessage = ExceptionUtils.getMessage(e);
+            event.getHook().editOriginal(errorMessage).queue();
+            BotLogger.log(event, messageText, e);
         }
     }
 
