@@ -77,7 +77,7 @@
         "sustainDamage": true,
         "canBeDirectHit": true,
         "isShip": true,
-        "ability": "While you own this card, you can only have 1 war sun. When this unit uses its BOMBARDMENT ability, it uses it against every planet in its system and each adjacent system, even yours, ignoring planetary shield."
+        "ability": "While you own this card, you can only have 1 war sun. When this unit uses its BOMBARDMENT ability, it uses it against every planet in its system and each adjacent system, even yours, ignoring PLANETARY SHIELD."
     },
     {
         "id": "tf-dawncrusher",
@@ -393,7 +393,7 @@
         "combatHitsOn": 9,
         "combatDieCount": 1,
         "isShip": true,
-        "ability": "Capture other players' infantry and fighters that are destroyed or removed in this unit's system or an adjacent system. At the start of your turn you may spend captured infantry or fighters to place equivalent units from your reinforcement in this system."
+        "ability": "Capture other players' infantry and fighters that are destroyed or removed in this unit's system or an adjacent system. At the start of your turn you may spend captured infantries or fighters to place equivalent units from your reinforcement in this system."
     },
     {
         "id": "tf-hcf",
@@ -505,7 +505,7 @@
         "sustainDamage": true,
         "canBeDirectHit": true,
         "isShip": true,
-        "ability": "This ship can transport any number of infantry and fighters, and they do not count against this ships capacity."
+        "ability": "This ship can transport any number of infantry and fighters, and they do not count against this ship's capacity."
     },
     {
         "id": "tf-echoofascension",
